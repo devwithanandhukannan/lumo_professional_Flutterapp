@@ -421,18 +421,15 @@ class _ProDocumentUploadScreenState extends State<ProDocumentUploadScreen>
                         const SizedBox(height: 12),
 
                         _UploadTile(
-                          title: 'Police Clearance Certificate',
+                          title: 'Police Clearance Certificate (PDF Only)',
                           subtitle: _policeFileName != null
                               ? 'Uploaded: $_policeFileName'
-                              : 'Tap to upload official background verification PDF',
+                              : 'Tap to upload official background clearance PDF (.pdf only)',
                           icon: Icons.verified_user_rounded,
                           color: ProColors.primary,
                           isUploaded: _policePdfUploaded,
                           fileName: _policeFileName,
-                          onTap: () => _showUploadOptionsModal(
-                            'police',
-                            'Police Clearance Certificate',
-                          ),
+                          onTap: () => _pickPdfDocument('police'),
                         ),
 
                         const SizedBox(height: 12),

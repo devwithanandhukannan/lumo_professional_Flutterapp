@@ -134,18 +134,31 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
         final formatted = first['formatted_address']?.toString() ?? '';
 
         String city = '';
+        String state = '';
         for (var comp in first['address_components'] as List) {
           final types = (comp['types'] as List).cast<String>();
-          if (types.contains('locality') || types.contains('administrative_area_level_2')) {
-            city = comp['long_name']?.toString() ?? '';
-            break;
+          if (types.contains('locality') || types.contains('sublocality_level_1') || types.contains('administrative_area_level_2')) {
+            if (city.isEmpty) city = comp['long_name']?.toString() ?? '';
           }
+          if (types.contains('administrative_area_level_1')) {
+            state = comp['long_name']?.toString() ?? '';
+          }
+        }
+
+        String displayLocation = '';
+        if (city.isNotEmpty && state.isNotEmpty) {
+          displayLocation = '$city, $state';
+        } else if (city.isNotEmpty) {
+          displayLocation = city;
+        } else {
+          final nonPlusParts = formatted.split(',').map((s) => s.trim()).where((s) => !s.contains('+')).toList();
+          displayLocation = nonPlusParts.isNotEmpty ? nonPlusParts.take(2).join(', ') : formatted;
         }
 
         if (mounted) {
           setState(() {
             _selectedAddress = formatted;
-            _cityName = city.isNotEmpty ? city : formatted.split(',').first;
+            _cityName = displayLocation;
           });
         }
       } else {

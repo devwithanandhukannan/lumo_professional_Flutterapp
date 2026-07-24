@@ -189,6 +189,7 @@ class ProApiClient {
     String? policeVerificationUrl,
     String? faceSelfieUrl,
     List<String>? certifications,
+    String? location,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/pro/documents'),
@@ -200,11 +201,29 @@ class ProApiClient {
             'policeVerificationUrl': policeVerificationUrl,
             'faceSelfieUrl': faceSelfieUrl,
             'certifications': certifications ?? [],
+            'location': location,
           }),
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
     throw Exception(body['message'] ?? 'Failed to submit documents');
+  }
+
+  static Future<Map<String, dynamic>> requestLocationChange({
+    required String requestedLocation,
+    String? reason,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/pro/location-change-request'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'requestedLocation': requestedLocation,
+            'reason': reason,
+          }),
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) return body;
+    throw Exception(body['message'] ?? 'Failed to submit location change request');
   }
 
   static Future<List<dynamic>> saveOfferedServices(List<Map<String, dynamic>> services) async {
@@ -237,7 +256,7 @@ class ProApiClient {
           }),
         ));
     final body = jsonDecode(res.body);
-    if (res.statusCode == 201) return body['data'] ?? body;
+    if (res.statusCode == 200 || res.statusCode == 201) return body['data'] ?? body;
     throw Exception(body['message'] ?? 'Failed to submit service request');
   }
 

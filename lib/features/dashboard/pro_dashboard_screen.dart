@@ -5,6 +5,8 @@ import '../../core/theme/pro_theme.dart';
 import '../jobs/job_detail_screen.dart';
 import '../safety/pro_sos_widget.dart';
 
+import '../onboarding/pro_document_upload_screen.dart';
+
 class ProDashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
   const ProDashboardScreen({super.key, required this.onLogout});
@@ -32,7 +34,12 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     setState(() => _loadingJobs = true);
     try {
       final health = await ProApiClient.getProHealth();
-      if (mounted) setState(() => _health = health);
+      if (mounted) {
+        setState(() => _health = health);
+        if (health['verificationStatus'] != null) {
+          ProSessionStorage.updateVerificationStatus(health['verificationStatus']);
+        }
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _health = {
@@ -57,7 +64,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   }
 
   Future<void> _toggleOnline(bool val) async {
-    final status = ProSessionStorage.verificationStatus;
+    final status = _health?['verificationStatus'] ?? ProSessionStorage.verificationStatus;
     if (val && status != 'APPROVED') {
       showDialog(
         context: context,
@@ -104,6 +111,125 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     } finally {
       if (mounted) setState(() => _togglingOnline = false);
     }
+  }
+
+  Widget _buildVerificationStatusBanner() {
+    final status = (_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus)?.toString().toUpperCase();
+    final notes = _health?['verificationNotes']?.toString() ?? 'Documents require correction or re-submission.';
+
+    if (status == 'PENDING') {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0x1FFAE8FF),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ProColors.warningAmber.withAlpha(150)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: ProColors.warningAmber.withAlpha(40),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 24),
+            ),
+            const SizedBox(width: 14),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'VERIFICATION PENDING',
+                    style: TextStyle(color: ProColors.warningAmber, fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    'Admin audit in progress. App features are unlocked in read-only mode until approved.',
+                    style: TextStyle(color: ProColors.textMuted, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    } else if (status == 'REJECTED') {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: const Color(0x22EF4444),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ProColors.emergencyRed.withAlpha(180)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: ProColors.emergencyRed.withAlpha(40),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.cancel_outlined, color: ProColors.emergencyRed, size: 24),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'REGISTRATION REJECTED',
+                        style: TextStyle(color: ProColors.emergencyRed, fontWeight: FontWeight.bold, fontSize: 13),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Reason: $notes',
+                        style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ProColors.emergencyRed,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                ),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
+                label: const Text('REAPPLY / FIX DOCUMENTS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ProDocumentUploadScreen(
+                        onCompleted: () {
+                          _loadData();
+                          Navigator.pop(context);
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return const SizedBox.shrink();
   }
 
   @override
@@ -172,6 +298,9 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // 0. Verification Status Banner
+              _buildVerificationStatusBanner(),
+
               // 1. On-Duty Glowing Toggle Card
               Container(
                 padding: const EdgeInsets.all(18),
