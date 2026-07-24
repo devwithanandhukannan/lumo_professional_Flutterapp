@@ -3,14 +3,18 @@ import 'package:http/http.dart' as http;
 import '../storage/pro_session_storage.dart';
 
 class ProApiClient {
-  static String _defaultBaseUrl() => 'http://192.168.1.2:8000';
+  static String _defaultBaseUrl() {
+    return 'http://192.168.1.2:8000';
+  }
+
   static String baseUrl = _defaultBaseUrl();
 
   static void updateBaseUrl(String url) {
     baseUrl = url.startsWith('http') ? url.trim() : 'http://$url';
   }
 
-  static Map<String, String> get _publicHeaders => {'Content-Type': 'application/json'};
+  static Map<String, String> get _publicHeaders =>
+      {'Content-Type': 'application/json'};
 
   static Map<String, String> get _authHeaders => {
         'Content-Type': 'application/json',
@@ -18,6 +22,8 @@ class ProApiClient {
           'Authorization': 'Bearer ${ProSessionStorage.authToken}',
       };
 
+  /// Dynamic fast-fail request handler with multi-host probe sequence
+  /// Ensures physical devices (e.g., Samsung on Wi-Fi), emulators, and desktop all resolve cleanly.
   static Future<http.Response> _requestWithFallback(
     Future<http.Response> Function(String currentUrl) requestFn,
   ) async {
@@ -34,8 +40,8 @@ class ProApiClient {
 
     for (final candidate in candidateUrls) {
       try {
-        final response = await requestFn(candidate).timeout(const Duration(seconds: 5));
-        baseUrl = candidate;
+        final response = await requestFn(candidate).timeout(const Duration(seconds: 3));
+        baseUrl = candidate; // Retain active working gateway URL
         return response;
       } catch (e) {
         lastError = e;
@@ -58,7 +64,51 @@ class ProApiClient {
 
   // ─── AUTH ─────────────────────────────────────────────────────────────────
 
-  /// Send OTP to mobile number
+  /// Register new professional with Email, Password, Mobile, Full Name, Gender
+  static Future<Map<String, dynamic>> registerPro({
+    required String email,
+    required String password,
+    required String phoneNumber,
+    required String fullName,
+    required String gender,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/auth/pro/register'),
+          headers: _publicHeaders,
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+            'phoneNumber': phoneNumber,
+            'fullName': fullName,
+            'gender': gender,
+          }),
+        ));
+
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) return body;
+    throw Exception(body['message'] ?? 'Registration failed (${res.statusCode})');
+  }
+
+  /// Login existing professional with Email & Password
+  static Future<Map<String, dynamic>> loginPro({
+    required String email,
+    required String password,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/auth/pro/login'),
+          headers: _publicHeaders,
+          body: jsonEncode({
+            'email': email,
+            'password': password,
+          }),
+        ));
+
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) return body;
+    throw Exception(body['message'] ?? 'Invalid email or password');
+  }
+
+  /// Send Phone OTP Code
   static Future<Map<String, dynamic>> sendOtp(String phoneNumber) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/otp/send'),
@@ -66,14 +116,16 @@ class ProApiClient {
           body: jsonEncode({'phoneNumber': phoneNumber}),
         ));
     final body = jsonDecode(res.body);
-    if (res.statusCode == 200) return body['data'] ?? body;
+    if (res.statusCode == 200) return body;
     throw Exception(body['message'] ?? 'Failed to send OTP');
   }
 
-  /// Verify OTP (sign in / base user creation)
+  /// Verify Phone OTP Code
   static Future<Map<String, dynamic>> verifyOtp({
     required String phoneNumber,
     required String otp,
+    String fullName = 'Professional',
+    String gender = 'OTHER',
   }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/otp/verify'),
@@ -82,86 +134,77 @@ class ProApiClient {
             'phoneNumber': phoneNumber,
             'otp': otp,
             'role': 'PROFESSIONAL',
+            'fullName': fullName,
+            'gender': gender,
           }),
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
-    throw Exception(body['message'] ?? 'Invalid OTP');
+    throw Exception(body['message'] ?? 'Invalid OTP code');
   }
 
-  /// Register professional with full profile fields (Step 2)
   static Future<Map<String, dynamic>> registerProWithPhone({
-    required String phoneNumber,
     required String fullName,
-    required int age,
-    required String email,
-    required String gender,
+    required String phoneNumber,
     required String serviceArea,
+    String? categoryId,
+    String? email,
+    String gender = 'OTHER',
+    int? age,
+    String? sex,
+    double? latitude,
+    double? longitude,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/auth/pro/register-phone'),
-          headers: _authHeaders,
+          Uri.parse('$url/api/v1/auth/register-phone'),
+          headers: _publicHeaders,
           body: jsonEncode({
-            'phoneNumber': phoneNumber,
             'fullName': fullName,
-            'age': age,
-            'email': email,
-            'gender': gender,
+            'phoneNumber': phoneNumber,
             'serviceArea': serviceArea,
+            'categoryId': categoryId,
+            'role': 'PROFESSIONAL',
+            if (email != null) 'email': email,
+            'gender': gender,
+            if (age != null) 'age': age,
+            if (sex != null) 'sex': sex,
+            if (latitude != null) 'latitude': latitude,
+            if (longitude != null) 'longitude': longitude,
           }),
         ));
+
     final body = jsonDecode(res.body);
     if (res.statusCode == 200 || res.statusCode == 201) return body;
-    throw Exception(body['message'] ?? 'Registration failed');
+    throw Exception(body['message'] ?? 'Failed to register professional profile');
   }
 
-  /// Send Email Verification Code
+  /// Send Email Code
   static Future<Map<String, dynamic>> sendEmailCode(String email) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/email/send'),
-          headers: _authHeaders,
+          headers: _publicHeaders,
           body: jsonEncode({'email': email}),
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
-    throw Exception(body['message'] ?? 'Failed to send email code');
+    throw Exception(body['message'] ?? 'Failed to send email verification');
   }
 
   /// Verify Email Code
   static Future<Map<String, dynamic>> verifyEmailCode(String email, String code) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/email/verify'),
-          headers: _authHeaders,
+          headers: _publicHeaders,
           body: jsonEncode({'email': email, 'code': code}),
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
-    throw Exception(body['message'] ?? 'Invalid code');
+    throw Exception(body['message'] ?? 'Invalid email verification code');
   }
 
-  // ─── VERIFICATION DOCUMENTS & FILE STORAGE ─────────────────────────────────
+  // ─── PROFESSIONAL PROFILE & DOCUMENTS ─────────────────────────────────────
 
-  static Future<Map<String, dynamic>> uploadDocument({
-    required String fileName,
-    required String fileData,
-    required String docType,
-  }) async {
-    final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/pro/upload-doc'),
-          headers: _authHeaders,
-          body: jsonEncode({
-            'fileName': fileName,
-            'fileData': fileData,
-            'docType': docType,
-          }),
-        ));
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200) return body;
-    throw Exception(body['message'] ?? 'Failed to upload document');
-  }
-
-  // ─── PROFESSIONAL PROFILE ─────────────────────────────────────────────────
-
+  /// Fetch full professional profile, verification status, and offered services
   static Future<Map<String, dynamic>> getProfile() async {
     final res = await _requestWithFallback((url) => http.get(
           Uri.parse('$url/api/v1/pro/profile'),
@@ -172,6 +215,7 @@ class ProApiClient {
     throw Exception(body['message'] ?? 'Failed to load profile');
   }
 
+  /// Fetch Account Health & Rating Metrics
   static Future<Map<String, dynamic>> getProHealth() async {
     final res = await _requestWithFallback((url) => http.get(
           Uri.parse('$url/api/v1/pro/health'),
@@ -179,9 +223,11 @@ class ProApiClient {
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body['data'] ?? body;
-    throw Exception(body['message'] ?? 'Failed to load health metrics');
+    throw Exception(body['message'] ?? 'Failed to load health');
   }
 
+  /// Submit Verification Documents (Govt ID, Police Clearance PDF, Face Selfie)
+  /// Triggers re-verification and sets status to PENDING until Admin approves.
   static Future<Map<String, dynamic>> submitDocuments({
     required String govtIdType,
     required String govtIdNumber,
@@ -189,7 +235,6 @@ class ProApiClient {
     String? policeVerificationUrl,
     String? faceSelfieUrl,
     List<String>? certifications,
-    String? location,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/pro/documents'),
@@ -201,76 +246,57 @@ class ProApiClient {
             'policeVerificationUrl': policeVerificationUrl,
             'faceSelfieUrl': faceSelfieUrl,
             'certifications': certifications ?? [],
-            'location': location,
           }),
         ));
+
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
-    throw Exception(body['message'] ?? 'Failed to submit documents');
+    throw Exception(body['message'] ?? 'Failed to submit verification documents');
   }
 
-  static Future<Map<String, dynamic>> requestLocationChange({
-    required String requestedLocation,
-    String? reason,
-  }) async {
-    final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/pro/location-change-request'),
-          headers: _authHeaders,
-          body: jsonEncode({
-            'requestedLocation': requestedLocation,
-            'reason': reason,
-          }),
-        ));
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200 || res.statusCode == 201) return body;
-    throw Exception(body['message'] ?? 'Failed to submit location change request');
-  }
-
+  /// Save Offered Services & Custom Pricing Rate
   static Future<List<dynamic>> saveOfferedServices(List<Map<String, dynamic>> services) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/pro/offered-services'),
           headers: _authHeaders,
           body: jsonEncode({'services': services}),
         ));
+
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return (body['data'] as List?) ?? [];
-    throw Exception(body['message'] ?? 'Failed to save services');
+    throw Exception(body['message'] ?? 'Failed to save offered services');
   }
 
-  // ─── CUSTOM SERVICE REQUEST ────────────────────────────────────────────────
-
-  static Future<Map<String, dynamic>> requestCustomService({
-    required String serviceName,
-    String? description,
-    double? suggestedPrice,
-    String? categoryId,
-  }) async {
+  static Future<void> updateCustomServicePrice(String serviceId, double customPrice) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/pro/service-request'),
+          Uri.parse('$url/api/v1/pro/offered-services/update-price'),
           headers: _authHeaders,
           body: jsonEncode({
-            'serviceName': serviceName,
-            'description': description,
-            'suggestedPrice': suggestedPrice,
-            'categoryId': categoryId,
+            'serviceId': serviceId,
+            'customPrice': customPrice,
           }),
         ));
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200 || res.statusCode == 201) return body['data'] ?? body;
-    throw Exception(body['message'] ?? 'Failed to submit service request');
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to update custom price');
+    }
   }
 
-  static Future<List<dynamic>> getMyServiceRequests() async {
-    final res = await _requestWithFallback((url) => http.get(
-          Uri.parse('$url/api/v1/pro/service-requests'),
+  /// Admin Verify / Approve Professional (Used by Super Admin or Demo test action)
+  static Future<void> adminVerifyPro(String userId, String status) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/admin/pro/$userId/verify'),
           headers: _authHeaders,
+          body: jsonEncode({'status': status, 'notes': 'Approved by verification pipeline audit'}),
         ));
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200) return (body['data'] as List?) ?? [];
-    throw Exception(body['message'] ?? 'Failed to load service requests');
+
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to update verification status');
+    }
   }
 
-  // ─── JOBS & INVITES ────────────────────────────────────────────────────────
+  // ─── BOOKINGS & JOBS ──────────────────────────────────────────────────────
 
   static Future<List<dynamic>> getMyJobs() async {
     final res = await _requestWithFallback((url) => http.get(
@@ -280,16 +306,6 @@ class ProApiClient {
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return (body['data'] as List?) ?? [];
     throw Exception(body['message'] ?? 'Failed to load jobs');
-  }
-
-  static Future<List<dynamic>> getJobInvites() async {
-    final res = await _requestWithFallback((url) => http.get(
-          Uri.parse('$url/api/v1/pro/job-invites'),
-          headers: _authHeaders,
-        ));
-    final body = jsonDecode(res.body);
-    if (res.statusCode == 200) return (body['data'] as List?) ?? [];
-    throw Exception(body['message'] ?? 'Failed to load invites');
   }
 
   static Future<void> acceptJob(String bookingId) async {
@@ -303,18 +319,10 @@ class ProApiClient {
     }
   }
 
-  static Future<void> rejectJob(String bookingId) async {
-    final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/bookings/$bookingId/reject'),
-          headers: _authHeaders,
-        ));
-    if (res.statusCode != 200) {
-      final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Failed to reject job');
-    }
-  }
-
-  static Future<void> verifyStartOtp({required String bookingId, required String otp}) async {
+  static Future<void> verifyStartOtp({
+    required String bookingId,
+    required String otp,
+  }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/bookings/$bookingId/start'),
           headers: _authHeaders,
@@ -322,11 +330,14 @@ class ProApiClient {
         ));
     if (res.statusCode != 200) {
       final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Invalid Start OTP');
+      throw Exception(body['message'] ?? 'Invalid Start OTP code');
     }
   }
 
-  static Future<void> verifyEndOtp({required String bookingId, required String otp}) async {
+  static Future<void> verifyEndOtp({
+    required String bookingId,
+    required String otp,
+  }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/bookings/$bookingId/complete'),
           headers: _authHeaders,
@@ -334,7 +345,7 @@ class ProApiClient {
         ));
     if (res.statusCode != 200) {
       final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Invalid End OTP');
+      throw Exception(body['message'] ?? 'Invalid End OTP code');
     }
   }
 
@@ -342,7 +353,7 @@ class ProApiClient {
 
   static Future<void> updateOnlineStatus(bool isOnline, {double? latitude, double? longitude}) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/pro/status'),
+          Uri.parse('$url/api/v1/pro/duty-status'),
           headers: _authHeaders,
           body: jsonEncode({
             'isOnline': isOnline,
@@ -350,13 +361,17 @@ class ProApiClient {
             if (longitude != null) 'longitude': longitude,
           }),
         ));
+
     if (res.statusCode != 200) {
-      final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Cannot toggle duty status');
+      try {
+        final body = jsonDecode(res.body);
+        throw Exception(body['message'] ?? 'Cannot toggle duty status');
+      } catch (e) {
+        if (e is Exception && !e.toString().contains('FormatException')) rethrow;
+        throw Exception('Duty status update failed (${res.statusCode})');
+      }
     }
   }
-
-  // ─── SAFETY ───────────────────────────────────────────────────────────────
 
   static Future<void> triggerSos({
     required double latitude,
@@ -376,20 +391,63 @@ class ProApiClient {
         ));
   }
 
-  // ─── ADMIN SIMULATION ──────────────────────────────────────────────────────
+  // ─── DOCUMENT UPLOADS ─────────────────────────────────────────────────────
 
-  static Future<void> adminVerifyPro(String userId, String status) async {
+  static Future<Map<String, dynamic>> uploadDocument({
+    required String fileName,
+    required String fileData,
+    required String docType,
+  }) async {
     final res = await _requestWithFallback((url) => http.post(
-      Uri.parse('$url/api/v1/pro/verify-audit'),
-      headers: _publicHeaders,
-      body: jsonEncode({'userId': userId, 'status': status}),
-    ));
-    if (res.statusCode != 200) {
-      // Local fallback OK
-    }
+          Uri.parse('$url/api/v1/media/upload'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'fileName': fileName,
+            'fileData': fileData,
+            'docType': docType,
+          }),
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) return body['data'] ?? body;
+    throw Exception(body['message'] ?? 'Failed to upload document');
   }
 
-  // ─── CATALOG ──────────────────────────────────────────────────────────────
+  // ─── SERVICES & RATES ──────────────────────────────────────────────────────
+
+
+
+  static Future<Map<String, dynamic>> requestCustomService({
+    required String serviceName,
+    String? description,
+    double? suggestedPrice,
+    String? categoryId,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/pro/service-request'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'serviceName': serviceName,
+            'description': description,
+            if (suggestedPrice != null) 'suggestedPrice': suggestedPrice,
+            if (categoryId != null) 'categoryId': categoryId,
+          }),
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) return body['data'] ?? body;
+    throw Exception(body['message'] ?? 'Failed to submit service request');
+  }
+
+  static Future<List<dynamic>> getMyCustomServiceRequests() async {
+    final res = await _requestWithFallback((url) => http.get(
+          Uri.parse('$url/api/v1/pro/custom-services/my-requests'),
+          headers: _authHeaders,
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) return (body['data'] as List?) ?? [];
+    return [];
+  }
+
+  static Future<List<dynamic>> getMyServiceRequests() async => getMyCustomServiceRequests();
 
   static Future<List<dynamic>> getCatalogServices({String? categoryId}) async {
     final res = await _requestWithFallback((url) {
@@ -401,19 +459,5 @@ class ProApiClient {
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return (body['data'] as List?) ?? [];
     throw Exception(body['message'] ?? 'Failed to load catalog services');
-  }
-
-  // ─── SETTINGS ─────────────────────────────────────────────────────────────
-
-  static Future<void> changePassword(String oldPassword, String newPassword) async {
-    final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/users/change-password'),
-          headers: _authHeaders,
-          body: jsonEncode({'oldPassword': oldPassword, 'newPassword': newPassword}),
-        ));
-    if (res.statusCode != 200) {
-      final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Failed to change password');
-    }
   }
 }

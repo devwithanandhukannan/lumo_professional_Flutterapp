@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.lumo.pro.pro_app"
-    compileSdk = 36
+    compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
-import '../onboarding/pro_service_setup_screen.dart';
+import 'pro_services_custom_screen.dart';
 
 class ProProfileScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -66,108 +66,8 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
     );
   }
 
-  void _showLocationChangeDialog() {
-    final locCtrl = TextEditingController();
-    final reasonCtrl = TextEditingController();
-    bool submitting = false;
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (context, setDlgState) => AlertDialog(
-          backgroundColor: ProColors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
-              Icon(Icons.map_rounded, color: ProColors.primary),
-              SizedBox(width: 10),
-              Text('Request Location Change', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text(
-                'Submit target service area or region for Admin review & approval.',
-                style: TextStyle(color: ProColors.textMuted, fontSize: 12),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: locCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'New Location / Region Name',
-                  labelStyle: const TextStyle(color: ProColors.textMuted),
-                  hintText: 'e.g. Trivandrum, Kerala',
-                  hintStyle: const TextStyle(color: ProColors.border),
-                  filled: true,
-                  fillColor: ProColors.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: ProColors.border)),
-                ),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: reasonCtrl,
-                style: const TextStyle(color: Colors.white),
-                decoration: InputDecoration(
-                  labelText: 'Reason for Relocation (Optional)',
-                  labelStyle: const TextStyle(color: ProColors.textMuted),
-                  hintText: 'e.g. Relocated home address',
-                  hintStyle: const TextStyle(color: ProColors.border),
-                  filled: true,
-                  fillColor: ProColors.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: ProColors.border)),
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel', style: TextStyle(color: ProColors.textMuted)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white),
-              onPressed: submitting ? null : () async {
-                final targetLoc = locCtrl.text.trim();
-                if (targetLoc.isEmpty) return;
-                setDlgState(() => submitting = true);
-                try {
-                  await ProApiClient.requestLocationChange(
-                    requestedLocation: targetLoc,
-                    reason: reasonCtrl.text.trim(),
-                  );
-                  if (mounted) {
-                    if (ctx.mounted) Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Location update request submitted for Admin approval ✓'), backgroundColor: ProColors.primary),
-                    );
-                    _loadHealth();
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    setDlgState(() => submitting = false);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Failed: $e'), backgroundColor: ProColors.emergencyRed),
-                    );
-                  }
-                }
-              },
-              child: submitting
-                  ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                  : const Text('SUBMIT REQUEST'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final String currentRegion = _health?['serviceArea'] ?? _health?['assignedRegion'] ?? ProSessionStorage.serviceArea;
-    final String? locStatus = _health?['locationChangeStatus']?.toString();
-
     return Scaffold(
       backgroundColor: ProColors.background,
       appBar: AppBar(
@@ -237,20 +137,11 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
                   ],
 
                   _Tile(
-                    icon: Icons.location_city_rounded,
-                    label: 'Service Region / Location',
-                    value: locStatus == 'PENDING_ADMIN_APPROVAL'
-                        ? '$currentRegion (Location Change Pending Admin Approval)'
-                        : (currentRegion.isNotEmpty ? currentRegion : 'Tap to set location'),
-                    onTap: _showLocationChangeDialog,
-                  ),
-
-                  _Tile(
                     icon: Icons.design_services_outlined,
-                    label: 'Offered Services & Custom Pricing',
-                    value: 'Configure rates for customer bookings',
+                    label: 'Offered Services & Custom Rates',
+                    value: 'Configure rates & custom services for customer bookings',
                     onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => ProServiceSetupScreen(onCompleted: () => Navigator.pop(context))));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const ProServicesCustomScreen()));
                     },
                   ),
                   _Tile(icon: Icons.phone_android, label: 'Mobile Number', value: ProSessionStorage.userPhone),

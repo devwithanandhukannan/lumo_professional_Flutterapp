@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
 import '../dashboard/pro_dashboard_screen.dart';
 import '../financials/pro_earnings_screen.dart';
-import '../health/pro_account_health_screen.dart';
 import '../profile/pro_profile_screen.dart';
 import '../profile/pro_settings_screen.dart';
 
@@ -22,7 +21,6 @@ class _ProMainNavigationScreenState extends State<ProMainNavigationScreen> {
     final List<Widget> pages = [
       ProDashboardScreen(onLogout: widget.onLogout),
       const ProEarningsScreen(),
-      const ProAccountHealthScreen(),
       ProProfileScreen(onLogout: widget.onLogout),
       ProSettingsScreen(onLogout: widget.onLogout),
     ];
@@ -57,11 +55,6 @@ class _ProMainNavigationScreenState extends State<ProMainNavigationScreen> {
               icon: Icon(Icons.account_balance_wallet_outlined),
               activeIcon: Icon(Icons.account_balance_wallet, color: ProColors.primary),
               label: 'Earnings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.shield_outlined),
-              activeIcon: Icon(Icons.shield_rounded, color: ProColors.primary),
-              label: 'Health',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person_outline_rounded),
