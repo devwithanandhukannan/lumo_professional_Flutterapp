@@ -25,6 +25,11 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
   String _selectedAddress = 'Fetching location...';
   String _cityName = 'Kochi';
   bool _isGeocoding = false;
+  bool _isSearching = false;
+  MapType _currentMapType = MapType.normal;
+
+  final TextEditingController _searchController = TextEditingController();
+  List<Map<String, dynamic>> _searchResults = [];
 
   @override
   void initState() {
@@ -32,6 +37,12 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
     _cityName = widget.initialAddress;
     _selectedAddress = widget.initialAddress;
     _locateCurrentPos();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   Future<void> _locateCurrentPos() async {
@@ -45,13 +56,68 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
           locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
         );
         final latLng = LatLng(pos.latitude, pos.longitude);
-        setState(() { _currentCameraPos = latLng; });
-        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15.0));
+        if (mounted) {
+          setState(() { _currentCameraPos = latLng; });
+        }
+        _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16.0));
         _reverseGeocode(latLng);
+        _showSnack('Updated to your current GPS location ✓');
+      } else {
+        _reverseGeocode(_currentCameraPos);
       }
     } catch (_) {
       _reverseGeocode(_currentCameraPos);
     }
+  }
+
+  Future<void> _searchPlace(String query) async {
+    if (query.trim().isEmpty) return;
+    setState(() => _isSearching = true);
+    try {
+      final url = Uri.parse(
+        'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(query.trim())}&key=${widget.apiKey}',
+      );
+      final res = await http.get(url);
+      final data = jsonDecode(res.body);
+
+      if (data['status'] == 'OK' && (data['results'] as List).isNotEmpty) {
+        final results = (data['results'] as List).take(5).map((item) {
+          final loc = item['geometry']['location'];
+          return {
+            'formatted': item['formatted_address']?.toString() ?? '',
+            'lat': (loc['lat'] as num).toDouble(),
+            'lng': (loc['lng'] as num).toDouble(),
+          };
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _searchResults = results;
+          });
+        }
+      } else {
+        if (mounted) {
+          setState(() => _searchResults = []);
+          _showSnack('No locations found for "$query"');
+        }
+      }
+    } catch (e) {
+      if (mounted) _showSnack('Search error: $e');
+    } finally {
+      if (mounted) setState(() => _isSearching = false);
+    }
+  }
+
+  void _selectSearchResult(Map<String, dynamic> result) {
+    final latLng = LatLng(result['lat'], result['lng']);
+    setState(() {
+      _currentCameraPos = latLng;
+      _searchResults = [];
+      _searchController.text = result['formatted'];
+    });
+    _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 16.0));
+    _reverseGeocode(latLng);
+    FocusScope.of(context).unfocus();
   }
 
   Future<void> _reverseGeocode(LatLng target) async {
@@ -101,10 +167,42 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
     }
   }
 
+  void _zoomIn() {
+    _mapController?.animateCamera(CameraUpdate.zoomIn());
+  }
+
+  void _zoomOut() {
+    _mapController?.animateCamera(CameraUpdate.zoomOut());
+  }
+
+  void _toggleMapType() {
+    setState(() {
+      if (_currentMapType == MapType.normal) {
+        _currentMapType = MapType.satellite;
+      } else if (_currentMapType == MapType.satellite) {
+        _currentMapType = MapType.hybrid;
+      } else {
+        _currentMapType = MapType.normal;
+      }
+    });
+  }
+
+  void _showSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: ProColors.primary,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.90,
       decoration: const BoxDecoration(
         color: ProColors.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
@@ -127,7 +225,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text('Select Service Area on Google Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      Text('Drag pin to your operational service region', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                      Text('Search or drag pin to operational region', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
                     ],
                   ),
                 ),
@@ -145,6 +243,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
               children: [
                 GoogleMap(
                   initialCameraPosition: CameraPosition(target: _currentCameraPos, zoom: 14.0),
+                  mapType: _currentMapType,
                   onMapCreated: (ctrl) {
                     _mapController = ctrl;
                   },
@@ -157,6 +256,10 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                   myLocationEnabled: false,
                   myLocationButtonEnabled: false,
                   zoomControlsEnabled: false,
+                  zoomGesturesEnabled: true,
+                  rotateGesturesEnabled: true,
+                  tiltGesturesEnabled: true,
+                  scrollGesturesEnabled: true,
                 ),
 
                 // Center Pin Icon
@@ -182,13 +285,115 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                   ),
                 ),
 
-                // GPS My Location Floating Action
+                // Search Bar Overlay
                 Positioned(
-                  right: 16, top: 16,
-                  child: FloatingActionButton.small(
-                    onPressed: _locateCurrentPos,
-                    backgroundColor: ProColors.surface,
-                    child: const Icon(Icons.my_location_rounded, color: ProColors.primary),
+                  left: 16, right: 16, top: 16,
+                  child: Column(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: ProColors.cardBg,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: ProColors.glassBorder),
+                          boxShadow: const [
+                            BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4)),
+                          ],
+                        ),
+                        child: TextField(
+                          controller: _searchController,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          onSubmitted: _searchPlace,
+                          decoration: InputDecoration(
+                            hintText: 'Search city, landmark, or address...',
+                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            prefixIcon: const Icon(Icons.search_rounded, color: ProColors.primary, size: 20),
+                            suffixIcon: _isSearching
+                                ? const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: ProColors.primary)),
+                                  )
+                                : _searchController.text.isNotEmpty
+                                    ? IconButton(
+                                        icon: const Icon(Icons.clear_rounded, color: ProColors.textMuted, size: 18),
+                                        onPressed: () {
+                                          _searchController.clear();
+                                          setState(() => _searchResults = []);
+                                        },
+                                      )
+                                    : null,
+                            border: InputBorder.none,
+                            contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                        ),
+                      ),
+
+                      // Search Suggestions Dropdown
+                      if (_searchResults.isNotEmpty)
+                        Container(
+                          margin: const EdgeInsets.only(top: 6),
+                          decoration: BoxDecoration(
+                            color: ProColors.cardBg,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: ProColors.glassBorder),
+                          ),
+                          child: Column(
+                            children: _searchResults.map((res) {
+                              return ListTile(
+                                dense: true,
+                                leading: const Icon(Icons.place_rounded, color: ProColors.accent, size: 18),
+                                title: Text(res['formatted'], style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                onTap: () => _selectSearchResult(res),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+
+                // Floating Action Controls: Map Type, GPS, Zoom In, Zoom Out
+                Positioned(
+                  right: 16, bottom: 20,
+                  child: Column(
+                    children: [
+                      // Toggle Map Type Button (Satellite / Normal)
+                      FloatingActionButton.small(
+                        heroTag: 'mapTypeBtn',
+                        onPressed: _toggleMapType,
+                        backgroundColor: ProColors.surface,
+                        child: Icon(
+                          _currentMapType == MapType.normal ? Icons.satellite_alt_rounded : Icons.map_rounded,
+                          color: ProColors.accent, size: 20,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Current Location GPS Button
+                      FloatingActionButton.small(
+                        heroTag: 'myLocBtn',
+                        onPressed: _locateCurrentPos,
+                        backgroundColor: ProColors.surface,
+                        child: const Icon(Icons.my_location_rounded, color: ProColors.primary, size: 20),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Zoom In Button
+                      FloatingActionButton.small(
+                        heroTag: 'zoomInBtn',
+                        onPressed: _zoomIn,
+                        backgroundColor: ProColors.surface,
+                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Zoom Out Button
+                      FloatingActionButton.small(
+                        heroTag: 'zoomOutBtn',
+                        onPressed: _zoomOut,
+                        backgroundColor: ProColors.surface,
+                        child: const Icon(Icons.remove_rounded, color: Colors.white, size: 22),
+                      ),
+                    ],
                   ),
                 ),
               ],
