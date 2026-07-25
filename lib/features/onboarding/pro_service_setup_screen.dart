@@ -38,19 +38,6 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
 
-  static final List<Map<String, dynamic>> _fallbackServices = [
-    {'id': 'srv-clean-01', 'name': 'Home Deep Cleaning', 'base_price': '499', 'icon': '🧹'},
-    {'id': 'srv-clean-02', 'name': 'Kitchen Cleaning', 'base_price': '349', 'icon': '🍽️'},
-    {'id': 'srv-elec-01', 'name': 'Switch & Socket Repair', 'base_price': '199', 'icon': '⚡'},
-    {'id': 'srv-elec-02', 'name': 'Fan Repair', 'base_price': '249', 'icon': '💨'},
-    {'id': 'srv-plumb-01', 'name': 'Tap Leak Fix', 'base_price': '249', 'icon': '🔧'},
-    {'id': 'srv-plumb-02', 'name': 'Pipe Leak Repair', 'base_price': '349', 'icon': '🪠'},
-    {'id': 'srv-salon-01', 'name': 'Home Haircut', 'base_price': '499', 'icon': '✂️'},
-    {'id': 'srv-ac-01', 'name': 'AC Servicing', 'base_price': '699', 'icon': '❄️'},
-    {'id': 'srv-safe-01', 'name': 'Safety Escort', 'base_price': '999', 'icon': '🛡️'},
-    {'id': 'srv-carpenter-01', 'name': 'Furniture Assembly', 'base_price': '449', 'icon': '🪑'},
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -73,10 +60,10 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
   Future<void> _loadServices() async {
     try {
       final svcs = await ProApiClient.getCatalogServices();
-      final list = svcs.isNotEmpty ? svcs.map((s) => Map<String, dynamic>.from(s)).toList() : _fallbackServices;
+      final list = svcs.map((s) => Map<String, dynamic>.from(s)).toList();
       _initServices(list);
     } catch (_) {
-      _initServices(_fallbackServices);
+      _initServices([]);
     }
     try {
       final profileRes = await ProApiClient.getProfile();
@@ -256,6 +243,32 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
                         // Services list
                         if (_loadingServices)
                           const Center(child: CircularProgressIndicator(color: ProColors.primary))
+                        else if (_catalogServices.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.all(20),
+                            margin: const EdgeInsets.only(bottom: 16),
+                            decoration: BoxDecoration(
+                              color: const Color(0x0AFFFFFF),
+                              borderRadius: BorderRadius.circular(18),
+                              border: Border.all(color: ProColors.glassBorder),
+                            ),
+                            child: const Column(
+                              children: [
+                                Icon(Icons.info_outline_rounded, color: ProColors.textMuted, size: 28),
+                                SizedBox(height: 8),
+                                Text(
+                                  'No Admin Services Available Yet',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Use "+ Request Custom Service" below to suggest a new service for Admin approval.',
+                                  style: TextStyle(color: ProColors.textMuted, fontSize: 12),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ],
+                            ),
+                          )
                         else ...[
                           ..._catalogServices.asMap().entries.map((entry) {
                             final s = entry.value;
