@@ -282,6 +282,50 @@ class ProApiClient {
     }
   }
 
+  static Future<void> toggleOfferedServiceStatus(String serviceId, bool isActive) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/pro/offered-services/toggle'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'serviceId': serviceId,
+            'isActive': isActive,
+          }),
+        ));
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to toggle service status');
+    }
+  }
+
+  static Future<void> deleteOfferedService(String serviceId) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/pro/offered-services/delete'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'serviceId': serviceId,
+          }),
+        ));
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to delete service');
+    }
+  }
+
+  static Future<void> toggleCustomServiceStatus(String requestId, bool isActive) async {
+    final res = await _requestWithFallback((url) => http.post(
+          Uri.parse('$url/api/v1/pro/custom-services/toggle'),
+          headers: _authHeaders,
+          body: jsonEncode({
+            'requestId': requestId,
+            'isActive': isActive,
+          }),
+        ));
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to toggle custom service status');
+    }
+  }
+
   /// Admin Verify / Approve Professional (Used by Super Admin or Demo test action)
   static Future<void> adminVerifyPro(String userId, String status) async {
     final res = await _requestWithFallback((url) => http.post(

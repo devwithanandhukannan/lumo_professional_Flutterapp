@@ -36,10 +36,10 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _health = {
-          'accountHealthScore': 98.5,
-          'ratingAvg': 4.92,
-          'totalJobsCompleted': 142,
-          'acceptanceRate': 95.0,
+          'accountHealthScore': 100.0,
+          'ratingAvg': 5.0,
+          'totalJobsCompleted': 0,
+          'acceptanceRate': 100.0,
           'verificationStatus': ProSessionStorage.verificationStatus,
           'coverageRadiusKm': ProSessionStorage.coverageRadiusKm,
         });
@@ -50,7 +50,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
       final jobs = await ProApiClient.getMyJobs();
       if (mounted) setState(() => _jobs = jobs);
     } catch (_) {
-      if (mounted) setState(() => _jobs = _demoJobs);
+      if (mounted) setState(() => _jobs = []);
     } finally {
       if (mounted) setState(() => _loadingJobs = false);
     }
@@ -145,23 +145,38 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () => showModalBottomSheet(
           context: context,
-          backgroundColor: ProColors.cardBg,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-          builder: (ctx) => const Padding(
-            padding: EdgeInsets.all(24),
-            child: Column(
+          backgroundColor: const Color(0xFF0F172A),
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+          builder: (ctx) => Container(
+            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
+            child: const Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                ProSosWidget(),
+                Text(
+                  'EMERGENCY ASSISTANCE HUB',
+                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Tap the emergency button below to alert LUMO Safety Command Center',
+                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 30),
+                ProSosWidget(isFullScreenModal: true),
+                SizedBox(height: 20),
               ],
             ),
           ),
         ),
-        backgroundColor: ProColors.emergencyRed,
-        child: const Icon(Icons.sos, color: Colors.white, size: 28),
+        backgroundColor: const Color(0xFFDC2626),
+        icon: const Icon(Icons.shield_outlined, color: Colors.white),
+        label: const Text('EMERGENCY SOS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.white)),
       ),
       body: RefreshIndicator(
         onRefresh: _loadData,
@@ -237,30 +252,43 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(color: ProColors.border),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    const _QuickSummaryItem(
-                      label: "TODAY'S EARNINGS",
-                      value: '₹2,100.00',
-                      icon: Icons.account_balance_wallet,
-                      color: ProColors.primary,
-                    ),
-                    Container(width: 1, height: 36, color: ProColors.border),
-                    _QuickSummaryItem(
-                      label: 'ACCOUNT HEALTH',
-                      value: '${(_health?['accountHealthScore'] as num?)?.toInt() ?? 98} / 100',
-                      icon: Icons.shield_rounded,
-                      color: ProColors.accent,
-                    ),
-                    Container(width: 1, height: 36, color: ProColors.border),
-                    _QuickSummaryItem(
-                      label: 'AVG RATING',
-                      value: '⭐ ${_health?['ratingAvg'] ?? 4.92}',
-                      icon: Icons.star_rounded,
-                      color: ProColors.warningAmber,
-                    ),
-                  ],
+                child: Builder(
+                  builder: (context) {
+                    double todayTotal = 0.0;
+                    for (final j in _jobs) {
+                      if (j['status'] == 'COMPLETED') {
+                        todayTotal += (double.tryParse(j['total_amount']?.toString() ?? '0') ?? 0.0);
+                      }
+                    }
+                    final healthScore = (_health?['accountHealthScore'] as num?)?.toInt() ?? (_health?['account_health_score'] as num?)?.toInt() ?? 100;
+                    final ratingAvg = _health?['ratingAvg'] ?? _health?['rating_avg'] ?? '5.0';
+
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _QuickSummaryItem(
+                          label: "TODAY'S EARNINGS",
+                          value: '₹${todayTotal.toStringAsFixed(2)}',
+                          icon: Icons.account_balance_wallet,
+                          color: ProColors.primary,
+                        ),
+                        Container(width: 1, height: 36, color: ProColors.border),
+                        _QuickSummaryItem(
+                          label: 'ACCOUNT HEALTH',
+                          value: '$healthScore / 100',
+                          icon: Icons.shield_rounded,
+                          color: ProColors.accent,
+                        ),
+                        Container(width: 1, height: 36, color: ProColors.border),
+                        _QuickSummaryItem(
+                          label: 'AVG RATING',
+                          value: '⭐ $ratingAvg',
+                          color: ProColors.warningAmber,
+                          icon: Icons.star_rounded,
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
 
@@ -451,30 +479,3 @@ class _JobCard extends StatelessWidget {
     );
   }
 }
-
-final List<Map<String, dynamic>> _demoJobs = [
-  {
-    'id': 'bk-9901',
-    'status': 'REQUESTED',
-    'service_name': 'Home Deep Cleaning',
-    'customer_name': 'Ananya Sharma',
-    'customer_phone': '+919812345678',
-    'customer_address': 'Flat 402, Lotus Apartments, Indiranagar, Bangalore',
-    'scheduled_at': 'Today, 03:00 PM',
-    'total_amount': '1250.00',
-    'otp_start': '4821',
-    'otp_end': '9940',
-  },
-  {
-    'id': 'bk-9902',
-    'status': 'NAVIGATING',
-    'service_name': 'Switch & Socket Repair',
-    'customer_name': 'Rahul Verma',
-    'customer_phone': '+919876501234',
-    'customer_address': '7th Cross, Koramangala 4th Block, Bangalore',
-    'scheduled_at': 'Today, 04:30 PM',
-    'total_amount': '499.00',
-    'otp_start': '1092',
-    'otp_end': '5512',
-  },
-];

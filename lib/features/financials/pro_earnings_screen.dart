@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
 
+import '../../core/network/pro_api_client.dart';
+
 class ProEarningsScreen extends StatefulWidget {
   const ProEarningsScreen({super.key});
 
@@ -9,52 +11,76 @@ class ProEarningsScreen extends StatefulWidget {
 }
 
 class _ProEarningsScreenState extends State<ProEarningsScreen> {
-  double _walletBalance = 4850.00;
+  double _walletBalance = 0.00;
+  double _todayEarnings = 0.00;
+  int _todayJobsCount = 0;
+  double _thisWeekEarnings = 0.00;
+  int _thisWeekJobsCount = 0;
+  bool _loading = true;
 
-  final List<Map<String, dynamic>> _weeklyData = [
-    {'day': 'Mon', 'amount': 1200},
-    {'day': 'Tue', 'amount': 1850},
-    {'day': 'Wed', 'amount': 950},
-    {'day': 'Thu', 'amount': 2100},
-    {'day': 'Fri', 'amount': 2400},
-    {'day': 'Sat', 'amount': 3100},
-    {'day': 'Sun', 'amount': 1600},
+  final List<Map<String, dynamic>> _weeklyData = const [
+    {'day': 'Mon', 'amount': 0},
+    {'day': 'Tue', 'amount': 0},
+    {'day': 'Wed', 'amount': 0},
+    {'day': 'Thu', 'amount': 0},
+    {'day': 'Fri', 'amount': 0},
+    {'day': 'Sat', 'amount': 0},
+    {'day': 'Sun', 'amount': 0},
   ];
 
-  final List<Map<String, dynamic>> _transactions = [
-    {
-      'id': 'tx-901',
-      'title': 'Job Completion #BK-8821',
-      'service': 'Home Deep Cleaning',
-      'amount': '+ ₹1,250.00',
-      'date': 'Today, 02:45 PM',
-      'isCredit': true,
-    },
-    {
-      'id': 'tx-902',
-      'title': 'Job Completion #BK-8804',
-      'service': 'Kitchen Cleaning & Sanitization',
-      'amount': '+ ₹850.00',
-      'date': 'Today, 11:15 AM',
-      'isCredit': true,
-    },
-    {
-      'id': 'tx-903',
-      'title': 'Instant Wallet Payout',
-      'service': 'Bank Transfer to UPI ****4810',
-      'amount': '- ₹3,000.00',
-      'date': 'Yesterday, 06:30 PM',
-      'isCredit': false,
-    },
-    {
-      'id': 'tx-904',
-      'title': 'Job Completion #BK-8762',
-      'service': 'Electrical Socket Repair',
-      'amount': '+ ₹499.00',
-      'date': '22 Jul, 04:10 PM',
-      'isCredit': true,
-    },
-  ];
+  List<Map<String, dynamic>> _transactions = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadEarnings();
+  }
+
+  Future<void> _loadEarnings() async {
+    try {
+      final jobs = await ProApiClient.getMyJobs();
+      double totalWallet = 0.0;
+      double todayTotal = 0.0;
+      int todayCount = 0;
+      double weekTotal = 0.0;
+      int weekCount = 0;
+      final txs = <Map<String, dynamic>>[];
+
+      for (final j in jobs) {
+        if (j['status'] == 'COMPLETED') {
+          final amt = (double.tryParse(j['total_amount']?.toString() ?? '0') ?? 0.0);
+          totalWallet += amt;
+          todayTotal += amt;
+          todayCount++;
+          weekTotal += amt;
+          weekCount++;
+
+          txs.add({
+            'id': j['id'] ?? 'tx-${DateTime.now().millisecondsSinceEpoch}',
+            'title': 'Job Completion #${j['id'] ?? 'BK'}',
+            'service': j['service_name'] ?? 'Service Job',
+            'amount': '+ ₹${amt.toStringAsFixed(2)}',
+            'date': 'Completed',
+            'isCredit': true,
+          });
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _walletBalance = totalWallet;
+          _todayEarnings = todayTotal;
+          _todayJobsCount = todayCount;
+          _thisWeekEarnings = weekTotal;
+          _thisWeekJobsCount = weekCount;
+          _transactions = txs;
+          _loading = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   void _showWithdrawalModal() {
     final amountCtrl = TextEditingController(text: '2000');
@@ -168,8 +194,10 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
           ),
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      body: _loading
+          ? const Center(child: CircularProgressIndicator(color: ProColors.primary))
+          : SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -235,8 +263,8 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                 Expanded(
                   child: _StatCard(
                     title: "TODAY'S EARNINGS",
-                    value: '₹2,100.00',
-                    subtitle: '3 Jobs Completed',
+                    value: '₹${_todayEarnings.toStringAsFixed(2)}',
+                    subtitle: '$_todayJobsCount Jobs Completed',
                     icon: Icons.today,
                     accentColor: ProColors.primary,
                   ),
@@ -245,8 +273,8 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                 Expanded(
                   child: _StatCard(
                     title: 'THIS WEEK',
-                    value: '₹13,250.00',
-                    subtitle: '18 Jobs Completed',
+                    value: '₹${_thisWeekEarnings.toStringAsFixed(2)}',
+                    subtitle: '$_thisWeekJobsCount Jobs Completed',
                     icon: Icons.date_range,
                     accentColor: ProColors.accent,
                   ),
@@ -271,7 +299,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('WEEKLY EARNINGS TREND', style: ProText.label),
-                      Text('Avg: ₹1,892 / day', style: ProText.caption.copyWith(color: ProColors.primary)),
+                      Text('Avg: ₹${(_thisWeekEarnings / 7).toStringAsFixed(0)} / day', style: ProText.caption.copyWith(color: ProColors.primary)),
                     ],
                   ),
                   const SizedBox(height: 20),
@@ -320,14 +348,33 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
             const Text('RECENT PAYOUT LEDGER', style: ProText.label),
             const SizedBox(height: 12),
 
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _transactions.length,
-              separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
-              itemBuilder: (context, index) {
-                final tx = _transactions[index];
-                final bool isCredit = tx['isCredit'] as bool;
+            if (_transactions.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: ProColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: ProColors.border),
+                ),
+                child: const Column(
+                  children: [
+                    Icon(Icons.account_balance_wallet_outlined, size: 36, color: ProColors.textMuted),
+                    SizedBox(height: 12),
+                    Text('No Payout Transactions Yet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    SizedBox(height: 4),
+                    Text('Completed customer jobs and wallet payouts will appear here in real time.', textAlign: TextAlign.center, style: ProText.caption),
+                  ],
+                ),
+              )
+            else
+              ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: _transactions.length,
+                separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
+                itemBuilder: (context, index) {
+                  final tx = _transactions[index];
+                  final bool isCredit = tx['isCredit'] as bool;
 
                 return Container(
                   padding: const EdgeInsets.all(16),

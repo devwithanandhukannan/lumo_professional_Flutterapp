@@ -25,7 +25,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
     setState(() => _loading = true);
     try {
       final profileRes = await ProApiClient.getProfile();
-      final services = profileRes['data']?['offeredServices'] ?? profileRes['data']?['services'] ?? [];
+      final services = profileRes['offeredServices'] ?? profileRes['services'] ?? profileRes['data']?['offeredServices'] ?? profileRes['data']?['services'] ?? [];
       final requests = await ProApiClient.getMyCustomServiceRequests();
 
       if (mounted) {
@@ -67,6 +67,102 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
       }
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _toggleServiceActive(Map<String, dynamic> srv, bool newActive) async {
+    final srvId = srv['service_id']?.toString() ?? srv['id']?.toString() ?? '';
+    if (srvId.isEmpty) return;
+    try {
+      await ProApiClient.toggleOfferedServiceStatus(srvId, newActive);
+      setState(() {
+        srv['is_active'] = newActive;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newActive ? 'Service enabled ✓' : 'Service toggled OFF ✓'),
+            backgroundColor: newActive ? ProColors.primary : ProColors.warningAmber,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: ProColors.emergencyRed),
+        );
+      }
+    }
+  }
+
+  Future<void> _deleteService(Map<String, dynamic> srv) async {
+    final srvId = srv['service_id']?.toString() ?? srv['id']?.toString() ?? '';
+    final srvName = srv['service_name']?.toString() ?? 'Service';
+    if (srvId.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ProColors.cardBg,
+        title: const Text('Delete Offered Service', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: Text('Are you sure you want to remove "$srvName" from your offered services?', style: const TextStyle(color: ProColors.textMuted, fontSize: 13)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('CANCEL', style: TextStyle(color: ProColors.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: ProColors.emergencyRed),
+            child: const Text('DELETE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      await ProApiClient.deleteOfferedService(srvId);
+      if (mounted) {
+        setState(() {
+          _offeredServices.removeWhere((item) => (item['service_id']?.toString() ?? item['id']?.toString()) == srvId);
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Service deleted successfully! ✓'), backgroundColor: ProColors.primary),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to delete: $e'), backgroundColor: ProColors.emergencyRed),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleCustomServiceActive(Map<String, dynamic> req, bool newActive) async {
+    final reqId = req['id']?.toString() ?? '';
+    if (reqId.isEmpty) return;
+    try {
+      await ProApiClient.toggleCustomServiceStatus(reqId, newActive);
+      setState(() {
+        req['is_active'] = newActive;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(newActive ? 'Custom service activated ✓' : 'Custom service deactivated (hidden from customers) ✓'),
+            backgroundColor: newActive ? ProColors.primary : ProColors.warningAmber,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed: $e'), backgroundColor: ProColors.emergencyRed),
+        );
+      }
     }
   }
 
@@ -343,7 +439,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
       backgroundColor: ProColors.background,
       appBar: AppBar(
         backgroundColor: ProColors.surface,
-        title: const Text('Offered Services & Custom Rates'),
+        title: const Text('My Services & Rates'),
         elevation: 0,
       ),
       body: _loading
@@ -353,7 +449,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Row buttons: Reselect Admin Services & Create Custom
+                  // Row buttons: Select Admin Services & Create Custom
                   Row(
                     children: [
                       Expanded(
@@ -362,12 +458,14 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => ProServiceSetupScreen(onCompleted: () {
-                                  Navigator.pop(context);
-                                  _loadData();
-                                }),
+                                builder: (_) => ProServiceSetupScreen(
+                                  isStandaloneManagement: true,
+                                  onCompleted: () {
+                                    _loadData();
+                                  },
+                                ),
                               ),
-                            );
+                            ).then((_) => _loadData());
                           },
                           style: OutlinedButton.styleFrom(
                             foregroundColor: ProColors.primary,
@@ -376,7 +474,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           icon: const Icon(Icons.playlist_add_rounded, size: 18),
-                          label: const Text('ADMIN SERVICES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          label: const Text('+ ADMIN SERVICES', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -390,7 +488,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           ),
                           icon: const Icon(Icons.add_circle_outline_rounded, size: 18),
-                          label: const Text('CREATE CUSTOM', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                          label: const Text('+ CUSTOM SERVICE', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
                         ),
                       ),
                     ],
@@ -399,7 +497,14 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                   const SizedBox(height: 24),
 
                   // Standard Active Offered Services & Instant Price Edit
-                  const Text('ACTIVE OFFERED SERVICES & INSTANT RATE EDIT', style: ProText.label),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('MY OFFERED SERVICES', style: ProText.label),
+                      if (_offeredServices.isNotEmpty)
+                        Text('${_offeredServices.length} total', style: const TextStyle(color: ProColors.textMuted, fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
                   const SizedBox(height: 10),
 
                   if (_offeredServices.isEmpty)
@@ -407,7 +512,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(color: ProColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.border)),
                       child: const Center(
-                        child: Text('No active services configured.\nTap "ADMIN SERVICES" above to select services.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                        child: Text('No services configured yet.\nTap "+ ADMIN SERVICES" above to select services.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
                       ),
                     )
                   else
@@ -417,48 +522,96 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                       itemCount: _offeredServices.length,
                       itemBuilder: (ctx, idx) {
                         final srv = _offeredServices[idx];
+                        final isActive = srv['is_active'] != false;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: ProColors.cardBg,
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: ProColors.border),
+                            border: Border.all(color: isActive ? ProColors.border : ProColors.border.withAlpha(50)),
                           ),
-                          child: Row(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(14)),
-                                child: const Icon(Icons.handyman_rounded, color: ProColors.primary, size: 22),
-                              ),
-                              const SizedBox(width: 14),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(srv['service_name'] ?? 'Service Name', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                                    const SizedBox(height: 2),
-                                    Text('Base Rate: ₹${srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.textMuted, fontSize: 11)),
-                                  ],
-                                ),
-                              ),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
+                              Row(
                                 children: [
-                                  Text('₹${srv['custom_price'] ?? srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.w900, fontSize: 16)),
-                                  const SizedBox(height: 4),
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: isActive ? ProColors.primarySoft : ProColors.surface,
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                    child: Icon(Icons.handyman_rounded, color: isActive ? ProColors.primary : ProColors.textMuted, size: 22),
+                                  ),
+                                  const SizedBox(width: 14),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(srv['service_name'] ?? 'Service Name', style: TextStyle(color: isActive ? Colors.white : ProColors.textMuted, fontWeight: FontWeight.bold, fontSize: 14)),
+                                            ),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: (isActive ? ProColors.primary : ProColors.textMuted).withAlpha(30),
+                                                borderRadius: BorderRadius.circular(6),
+                                              ),
+                                              child: Text(
+                                                isActive ? 'ACTIVE' : 'DEACTIVATED',
+                                                style: TextStyle(
+                                                  color: isActive ? ProColors.primary : ProColors.textMuted,
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Text('Base Rate: ₹${srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Switch(
+                                    value: isActive,
+                                    activeColor: ProColors.primary,
+                                    onChanged: (val) => _toggleServiceActive(srv, val),
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline_rounded, color: ProColors.emergencyRed, size: 20),
+                                    tooltip: 'Delete service',
+                                    onPressed: () => _deleteService(srv),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              const Divider(color: ProColors.border, height: 1),
+                              const SizedBox(height: 8),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Text('Your Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                                      Text('₹${srv['custom_price'] ?? srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.w900, fontSize: 15)),
+                                    ],
+                                  ),
                                   InkWell(
                                     onTap: () => _openInstantPriceEditModal(srv),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                                       decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(8)),
                                       child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          Icon(Icons.edit, color: ProColors.primary, size: 10),
+                                          Icon(Icons.edit, color: ProColors.primary, size: 12),
                                           SizedBox(width: 4),
-                                          Text('Edit Rate', style: TextStyle(color: ProColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
+                                          Text('Edit Rate', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ),
@@ -474,7 +627,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                   const SizedBox(height: 24),
 
                   // Submitted Custom Service Requests & Admin Status
-                  const Text('MY CUSTOM SERVICE REQUESTS & ADMIN APPROVALS', style: ProText.label),
+                  const Text('MY CUSTOM REQUESTS', style: ProText.label),
                   const SizedBox(height: 10),
 
                   if (_customRequests.isEmpty)
@@ -482,7 +635,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(color: ProColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.border)),
                       child: const Center(
-                        child: Text('No custom service requests submitted yet.\nTap "CREATE CUSTOM" to request a new service.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                        child: Text('No custom service requests submitted yet.\nTap "+ CUSTOM SERVICE" to request a new service.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
                       ),
                     )
                   else
@@ -497,15 +650,16 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                         final isRejectedReq = reqStatus == 'REJECTED';
 
                         Color badgeColor = ProColors.warningAmber;
-                        String badgeText = 'PENDING ADMIN APPROVAL';
+                        String badgeText = 'PENDING APPROVAL';
                         if (isApprovedReq) {
                           badgeColor = ProColors.primary;
-                          badgeText = 'APPROVED · LISTED TO CUSTOMERS';
+                          badgeText = 'APPROVED';
                         } else if (isRejectedReq) {
                           badgeColor = ProColors.emergencyRed;
-                          badgeText = 'REJECTED BY ADMIN';
+                          badgeText = 'REJECTED';
                         }
 
+                        final isReqActive = req['is_active'] != false;
                         return Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
@@ -520,25 +674,58 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                               Row(
                                 children: [
                                   Expanded(
-                                    child: Text(req['service_name'] ?? 'Custom Service', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(req['service_name'] ?? 'Custom Service', style: TextStyle(color: isReqActive ? Colors.white : ProColors.textMuted, fontWeight: FontWeight.bold, fontSize: 15)),
+                                        const SizedBox(height: 4),
+                                        Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(color: badgeColor.withAlpha(30), borderRadius: BorderRadius.circular(8), border: Border.all(color: badgeColor.withAlpha(120))),
+                                              child: Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 9, fontWeight: FontWeight.w900)),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Container(
+                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                              decoration: BoxDecoration(
+                                                color: (isReqActive ? ProColors.primary : ProColors.textMuted).withAlpha(30),
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                isReqActive ? 'ACTIVE' : 'DEACTIVATED',
+                                                style: TextStyle(
+                                                  color: isReqActive ? ProColors.primary : ProColors.textMuted,
+                                                  fontSize: 9,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                    decoration: BoxDecoration(color: badgeColor.withAlpha(30), borderRadius: BorderRadius.circular(10), border: Border.all(color: badgeColor.withAlpha(120))),
-                                    child: Text(badgeText, style: TextStyle(color: badgeColor, fontSize: 10, fontWeight: FontWeight.w900)),
+                                  Switch(
+                                    value: isReqActive,
+                                    activeColor: ProColors.primary,
+                                    onChanged: (val) => _toggleCustomServiceActive(req, val),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 10),
+                              const Divider(color: ProColors.border, height: 1),
+                              const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Text('Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
-                                  Text('₹${req['suggested_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.bold, fontSize: 13)),
+                                  const Text('Proposed Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                                  Text('₹${req['suggested_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.bold, fontSize: 14)),
                                   const Spacer(),
                                   TextButton.icon(
                                     onPressed: () => _openCustomServiceModal(req),
                                     icon: const Icon(Icons.edit_note, size: 14, color: ProColors.primary),
-                                    label: const Text('Edit Details (Admin Review)', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                                    label: const Text('Edit Details', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
                                   ),
                                 ],
                               ),

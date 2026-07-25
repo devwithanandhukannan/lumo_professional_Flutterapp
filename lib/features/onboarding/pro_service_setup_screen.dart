@@ -6,7 +6,12 @@ import 'pro_document_upload_screen.dart';
 
 class ProServiceSetupScreen extends StatefulWidget {
   final VoidCallback onCompleted;
-  const ProServiceSetupScreen({super.key, required this.onCompleted});
+  final bool isStandaloneManagement;
+  const ProServiceSetupScreen({
+    super.key,
+    required this.onCompleted,
+    this.isStandaloneManagement = false,
+  });
 
   @override
   State<ProServiceSetupScreen> createState() => _ProServiceSetupScreenState();
@@ -74,6 +79,23 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
       _initServices(_fallbackServices);
     }
     try {
+      final profileRes = await ProApiClient.getProfile();
+      final offered = (profileRes['offeredServices'] as List?) ?? (profileRes['data']?['offeredServices'] as List?) ?? [];
+      if (mounted) {
+        setState(() {
+          for (final o in offered) {
+            final sId = o['service_id']?.toString() ?? o['id']?.toString();
+            if (sId != null && o['is_active'] != false) {
+              _selected[sId] = true;
+              if (o['custom_price'] != null && _priceControllers.containsKey(sId)) {
+                _priceControllers[sId]?.text = o['custom_price'].toString();
+              }
+            }
+          }
+        });
+      }
+    } catch (_) {}
+    try {
       final reqs = await ProApiClient.getMyServiceRequests();
       if (mounted) setState(() => _myServiceRequests = reqs.map((r) => Map<String, dynamic>.from(r)).toList());
     } catch (_) {}
@@ -130,6 +152,16 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
       }
     }
 
+    for (final req in _myServiceRequests) {
+      final id = req['id']?.toString() ?? '';
+      if (id.isNotEmpty && _selected[id] == true) {
+        final price = double.tryParse(req['suggested_price']?.toString() ?? '0') ?? 0;
+        if (!selectedItems.any((item) => item['serviceId'] == id)) {
+          selectedItems.add({'serviceId': id, 'customPrice': price});
+        }
+      }
+    }
+
     if (selectedItems.isEmpty) {
       setState(() => _error = 'Select at least one service you offer');
       return;
@@ -138,13 +170,24 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
     setState(() { _isSaving = true; _error = null; });
     try {
       await ProApiClient.saveOfferedServices(selectedItems);
-    } catch (_) {
-      // proceed offline
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        _showSnack('Failed to save services: ${e.toString().replaceAll('Exception: ', '')}', isError: true);
+        return;
+      }
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
 
     if (mounted) {
+      if (widget.isStandaloneManagement) {
+        _showSnack('Offered services updated successfully! ✓');
+        widget.onCompleted();
+        Navigator.pop(context);
+        return;
+      }
+
       Navigator.push(
         context,
         MaterialPageRoute(builder: (_) => ProDocumentUploadScreen(onCompleted: widget.onCompleted)),
@@ -182,24 +225,30 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
                   // App bar
                   SliverAppBar(
                     backgroundColor: Colors.transparent,
-                    leading: BackButton(color: ProColors.textMuted),
-                    title: const Text('Service Configuration'),
-                    automaticallyImplyLeading: false,
+                    leading: const BackButton(color: ProColors.textMuted),
+                    title: Text(widget.isStandaloneManagement ? 'Select Admin Services' : 'Service Configuration'),
+                    automaticallyImplyLeading: widget.isStandaloneManagement,
                   ),
 
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        // Step indicator
-                        _buildStepBar(2),
-                        const SizedBox(height: 20),
-
-                        const Text('STEP 3 OF 4', style: ProText.label),
-                        const SizedBox(height: 6),
+                        if (!widget.isStandaloneManagement) ...[
+                          // Step indicator
+                          _buildStepBar(2),
+                          const SizedBox(height: 20),
+                          const Text('STEP 3 OF 4', style: ProText.label),
+                          const SizedBox(height: 6),
+                        ],
                         const Text('Your Services & Rates', style: ProText.heading1),
                         const SizedBox(height: 6),
-                        const Text('Select services you offer. Set your custom rates (base price shown for reference, commission is handled by admin).', style: ProText.body),
+                        Text(
+                          widget.isStandaloneManagement
+                              ? 'Toggle ON the admin services you offer and customize your pricing rates.'
+                              : 'Select services you offer. Set your custom rates (base price shown for reference, commission is handled by admin).',
+                          style: ProText.body,
+                        ),
                         const SizedBox(height: 20),
 
                         if (_error != null) _errorBanner(_error!),
@@ -309,10 +358,10 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen>
                         const SizedBox(height: 24),
 
                         GradientButton(
-                          label: 'NEXT: UPLOAD DOCUMENTS',
+                          label: widget.isStandaloneManagement ? 'SAVE OFFERED SERVICES' : 'NEXT: UPLOAD DOCUMENTS',
                           onTap: _saveAndProceed,
                           isLoading: _isSaving,
-                          icon: Icons.arrow_forward_rounded,
+                          icon: widget.isStandaloneManagement ? Icons.check_circle_rounded : Icons.arrow_forward_rounded,
                         ),
                         const SizedBox(height: 40),
                       ]),
