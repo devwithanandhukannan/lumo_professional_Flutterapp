@@ -71,8 +71,11 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
     super.dispose();
   }
 
+  double? _selectedLat;
+  double? _selectedLng;
+
   Future<void> _openGoogleMapPicker() async {
-    final selectedCity = await showModalBottomSheet<String>(
+    final result = await showModalBottomSheet<dynamic>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
@@ -81,10 +84,18 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
       ),
     );
 
-    if (selectedCity != null && selectedCity.isNotEmpty) {
-      setState(() {
-        _serviceAreaCtrl.text = selectedCity;
-      });
+    if (result != null) {
+      if (result is Map) {
+        setState(() {
+          _serviceAreaCtrl.text = (result['cityName'] ?? result['address'] ?? 'Kochi').toString();
+          if (result['latitude'] != null) _selectedLat = (result['latitude'] as num).toDouble();
+          if (result['longitude'] != null) _selectedLng = (result['longitude'] as num).toDouble();
+        });
+      } else if (result is String && result.isNotEmpty) {
+        setState(() {
+          _serviceAreaCtrl.text = result;
+        });
+      }
     }
   }
 
@@ -119,13 +130,15 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
         email: email,
         gender: _selectedGender,
         serviceArea: area.isEmpty ? 'Kochi' : area,
+        latitude: _selectedLat,
+        longitude: _selectedLng,
       );
 
       final data = res['data'] ?? res;
       final user = data['user'] ?? {};
 
       await ProSessionStorage.setSession(
-        token: ProSessionStorage.authToken ?? 'mock-token',
+        token: ProSessionStorage.authToken ?? '',
         phone: phone,
         email: email.isEmpty ? null : email,
         name: name,
@@ -136,19 +149,14 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
         serviceArea: area.isEmpty ? 'Kochi' : area,
         isOnboardingComplete: false,
       );
-    } catch (_) {
-      // Local fallback save so onboarding user is not blocked
-      await ProSessionStorage.setSession(
-        token: ProSessionStorage.authToken ?? 'mock-token',
-        phone: phone,
-        email: email.isEmpty ? null : email,
-        name: name,
-        gender: _selectedGender,
-        verificationStatus: 'PENDING',
-        age: age,
-        serviceArea: area.isEmpty ? 'Kochi' : area,
-        isOnboardingComplete: false,
-      );
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString().replaceAll('Exception: ', '');
+          _isLoading = false;
+        });
+      }
+      return;
     }
 
     if (mounted) {
@@ -177,7 +185,17 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                 slivers: [
                   SliverAppBar(
                     backgroundColor: Colors.transparent,
-                    leading: const BackButton(color: ProColors.textMuted),
+                    leading: IconButton(
+                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      onPressed: () async {
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          await ProSessionStorage.clearSession();
+                          widget.onCompleted();
+                        }
+                      },
+                    ),
                     title: const Text('Basic Profile Details'),
                   ),
                   SliverPadding(

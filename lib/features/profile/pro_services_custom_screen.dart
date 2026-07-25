@@ -34,35 +34,11 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
           _customRequests = requests;
         });
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() {
-          _offeredServices = [
-            {
-              'service_id': 'srv-1',
-              'service_name': 'Home Deep Cleaning & Sanitation',
-              'category_name': 'Cleaning Services',
-              'base_price': 499.00,
-              'custom_price': 599.00,
-            },
-            {
-              'service_id': 'srv-2',
-              'service_name': 'AC Servicing & Filter Replacement',
-              'category_name': 'Appliance Repair',
-              'base_price': 349.00,
-              'custom_price': 399.00,
-            },
-          ];
-          _customRequests = [
-            {
-              'id': 'svc-req-demo',
-              'service_name': 'Full Villa Water Tank High Pressure Washing',
-              'description': 'Deep high pressure cleaning for multi-story water tanks.',
-              'suggested_price': 1299.00,
-              'status': 'PENDING_ADMIN_APPROVAL',
-              'created_at': DateTime.now().toIso8601String(),
-            }
-          ];
+          _offeredServices = [];
+          _customRequests = [];
         });
       }
     } finally {

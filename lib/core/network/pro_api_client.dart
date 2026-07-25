@@ -41,6 +41,16 @@ class ProApiClient {
     for (final candidate in candidateUrls) {
       try {
         final response = await requestFn(candidate).timeout(const Duration(seconds: 3));
+        final bodyStr = response.body.trim();
+        final isHtml = bodyStr.startsWith('<!DOCTYPE') ||
+            bodyStr.startsWith('<html') ||
+            (response.headers['content-type']?.contains('text/html') ?? false);
+
+        if (isHtml) {
+          lastError = Exception('Received HTML response from $candidate');
+          continue;
+        }
+
         baseUrl = candidate; // Retain active working gateway URL
         return response;
       } catch (e) {
@@ -109,11 +119,15 @@ class ProApiClient {
   }
 
   /// Send Phone OTP Code
-  static Future<Map<String, dynamic>> sendOtp(String phoneNumber) async {
+  static Future<Map<String, dynamic>> sendOtp(String phoneNumber, {bool isSignInMode = false}) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/otp/send'),
           headers: _publicHeaders,
-          body: jsonEncode({'phoneNumber': phoneNumber}),
+          body: jsonEncode({
+            'phoneNumber': phoneNumber,
+            'checkRegistered': isSignInMode,
+            'isSignInMode': isSignInMode,
+          }),
         ));
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
@@ -126,6 +140,7 @@ class ProApiClient {
     required String otp,
     String fullName = 'Professional',
     String gender = 'OTHER',
+    bool isSignInMode = false,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/auth/otp/verify'),
@@ -136,6 +151,7 @@ class ProApiClient {
             'role': 'PROFESSIONAL',
             'fullName': fullName,
             'gender': gender,
+            'isSignInMode': isSignInMode,
           }),
         ));
     final body = jsonDecode(res.body);
@@ -156,7 +172,7 @@ class ProApiClient {
     double? longitude,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/auth/register-phone'),
+          Uri.parse('$url/api/v1/auth/pro/register-phone'),
           headers: _publicHeaders,
           body: jsonEncode({
             'fullName': fullName,
@@ -443,12 +459,13 @@ class ProApiClient {
     required String docType,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/media/upload'),
+          Uri.parse('$url/api/v1/pro/upload-doc'),
           headers: _authHeaders,
           body: jsonEncode({
             'fileName': fileName,
             'fileData': fileData,
             'docType': docType,
+            if (ProSessionStorage.userId != null) 'userId': ProSessionStorage.userId,
           }),
         ));
     final body = jsonDecode(res.body);
@@ -477,8 +494,8 @@ class ProApiClient {
           }),
         ));
     final body = jsonDecode(res.body);
-    if (res.statusCode == 200 || res.statusCode == 201) return body['data'] ?? body;
-    throw Exception(body['message'] ?? 'Failed to submit service request');
+    if (res.statusCode == 200 || res.statusCode == 201) return (body['data'] as Map<String, dynamic>?) ?? Map<String, dynamic>.from(body);
+    throw Exception(body['message'] ?? body['error']?['message'] ?? 'Failed to submit service request');
   }
 
   static Future<List<dynamic>> getMyCustomServiceRequests() async {

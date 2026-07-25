@@ -93,7 +93,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     setState(() { _isSendingOtp = true; _error = null; });
     try {
       final phone = _normalizedPhone;
-      final res = await ProApiClient.sendOtp(phone);
+      final res = await ProApiClient.sendOtp(phone, isSignInMode: !_isRegisterMode);
       setState(() {
         _otpSent = true;
         final debugOtp = res['debugOtp']?.toString();
@@ -120,10 +120,25 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       final res = await ProApiClient.verifyOtp(
         phoneNumber: phone,
         otp: code,
+        isSignInMode: !_isRegisterMode,
       );
       final data = res['data'] ?? res;
       final token = data['tokens']?['accessToken'] ?? data['accessToken'] ?? '';
       final user = data['user'] ?? {};
+      final pro = data['profile'] ?? {};
+      final isRegistered = data['isRegistered'] == true;
+
+      final bool hasFullName = user['fullName'] != null &&
+          user['fullName'].toString().trim().isNotEmpty &&
+          user['fullName'] != 'New User' &&
+          user['fullName'] != 'Professional';
+
+      final bool hasLocation = (user['serviceArea'] != null && user['serviceArea'].toString().trim().isNotEmpty) ||
+          (pro['service_area'] != null && pro['service_area'].toString().trim().isNotEmpty);
+
+      final bool hasSelfie = pro['face_verification_url'] != null && pro['face_verification_url'].toString().trim().isNotEmpty;
+
+      final bool isFullyRegistered = isRegistered && hasFullName && hasLocation && hasSelfie;
 
       await ProSessionStorage.setSession(
         token: token,
@@ -133,7 +148,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         gender: user['gender']?.toString() ?? 'OTHER',
         userId: user['id']?.toString(),
         verificationStatus: data['verificationStatus']?.toString() ?? 'PENDING',
-        isOnboardingComplete: !_isRegisterMode,
+        isOnboardingComplete: isFullyRegistered,
       );
 
       if (mounted) widget.onLoginSuccess();

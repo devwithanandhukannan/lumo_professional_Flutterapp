@@ -448,7 +448,12 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                   label: 'CONFIRM SERVICE LOCATION',
                   icon: Icons.check_circle_rounded,
                   onTap: () {
-                    Navigator.pop(context, _cityName);
+                    Navigator.pop(context, {
+                      'cityName': _cityName,
+                      'address': _selectedAddress,
+                      'latitude': _currentCameraPos.latitude,
+                      'longitude': _currentCameraPos.longitude,
+                    });
                   },
                 ),
               ],

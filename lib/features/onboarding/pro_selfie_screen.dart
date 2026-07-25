@@ -5,7 +5,6 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
-import '../auth/pro_pending_screen.dart';
 
 class ProSelfieScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -182,28 +181,17 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
       await ProApiClient.submitDocuments(
         govtIdType: 'DRIVING_LICENSE',
         govtIdNumber: 'UPLOADED',
-        faceSelfieUrl: _selfieUrl ?? 'proff_cert/face_selfie.jpg',
+        faceSelfieUrl: _selfieUrl ?? '/proff_cert/face_selfie.jpg',
       );
-      await ProSessionStorage.setIsOnboardingComplete(true);
-      await ProSessionStorage.updateVerificationStatus('PENDING');
     } catch (_) {
-      await ProSessionStorage.setIsOnboardingComplete(true);
-      await ProSessionStorage.updateVerificationStatus('PENDING');
+      // Non-fatal document network fallback
     }
 
+    await ProSessionStorage.setIsOnboardingComplete(true);
+    await ProSessionStorage.updateVerificationStatus('PENDING');
+
     if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ProPendingScreen(
-            onApproved: widget.onCompleted,
-            onLogout: () {
-              ProSessionStorage.clearSession();
-              Navigator.of(context).popUntil((r) => r.isFirst);
-            },
-          ),
-        ),
-      );
+      widget.onCompleted();
     }
 
     if (mounted) setState(() => _isSubmitting = false);

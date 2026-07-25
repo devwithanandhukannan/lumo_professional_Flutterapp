@@ -3,7 +3,6 @@ import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
 import '../jobs/job_detail_screen.dart';
-import '../safety/pro_sos_widget.dart';
 
 class ProDashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -145,39 +144,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           ),
         ],
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          backgroundColor: const Color(0xFF0F172A),
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
-          builder: (ctx) => Container(
-            padding: const EdgeInsets.symmetric(vertical: 40, horizontal: 24),
-            child: const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'EMERGENCY ASSISTANCE HUB',
-                  style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 1.2),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Tap the emergency button below to alert LUMO Safety Command Center',
-                  style: TextStyle(color: Color(0xFF94A3B8), fontSize: 12),
-                  textAlign: TextAlign.center,
-                ),
-                SizedBox(height: 30),
-                ProSosWidget(isFullScreenModal: true),
-                SizedBox(height: 20),
-              ],
-            ),
-          ),
-        ),
-        backgroundColor: const Color(0xFFDC2626),
-        icon: const Icon(Icons.shield_outlined, color: Colors.white),
-        label: const Text('EMERGENCY SOS', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.2, color: Colors.white)),
-      ),
+      floatingActionButton: null,
       body: RefreshIndicator(
         onRefresh: _loadData,
         color: ProColors.primary,
@@ -187,6 +154,52 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              // PENDING Account Verification Audit Banner
+              if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) != 'APPROVED') ...[
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0x33F59E0B), Color(0x1AF59E0B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0x66F59E0B)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: const Color(0x33F59E0B),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 24),
+                      ),
+                      const SizedBox(width: 14),
+                      const Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'ACCOUNT VERIFICATION UNDER REVIEW',
+                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                            ),
+                            SizedBox(height: 2),
+                            Text(
+                              'Your profile details & documents are under review by Super Admin. You will be notified once approved to receive bookings.',
+                              style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 11, height: 1.3),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
+
               // 1. On-Duty Glowing Toggle Card
               Container(
                 padding: const EdgeInsets.all(18),
