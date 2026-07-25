@@ -467,7 +467,7 @@ class ProApiClient {
     String? categoryId,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
-          Uri.parse('$url/api/v1/pro/service-request'),
+          Uri.parse('$url/api/v1/pro/request-service'),
           headers: _authHeaders,
           body: jsonEncode({
             'serviceName': serviceName,
