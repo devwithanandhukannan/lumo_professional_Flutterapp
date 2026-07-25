@@ -8,7 +8,19 @@ import '../../core/theme/pro_theme.dart';
 
 class ProSelfieScreen extends StatefulWidget {
   final VoidCallback onCompleted;
-  const ProSelfieScreen({super.key, required this.onCompleted});
+  final String? govtIdType;
+  final String? govtIdNumber;
+  final String? govtIdUrl;
+  final String? policeVerificationUrl;
+
+  const ProSelfieScreen({
+    super.key,
+    required this.onCompleted,
+    this.govtIdType,
+    this.govtIdNumber,
+    this.govtIdUrl,
+    this.policeVerificationUrl,
+  });
 
   @override
   State<ProSelfieScreen> createState() => _ProSelfieScreenState();
@@ -179,8 +191,10 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
 
     try {
       await ProApiClient.submitDocuments(
-        govtIdType: 'DRIVING_LICENSE',
-        govtIdNumber: 'UPLOADED',
+        govtIdType: widget.govtIdType ?? 'DRIVING_LICENSE',
+        govtIdNumber: widget.govtIdNumber ?? 'UPLOADED',
+        govtIdUrl: widget.govtIdUrl,
+        policeVerificationUrl: widget.policeVerificationUrl,
         faceSelfieUrl: _selfieUrl ?? '/proff_cert/face_selfie.jpg',
       );
     } catch (_) {

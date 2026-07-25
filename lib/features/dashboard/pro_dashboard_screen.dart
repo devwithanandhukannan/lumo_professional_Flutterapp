@@ -3,6 +3,7 @@ import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
 import '../jobs/job_detail_screen.dart';
+import '../onboarding/pro_document_upload_screen.dart';
 
 class ProDashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -154,8 +155,97 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // PENDING Account Verification Audit Banner
-              if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) != 'APPROVED') ...[
+              // Verification Status Banner (Pending vs Rejected)
+              if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'REJECTED') ...[
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0x33EF4444), Color(0x1AEF4444)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0x88EF4444)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0x33EF4444),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'APPLICATION REJECTED BY ADMIN',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                                ),
+                                Text(
+                                  'Action required to complete verification',
+                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: const Color(0x44000000),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0x33EF4444)),
+                        ),
+                        child: Text(
+                          _health?['rejectionReason'] ?? _health?['verificationNotes'] ?? 'Your documents were not approved by Admin. Please re-upload clear copies of your ID and Police Clearance.',
+                          style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4),
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton.icon(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ProDocumentUploadScreen(
+                                  onCompleted: () {
+                                    Navigator.pop(context);
+                                    _loadData();
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                          icon: const Icon(Icons.refresh_rounded, size: 18),
+                          label: const Text('RE-APPLY & UPLOAD NEW DOCUMENTS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEF4444),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ] else if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) != 'APPROVED') ...[
+                // PENDING Account Verification Audit Banner
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(

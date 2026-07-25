@@ -329,7 +329,13 @@ startxref
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => ProSelfieScreen(onCompleted: widget.onCompleted),
+          builder: (_) => ProSelfieScreen(
+            onCompleted: widget.onCompleted,
+            govtIdType: _selectedIdType,
+            govtIdNumber: idNum,
+            govtIdUrl: _govtIdUrl,
+            policeVerificationUrl: _policeUrl,
+          ),
         ),
       );
     }
