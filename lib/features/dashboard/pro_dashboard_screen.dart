@@ -244,7 +244,14 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const ProDocumentUploadScreen()),
+                              MaterialPageRoute(
+                                builder: (_) => ProDocumentUploadScreen(
+                                  onCompleted: () {
+                                    Navigator.pop(context);
+                                    _loadData();
+                                  },
+                                ),
+                              ),
                             ).then((_) => _loadData());
                           },
                           style: ElevatedButton.styleFrom(
