@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
 import '../dashboard/pro_dashboard_screen.dart';
 import '../financials/pro_earnings_screen.dart';
-import '../profile/pro_profile_screen.dart';
+import '../jobs/pro_instant_requests_screen.dart';
 import '../profile/pro_settings_screen.dart';
 
 class ProMainNavigationScreen extends StatefulWidget {
@@ -20,8 +20,8 @@ class _ProMainNavigationScreenState extends State<ProMainNavigationScreen> {
   Widget build(BuildContext context) {
     final List<Widget> pages = [
       ProDashboardScreen(onLogout: widget.onLogout),
+      const ProInstantRequestsScreen(),
       const ProEarningsScreen(),
-      ProProfileScreen(onLogout: widget.onLogout),
       ProSettingsScreen(onLogout: widget.onLogout),
     ];
 
@@ -52,14 +52,14 @@ class _ProMainNavigationScreenState extends State<ProMainNavigationScreen> {
               label: 'Dashboard',
             ),
             BottomNavigationBarItem(
+              icon: Icon(Icons.bolt_outlined),
+              activeIcon: Icon(Icons.bolt_rounded, color: ProColors.warningAmber),
+              label: 'Instant Requests',
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.account_balance_wallet_outlined),
               activeIcon: Icon(Icons.account_balance_wallet, color: ProColors.primary),
               label: 'Earnings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline_rounded),
-              activeIcon: Icon(Icons.person_rounded, color: ProColors.primary),
-              label: 'Profile',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.settings_outlined),
