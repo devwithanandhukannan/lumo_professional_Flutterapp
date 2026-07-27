@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import '../../core/network/pro_api_client.dart';
 
 
@@ -33,6 +34,36 @@ class _ProSosWidgetState extends State<ProSosWidget>
   void dispose() {
     _pulseCtrl.dispose();
     super.dispose();
+  }
+
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        return await Geolocator.getLastKnownPosition();
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          return await Geolocator.getLastKnownPosition();
+        }
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        return await Geolocator.getLastKnownPosition();
+      }
+
+      return await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 5),
+        ),
+      );
+    } catch (_) {
+      return await Geolocator.getLastKnownPosition();
+    }
   }
 
   void _confirmSos() {
@@ -85,12 +116,24 @@ class _ProSosWidgetState extends State<ProSosWidget>
 
   Future<void> _triggerSos() async {
     setState(() => _isTriggering = true);
+
+    double lat = 12.9716;
+    double lng = 77.5946;
+
+    try {
+      final pos = await _getCurrentLocation();
+      if (pos != null) {
+        lat = pos.latitude;
+        lng = pos.longitude;
+      }
+    } catch (_) {}
+
     try {
       await ProApiClient.triggerSos(
-        latitude: 9.9312,
-        longitude: 76.2673,
+        latitude: lat,
+        longitude: lng,
         bookingId: widget.bookingId,
-        notes: 'Provider Emergency Red Button Pressed',
+        notes: 'Provider Emergency Red Button Pressed (GPS: $lat, $lng)',
       );
     } catch (_) {}
 

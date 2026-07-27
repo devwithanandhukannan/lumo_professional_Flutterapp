@@ -196,15 +196,19 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: ProColors.primary))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Wallet Balance Card
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
+          : RefreshIndicator(
+              onRefresh: _loadEarnings,
+              color: ProColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Wallet Balance Card
+                    Container(
+                      padding: const EdgeInsets.all(22),
+                      decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [ProColors.cardBg, Color(0xFF1E293B)],
                   begin: Alignment.topLeft,
@@ -426,8 +430,9 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _StatCard extends StatelessWidget {

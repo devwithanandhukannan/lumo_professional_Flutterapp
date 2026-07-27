@@ -420,9 +420,13 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator(color: ProColors.primary))
-          : SingleChildScrollView(
-              padding: const EdgeInsets.all(20),
-              child: Column(
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              color: ProColors.primary,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: const EdgeInsets.all(20),
+                child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Row buttons: Select Admin Services & Create Custom
@@ -718,6 +722,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                 ],
               ),
             ),
+          ),
     );
   }
 }

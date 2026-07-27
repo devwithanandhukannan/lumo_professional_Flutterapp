@@ -1,10 +1,26 @@
 import 'dart:convert';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import '../storage/pro_session_storage.dart';
 
 class ProApiClient {
+  static void Function()? onUnauthorizedOrNotFound;
+
+  static void _checkResponseForUserError(http.Response res) {
+    if (res.statusCode == 401 || res.statusCode == 404) {
+      ProSessionStorage.clearSession();
+      onUnauthorizedOrNotFound?.call();
+    }
+  }
+
   static String _defaultBaseUrl() {
-    return 'http://192.168.1.2:8000';
+    if (kIsWeb) return 'http://localhost:8000';
+    try {
+      if (Platform.isAndroid) return 'http://10.0.2.2:8000';
+      if (Platform.isIOS) return 'http://127.0.0.1:8000';
+    } catch (_) {}
+    return 'http://192.168.1.8:8000';
   }
 
   static String baseUrl = _defaultBaseUrl();
@@ -29,18 +45,17 @@ class ProApiClient {
   ) async {
     final candidateUrls = <String>{
       baseUrl,
-      'http://192.168.1.2:8000',
-      'http://10.0.2.2:8000',
+      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
+      'http://192.168.1.8:8000',
       'http://127.0.0.1:8000',
       'http://localhost:8000',
-      'http://192.168.1.8:8000',
     }.toList();
 
     Object? lastError;
 
     for (final candidate in candidateUrls) {
       try {
-        final response = await requestFn(candidate).timeout(const Duration(seconds: 3));
+        final response = await requestFn(candidate).timeout(const Duration(milliseconds: 1000));
         final bodyStr = response.body.trim();
         final isHtml = bodyStr.startsWith('<!DOCTYPE') ||
             bodyStr.startsWith('<html') ||
@@ -226,6 +241,7 @@ class ProApiClient {
           Uri.parse('$url/api/v1/pro/profile'),
           headers: _authHeaders,
         ));
+    _checkResponseForUserError(res);
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body['data'] ?? body;
     throw Exception(body['message'] ?? 'Failed to load profile');
@@ -425,7 +441,8 @@ class ProApiClient {
     if (res.statusCode != 200) {
       try {
         final body = jsonDecode(res.body);
-        throw Exception(body['message'] ?? 'Cannot toggle duty status');
+        final msg = body['error']?['message'] ?? body['message'] ?? 'Cannot toggle duty status';
+        throw Exception(msg);
       } catch (e) {
         if (e is Exception && !e.toString().contains('FormatException')) rethrow;
         throw Exception('Duty status update failed (${res.statusCode})');

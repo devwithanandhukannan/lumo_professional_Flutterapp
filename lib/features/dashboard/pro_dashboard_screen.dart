@@ -4,6 +4,7 @@ import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
 import '../jobs/job_detail_screen.dart';
 import '../onboarding/pro_document_upload_screen.dart';
+import '../safety/pro_sos_widget.dart';
 
 class ProDashboardScreen extends StatefulWidget {
   final VoidCallback onLogout;
@@ -30,6 +31,14 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
 
   Future<void> _loadData() async {
     setState(() => _loadingJobs = true);
+
+    try {
+      final profileRes = await ProApiClient.getProfile();
+      final pro = profileRes['profile'] ?? profileRes['data']?['profile'] ?? profileRes['data'] ?? {};
+      final latestStatus = pro['verification_status']?.toString() ?? profileRes['verificationStatus']?.toString() ?? 'PENDING';
+      await ProSessionStorage.updateVerificationStatus(latestStatus);
+    } catch (_) {}
+
     try {
       final health = await ProApiClient.getProHealth();
       if (mounted) setState(() => _health = health);
@@ -57,46 +66,58 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   }
 
   Future<void> _toggleOnline(bool val) async {
-    final status = ProSessionStorage.verificationStatus;
-    if (val && status != 'APPROVED') {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          backgroundColor: ProColors.cardBg,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Row(
-            children: [
-              Icon(Icons.lock_clock_outlined, color: ProColors.warningAmber, size: 24),
-              SizedBox(width: 8),
-              Text('Account Verification Required', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+    setState(() => _togglingOnline = true);
+
+    String currentStatus = ProSessionStorage.verificationStatus;
+    try {
+      final profileRes = await ProApiClient.getProfile();
+      final pro = profileRes['profile'] ?? profileRes['data']?['profile'] ?? profileRes['data'] ?? {};
+      if (pro['verification_status'] != null) {
+        currentStatus = pro['verification_status'].toString();
+        await ProSessionStorage.updateVerificationStatus(currentStatus);
+      }
+    } catch (_) {}
+
+    if (val && currentStatus != 'APPROVED') {
+      setState(() => _togglingOnline = false);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: ProColors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.lock_clock_outlined, color: ProColors.warningAmber, size: 24),
+                SizedBox(width: 8),
+                Text('Account Verification Required', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            content: Text(
+              'Cannot go online. Account verification status is $currentStatus. Super Admin document audit and approval required before starting duty.',
+              style: ProText.caption,
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white),
+                child: const Text('OK'),
+              ),
             ],
           ),
-          content: Text(
-            'Cannot go online. Account verification status is $status. Super Admin document audit and approval required before starting duty.',
-            style: ProText.caption,
-          ),
-          actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.pop(ctx),
-              style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white),
-              child: const Text('OK'),
-            ),
-          ],
-        ),
-      );
+        );
+      }
       return;
     }
-
-    setState(() {
-      _isOnline = val;
-      _togglingOnline = true;
-    });
 
     try {
       await ProApiClient.updateOnlineStatus(val, latitude: 12.9716, longitude: 77.5946);
       await ProSessionStorage.setOnlineStatus(val);
+      if (mounted) setState(() => _isOnline = val);
     } catch (e) {
       if (mounted) {
+        setState(() => _isOnline = !val);
+        await ProSessionStorage.setOnlineStatus(!val);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Duty status update failed: $e'), backgroundColor: ProColors.emergencyRed),
         );
@@ -344,6 +365,61 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                   ],
                 ),
               ),
+
+              // 1b. Safety SOS Emergency Control Widget (Visible when ON-DUTY)
+              if (_isOnline) ...[
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0x33EF4444), Color(0x1AEF4444)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: const Color(0xAAEF4444), width: 1.5),
+                    boxShadow: const [
+                      BoxShadow(color: Color(0x33EF4444), blurRadius: 16, offset: Offset(0, 6)),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: const Color(0x44EF4444),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.shield_outlined, color: Color(0xFFEF4444), size: 24),
+                          ),
+                          const SizedBox(width: 14),
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'SAFETY PROTOCOL ACTIVE',
+                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                                ),
+                                SizedBox(height: 2),
+                                Text(
+                                  '24/7 SOS emergency monitoring enabled. Tap SOS below in any critical situation.',
+                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11, height: 1.3),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      const ProSosWidget(),
+                    ],
+                  ),
+                ),
+              ],
 
               const SizedBox(height: 20),
 

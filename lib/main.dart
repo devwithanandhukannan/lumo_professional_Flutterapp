@@ -42,6 +42,15 @@ class _ProAuthGateState extends State<_ProAuthGate> {
   @override
   void initState() {
     super.initState();
+    ProApiClient.onUnauthorizedOrNotFound = () {
+      if (mounted) {
+        setState(() {
+          _isAuthenticated = false;
+          _isOnboardingComplete = false;
+          _isLoading = false;
+        });
+      }
+    };
     _refreshSessionState();
   }
 

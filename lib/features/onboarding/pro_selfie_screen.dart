@@ -205,6 +205,7 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
     await ProSessionStorage.updateVerificationStatus('PENDING');
 
     if (mounted) {
+      Navigator.of(context).popUntil((route) => route.isFirst);
       widget.onCompleted();
     }
 

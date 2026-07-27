@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
+import '../../core/network/pro_api_client.dart';
 
 class ProAccountHealthScreen extends StatefulWidget {
   const ProAccountHealthScreen({super.key});
@@ -25,9 +26,18 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
         backgroundColor: ProColors.surface,
         title: const Text('Account Health & Compliance'),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
+      body: RefreshIndicator(
+        onRefresh: () async {
+          try {
+            await ProApiClient.getProHealth();
+            if (mounted) setState(() {});
+          } catch (_) {}
+        },
+        color: ProColors.primary,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(20),
+          child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Gauge & Score Card
@@ -214,8 +224,9 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 class _MetricTile extends StatelessWidget {
