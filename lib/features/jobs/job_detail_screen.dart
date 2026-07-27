@@ -257,7 +257,13 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         child: Text(_jobState, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ProColors.primary)),
                       ),
                       const Spacer(),
-                      Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
+                          const Text('Base + Per-KM Fee', style: TextStyle(fontSize: 9, color: ProColors.successGreen, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
                     ],
                   ),
                   const SizedBox(height: 14),
