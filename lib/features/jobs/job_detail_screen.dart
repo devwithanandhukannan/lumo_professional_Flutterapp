@@ -150,6 +150,25 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     );
   }
 
+  Future<void> _acceptJob() async {
+    setState(() => _verifyingOtp = true);
+    try {
+      await ProApiClient.acceptJob(widget.job['id']?.toString() ?? '');
+      if (mounted) {
+        setState(() {
+          _jobState = 'NAVIGATING';
+          _verifyingOtp = false;
+        });
+        _showSnackBar('✅ Job Accepted! Live navigation active.', isSuccess: true);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _verifyingOtp = false);
+        _showSnackBar('Failed to accept job: ${e.toString()}', isSuccess: false);
+      }
+    }
+  }
+
   void _showEndOtpDialog() {
     _endOtpCtrl.clear();
     showDialog(
@@ -319,7 +338,22 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             const SizedBox(height: 16),
 
             // OTP State Machine Execution Button
-            if (_jobState == 'NAVIGATING') ...[
+            if (_jobState == 'REQUESTED') ...[
+              SizedBox(
+                height: 52,
+                child: ElevatedButton.icon(
+                  onPressed: _verifyingOtp ? null : _acceptJob,
+                  style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  icon: const Icon(Icons.check_circle_outline, color: Colors.white),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: _verifyingOtp
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                        : const Text('ACCEPT CUSTOMER JOB REQUEST', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white)),
+                  ),
+                ),
+              ),
+            ] else if (_jobState == 'NAVIGATING') ...[
               SizedBox(
                 height: 52,
                 child: ElevatedButton.icon(

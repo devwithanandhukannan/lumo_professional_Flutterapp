@@ -127,6 +127,22 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     }
   }
 
+  Future<void> _acceptJob(String bookingId) async {
+    try {
+      await ProApiClient.acceptJob(bookingId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('✅ Job Accepted! Live navigation active.'), backgroundColor: ProColors.primary),
+      );
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to accept job: ${e.toString()}'), backgroundColor: ProColors.emergencyRed),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final String proName = ProSessionStorage.userName;
@@ -176,7 +192,6 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Verification Status Banner (Pending vs Rejected)
               if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'REJECTED') ...[
                 Container(
                   padding: const EdgeInsets.all(18),
@@ -200,7 +215,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                               color: const Color(0x33EF4444),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.cancel_rounded, color: Color(0xFFEF4444), size: 24),
+                            child: const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 24),
                           ),
                           const SizedBox(width: 14),
                           const Expanded(
@@ -208,93 +223,61 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'APPLICATION REJECTED BY ADMIN',
+                                  'APPLICATION RETURNED FOR CORRECTION',
                                   style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
                                 ),
+                                SizedBox(height: 2),
                                 Text(
-                                  'Action required to complete verification',
-                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11),
+                                  'Super Admin requested document re-upload. Please upload clear photos of your Govt ID and Certificate.',
+                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11, height: 1.3),
                                 ),
                               ],
                             ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: const Color(0x44000000),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0x33EF4444)),
-                        ),
-                        child: Text(
-                          _health?['rejectionReason'] ?? _health?['verificationNotes'] ?? 'Your documents were not approved by Admin. Please re-upload clear copies of your ID and Police Clearance.',
-                          style: const TextStyle(color: Colors.white, fontSize: 12, height: 1.4),
-                        ),
-                      ),
                       const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
+                        height: 42,
                         child: ElevatedButton.icon(
                           onPressed: () {
                             Navigator.push(
                               context,
-                              MaterialPageRoute(
-                                builder: (_) => ProDocumentUploadScreen(
-                                  onCompleted: () {
-                                    Navigator.pop(context);
-                                    _loadData();
-                                  },
-                                ),
-                              ),
-                            );
+                              MaterialPageRoute(builder: (_) => const ProDocumentUploadScreen()),
+                            ).then((_) => _loadData());
                           },
-                          icon: const Icon(Icons.refresh_rounded, size: 18),
-                          label: const Text('RE-APPLY & UPLOAD NEW DOCUMENTS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFEF4444),
                             foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
+                          icon: const Icon(Icons.upload_file_rounded, size: 18),
+                          label: const Text('RE-UPLOAD DOCUMENTS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 16),
-              ] else if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) != 'APPROVED') ...[
-                // PENDING Account Verification Audit Banner
+              ] else if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'PENDING') ...[
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0x33F59E0B), Color(0x1AF59E0B)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0x66F59E0B)),
+                    color: ProColors.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: ProColors.border),
                   ),
-                  child: Row(
+                  child: const Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: const Color(0x33F59E0B),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 24),
-                      ),
-                      const SizedBox(width: 14),
-                      const Expanded(
+                      Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 28),
+                      SizedBox(width: 14),
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'ACCOUNT VERIFICATION UNDER REVIEW',
+                              'VERIFICATION PENDING AUDIT',
                               style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
                             ),
                             SizedBox(height: 2),
@@ -311,7 +294,6 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // 1. On-Duty Glowing Toggle Card
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -366,7 +348,6 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 ),
               ),
 
-              // 1b. Safety SOS Emergency Control Widget (Visible when ON-DUTY)
               if (_isOnline) ...[
                 const SizedBox(height: 16),
                 Container(
@@ -423,7 +404,6 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
 
               const SizedBox(height: 20),
 
-              // 2. Earnings & Health Summary Card
               Container(
                 padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
@@ -473,7 +453,6 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
 
               const SizedBox(height: 24),
 
-              // 3. Incoming Job Requests Section
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -531,6 +510,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                     final job = _jobs[index];
                     return _JobCard(
                       job: job,
+                      onAccept: () => _acceptJob(job['id']?.toString() ?? ''),
                       onTap: () {
                         Navigator.push(
                           context,
@@ -581,8 +561,9 @@ class _QuickSummaryItem extends StatelessWidget {
 class _JobCard extends StatelessWidget {
   final Map<String, dynamic> job;
   final VoidCallback onTap;
+  final VoidCallback onAccept;
 
-  const _JobCard({required this.job, required this.onTap});
+  const _JobCard({required this.job, required this.onTap, required this.onAccept});
 
   @override
   Widget build(BuildContext context) {
@@ -641,17 +622,35 @@ class _JobCard extends StatelessWidget {
                 Text('₹${job['total_amount']}', style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16)),
               ],
             ),
-            const SizedBox(height: 14),
-            Row(
-              children: [
-                const Icon(Icons.arrow_forward_ios, color: ProColors.primary, size: 12),
-                const SizedBox(width: 6),
-                Text(
-                  status == 'REQUESTED' ? 'Tap to View Request Details & Accept' : 'Tap for Live Navigation & Start/End OTP Verification',
-                  style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w700),
+            if (status == 'REQUESTED') ...[
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                height: 42,
+                child: ElevatedButton.icon(
+                  onPressed: onAccept,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ProColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  icon: const Icon(Icons.check_circle_outline, size: 18),
+                  label: const Text('ACCEPT JOB REQUEST', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5)),
                 ),
-              ],
-            ),
+              ),
+            ] else ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  const Icon(Icons.arrow_forward_ios, color: ProColors.primary, size: 12),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'Tap for Live Navigation & Start/End OTP Verification',
+                    style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

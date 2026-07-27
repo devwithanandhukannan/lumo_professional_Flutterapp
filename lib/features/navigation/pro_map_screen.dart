@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:http/http.dart' as http;
 import '../../core/theme/pro_theme.dart';
 
 class ProMapScreen extends StatefulWidget {
@@ -12,33 +15,144 @@ class ProMapScreen extends StatefulWidget {
 }
 
 class _ProMapScreenState extends State<ProMapScreen> {
+  GoogleMapController? _mapController;
 
-  static const LatLng _proLocation = LatLng(12.9716, 77.5946);
-  static const LatLng _customerLocation = LatLng(12.9783, 77.6408);
+  LatLng _proLocation = const LatLng(12.9716, 77.5946);
+  LatLng _customerLocation = const LatLng(12.9783, 77.6408);
 
-  final Set<Marker> _markers = {
-    Marker(
-      markerId: const MarkerId('pro_marker'),
-      position: _proLocation,
-      infoWindow: const InfoWindow(title: 'You (Professional)', snippet: 'On-Duty Location'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
-    ),
-    Marker(
-      markerId: const MarkerId('customer_marker'),
-      position: _customerLocation,
-      infoWindow: const InfoWindow(title: 'Customer Address', snippet: 'Indiranagar, Bangalore'),
-      icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
-    ),
-  };
+  Set<Marker> _markers = {};
+  Set<Polyline> _polylines = {};
+  String _distanceInfo = 'Calculating route...';
+  bool _loadingRoute = true;
 
-  final Set<Polyline> _polylines = {
-    const Polyline(
-      polylineId: PolylineId('route'),
-      points: [_proLocation, LatLng(12.9750, 77.6100), LatLng(12.9770, 77.6250), _customerLocation],
-      color: ProColors.primary,
-      width: 5,
-    ),
-  };
+  @override
+  void initState() {
+    super.initState();
+    _initCoordinatesAndRoute();
+  }
+
+  Future<void> _initCoordinatesAndRoute() async {
+    // 1. Extract customer coordinates if available from job payload
+    final custLat = double.tryParse(widget.job['latitude']?.toString() ?? '') ?? 12.9783;
+    final custLng = double.tryParse(widget.job['longitude']?.toString() ?? '') ?? 77.6408;
+    _customerLocation = LatLng(custLat, custLng);
+
+    // 2. Fetch high-accuracy live GPS location from device via Geolocator
+    try {
+      LocationPermission perm = await Geolocator.checkPermission();
+      if (perm == LocationPermission.denied) {
+        perm = await Geolocator.requestPermission();
+      }
+      if (perm == LocationPermission.whileInUse || perm == LocationPermission.always) {
+        final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        _proLocation = LatLng(pos.latitude, pos.longitude);
+      }
+    } catch (_) {}
+
+    _updateMarkers();
+    await _fetchOsrmRoute();
+    _fitMapBounds();
+  }
+
+  void _updateMarkers() {
+    setState(() {
+      _markers = {
+        Marker(
+          markerId: const MarkerId('pro_marker'),
+          position: _proLocation,
+          infoWindow: const InfoWindow(title: 'You (Professional)', snippet: 'On-Duty Live Location'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+        ),
+        Marker(
+          markerId: const MarkerId('customer_marker'),
+          position: _customerLocation,
+          infoWindow: InfoWindow(title: 'Customer Address', snippet: widget.job['customer_address']?.toString() ?? 'Service Address'),
+          icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+        ),
+      };
+    });
+  }
+
+  Future<void> _fetchOsrmRoute() async {
+    final url = 'https://router.project-osrm.org/route/v1/driving/'
+        '${_proLocation.longitude},${_proLocation.latitude};'
+        '${_customerLocation.longitude},${_customerLocation.latitude}'
+        '?overview=full&geometries=geojson';
+
+    try {
+      final res = await http.get(Uri.parse(url)).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        final routes = body['routes'] as List?;
+        if (routes != null && routes.isNotEmpty) {
+          final firstRoute = routes[0];
+          final geometry = firstRoute['geometry'] as Map<String, dynamic>?;
+          final coords = geometry?['coordinates'] as List?;
+          final distanceMeters = (firstRoute['distance'] as num?)?.toDouble() ?? 0.0;
+          final durationSecs = (firstRoute['duration'] as num?)?.toDouble() ?? 0.0;
+
+          if (coords != null) {
+            final List<LatLng> polylinePoints = coords.map((c) {
+              final lon = (c[0] as num).toDouble();
+              final lat = (c[1] as num).toDouble();
+              return LatLng(lat, lon);
+            }).toList();
+
+            final km = (distanceMeters / 1000.0).toStringAsFixed(1);
+            final mins = (durationSecs / 60.0).ceil();
+
+            if (mounted) {
+              setState(() {
+                _distanceInfo = '$km km · $mins min';
+                _polylines = {
+                  Polyline(
+                    polylineId: const PolylineId('osrm_road_route'),
+                    points: polylinePoints,
+                    color: ProColors.primary,
+                    width: 6,
+                  ),
+                };
+                _loadingRoute = false;
+              });
+            }
+            return;
+          }
+        }
+      }
+    } catch (_) {}
+
+    // Fallback if network route fetch fails
+    if (mounted) {
+      setState(() {
+        _distanceInfo = '4.8 km · 12 min';
+        _polylines = {
+          Polyline(
+            polylineId: const PolylineId('fallback_route'),
+            points: [_proLocation, _customerLocation],
+            color: ProColors.primary,
+            width: 5,
+          ),
+        };
+        _loadingRoute = false;
+      });
+    }
+  }
+
+  void _fitMapBounds() {
+    if (_mapController == null) return;
+
+    double minLat = _proLocation.latitude < _customerLocation.latitude ? _proLocation.latitude : _customerLocation.latitude;
+    double maxLat = _proLocation.latitude > _customerLocation.latitude ? _proLocation.latitude : _customerLocation.latitude;
+    double minLng = _proLocation.longitude < _customerLocation.longitude ? _proLocation.longitude : _customerLocation.longitude;
+    double maxLng = _proLocation.longitude > _customerLocation.longitude ? _proLocation.longitude : _customerLocation.longitude;
+
+    final bounds = LatLngBounds(
+      southwest: LatLng(minLat - 0.005, minLng - 0.005),
+      northeast: LatLng(maxLat + 0.005, maxLng + 0.005),
+    );
+
+    _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 70));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +172,14 @@ class _ProMapScreenState extends State<ProMapScreen> {
       body: Stack(
         children: [
           GoogleMap(
-            initialCameraPosition: const CameraPosition(
-              target: LatLng(12.9750, 77.6177),
+            initialCameraPosition: CameraPosition(
+              target: _proLocation,
               zoom: 13.5,
             ),
-            onMapCreated: (_) {},
+            onMapCreated: (controller) {
+              _mapController = controller;
+              _fitMapBounds();
+            },
             markers: _markers,
             polylines: _polylines,
             myLocationEnabled: true,
@@ -108,7 +225,10 @@ class _ProMapScreenState extends State<ProMapScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(color: ProColors.accentSoft, borderRadius: BorderRadius.circular(20)),
-                    child: const Text('4.8 km · 12 min', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ProColors.accent)),
+                    child: Text(
+                      _loadingRoute ? 'Loading...' : _distanceInfo,
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ProColors.accent),
+                    ),
                   ),
                 ],
               ),
