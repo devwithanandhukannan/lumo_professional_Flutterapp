@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
 import '../health/pro_account_health_screen.dart';
-
-import '../../core/storage/pro_session_storage.dart';
+import 'pro_profile_screen.dart';
 
 class ProSettingsScreen extends StatelessWidget {
   final VoidCallback onLogout;
@@ -28,48 +28,73 @@ class ProSettingsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Account Profile Header Card
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: ProColors.border),
-              ),
-              child: Row(
-                children: [
-                  const CircleAvatar(
-                    radius: 26,
-                    backgroundColor: ProColors.primarySoft,
-                    child: Icon(Icons.person, color: ProColors.primary, size: 28),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                            const SizedBox(width: 6),
-                            const Icon(Icons.verified, color: ProColors.primary, size: 16),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(phone, style: const TextStyle(fontSize: 12, color: ProColors.textMuted)),
-                        if (email.isNotEmpty) Text(email, style: const TextStyle(fontSize: 11, color: ProColors.textMuted)),
-                      ],
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ProProfileScreen(onLogout: onLogout)),
+                );
+              },
+              child: Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: ProColors.cardBg,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: ProColors.primary.withAlpha(80)),
+                ),
+                child: Row(
+                  children: [
+                    const CircleAvatar(
+                      radius: 26,
+                      backgroundColor: ProColors.primarySoft,
+                      child: Icon(Icons.person, color: ProColors.primary, size: 28),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
-                    child: Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: ProColors.primary)),
-                  ),
-                ],
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.verified, color: ProColors.primary, size: 16),
+                            ],
+                          ),
+                          const SizedBox(height: 2),
+                          Text(phone, style: const TextStyle(fontSize: 12, color: ProColors.textMuted)),
+                          if (email.isNotEmpty) Text(email, style: const TextStyle(fontSize: 11, color: ProColors.textMuted)),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                      child: Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: ProColors.primary)),
+                    ),
+                    const SizedBox(width: 6),
+                    const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 20),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 24),
 
+            const Text('ACCOUNT & SERVICES', style: ProText.label),
+            const SizedBox(height: 10),
+            _SettingTile(
+              icon: Icons.badge_outlined,
+              title: 'View & Edit Partner Profile',
+              subtitle: 'Manage offered services, documents & credentials',
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => ProProfileScreen(onLogout: onLogout)),
+                );
+              },
+            ),
+
+            const SizedBox(height: 16),
             const Text('DISPATCH & SAFETY', style: ProText.label),
             const SizedBox(height: 10),
             _SettingTile(
