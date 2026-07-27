@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
+import '../earnings/pro_earnings_screen.dart';
 import '../jobs/job_detail_screen.dart';
 import '../onboarding/pro_document_upload_screen.dart';
 import '../safety/pro_sos_widget.dart';
@@ -175,6 +176,16 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.account_balance_wallet_rounded, color: ProColors.primary),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ProEarningsScreen()),
+              );
+            },
+            tooltip: 'Earnings Ledger',
+          ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _loadData,

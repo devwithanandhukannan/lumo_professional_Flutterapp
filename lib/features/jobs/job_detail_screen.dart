@@ -261,7 +261,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-                          const Text('Base + Per-KM Fee', style: TextStyle(fontSize: 9, color: ProColors.successGreen, fontWeight: FontWeight.bold)),
+                          const Text('Base + Per-KM Fee', style: TextStyle(fontSize: 9, color: ProColors.primary, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],

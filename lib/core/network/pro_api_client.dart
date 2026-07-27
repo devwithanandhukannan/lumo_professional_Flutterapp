@@ -384,6 +384,8 @@ class ProApiClient {
     throw Exception(body['message'] ?? 'Failed to load jobs');
   }
 
+  static Future<List<dynamic>> getJobHistory() => getMyJobs();
+
   static Future<void> acceptJob(String bookingId) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/bookings/$bookingId/accept'),
