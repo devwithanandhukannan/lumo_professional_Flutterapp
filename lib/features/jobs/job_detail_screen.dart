@@ -382,7 +382,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                 ),
               ),
-            ] else if (_jobState == 'NAVIGATING') ...[
+            ] else if (_jobState == 'ACCEPTED' || _jobState == 'NAVIGATING' || _jobState == 'ARRIVED') ...[
               SizedBox(
                 height: 52,
                 child: ElevatedButton.icon(
