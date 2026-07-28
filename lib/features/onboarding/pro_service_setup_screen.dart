@@ -23,6 +23,7 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
   List<Map<String, dynamic>> _catalogServices = [];
   final Map<String, bool> _selected = {};
   final Map<String, TextEditingController> _priceControllers = {};
+  final Map<String, TextEditingController> _kmChargeControllers = {};
   List<Map<String, dynamic>> _myServiceRequests = [];
 
   bool _loadingServices = true;
@@ -47,6 +48,9 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
     _customDescCtrl.dispose();
     _customPriceCtrl.dispose();
     for (final c in _priceControllers.values) {
+      c.dispose();
+    }
+    for (final c in _kmChargeControllers.values) {
       c.dispose();
     }
     super.dispose();
@@ -95,6 +99,7 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
     for (final s in services) {
       final id = s['id'].toString();
       _priceControllers[id] = TextEditingController(text: s['base_price']?.toString() ?? '');
+      _kmChargeControllers[id] = TextEditingController(text: '15');
     }
     if (mounted) {
       setState(() {
@@ -139,7 +144,8 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
         final price = double.tryParse(_priceControllers[id]?.text.trim() ?? '') ??
             double.tryParse(s['base_price']?.toString() ?? '0') ??
             0;
-        selectedItems.add({'serviceId': id, 'customPrice': price});
+        final kmCharge = double.tryParse(_kmChargeControllers[id]?.text.trim() ?? '15') ?? 15.0;
+        selectedItems.add({'serviceId': id, 'customPrice': price, 'kmCharge': kmCharge});
       }
     }
 
@@ -308,13 +314,26 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                         if (isChecked) ...[
                           const SizedBox(width: 8),
                           SizedBox(
-                            width: 80,
+                            width: 72,
                             child: TextField(
                               controller: _priceControllers[id],
                               keyboardType: TextInputType.number,
                               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                               decoration: proInputDecoration(hint: '₹ Rate').copyWith(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          SizedBox(
+                            width: 72,
+                            child: TextField(
+                              controller: _kmChargeControllers[id],
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                              decoration: proInputDecoration(hint: '₹/km').copyWith(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                                hintStyle: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
                               ),
                             ),
                           ),

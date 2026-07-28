@@ -93,12 +93,31 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     setState(() { _isSendingOtp = true; _error = null; });
     try {
       final phone = _normalizedPhone;
+
+      // Update 2: Pre-flight phone check — block re-registration of existing pros
+      if (_isRegisterMode) {
+        try {
+          final checkRes = await ProApiClient.checkPhoneExists(phone);
+          final checkData = (checkRes['data'] ?? checkRes) as Map<String, dynamic>;
+          if (checkData['exists'] == true) {
+            if (mounted) {
+              setState(() {
+                _isRegisterMode = false;
+                _infoMessage = 'Phone already registered — switched to Sign In.';
+              });
+            }
+          }
+        } catch (_) {
+          // Non-blocking: if pre-check fails, proceed normally
+        }
+      }
+
       final res = await ProApiClient.sendOtp(phone, isSignInMode: !_isRegisterMode);
       setState(() {
         _otpSent = true;
         final debugOtp = res['debugOtp']?.toString();
         _infoMessage = debugOtp != null
-            ? '📋 Dev Mode — OTP: $debugOtp (copy from backend terminal)'
+            ? 'Dev OTP: $debugOtp'
             : 'OTP sent to $phone';
       });
     } catch (e) {

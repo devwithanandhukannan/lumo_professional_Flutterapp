@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
@@ -122,6 +124,24 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
 
     final phone = widget.phoneNumber.isNotEmpty ? widget.phoneNumber : ProSessionStorage.userPhone;
 
+    double? lat = _selectedLat;
+    double? lng = _selectedLng;
+
+    if ((lat == null || lng == null) && area.isNotEmpty) {
+      try {
+        final geocodeUrl = Uri.parse(
+          'https://maps.googleapis.com/maps/api/geocode/json?address=${Uri.encodeComponent(area)}&key=AIzaSyD9r59vIxUjLj3hiICvy9CYbXYbmil0Xb4',
+        );
+        final geoRes = await http.get(geocodeUrl).timeout(const Duration(seconds: 4));
+        final geoData = jsonDecode(geoRes.body);
+        if (geoData['status'] == 'OK' && (geoData['results'] as List).isNotEmpty) {
+          final loc = geoData['results'][0]['geometry']['location'];
+          lat = (loc['lat'] as num).toDouble();
+          lng = (loc['lng'] as num).toDouble();
+        }
+      } catch (_) {}
+    }
+
     try {
       final res = await ProApiClient.registerProWithPhone(
         phoneNumber: phone,
@@ -130,8 +150,8 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
         email: email,
         gender: _selectedGender,
         serviceArea: area.isEmpty ? 'Kochi' : area,
-        latitude: _selectedLat,
-        longitude: _selectedLng,
+        latitude: lat,
+        longitude: lng,
       );
 
       final data = res['data'] ?? res;

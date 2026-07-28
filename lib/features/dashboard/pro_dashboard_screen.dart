@@ -112,13 +112,13 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     }
 
     try {
-      await ProApiClient.updateOnlineStatus(val, latitude: 12.9716, longitude: 77.5946);
+      await ProApiClient.updateOnlineStatus(val);
       await ProSessionStorage.setOnlineStatus(val);
       if (mounted) setState(() => _isOnline = val);
     } catch (e) {
+      await ProSessionStorage.setOnlineStatus(!val);
       if (mounted) {
         setState(() => _isOnline = !val);
-        await ProSessionStorage.setOnlineStatus(!val);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Duty status update failed: $e'), backgroundColor: ProColors.emergencyRed),
         );

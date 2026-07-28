@@ -105,10 +105,11 @@ class _ProAuthGateState extends State<_ProAuthGate> {
         });
       }
     } catch (_) {
+      await ProSessionStorage.clearSession();
       if (mounted) {
         setState(() {
-          _isAuthenticated = ProSessionStorage.isAuthenticated;
-          _isOnboardingComplete = ProSessionStorage.isOnboardingComplete;
+          _isAuthenticated = false;
+          _isOnboardingComplete = false;
           _isLoading = false;
         });
       }

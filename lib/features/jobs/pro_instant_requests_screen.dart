@@ -141,7 +141,33 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                 ],
                               ),
                               const SizedBox(height: 12),
-                              Text(serviceName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Row(
+                                children: [
+                                  Expanded(child: Text(serviceName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white))),
+                                  // Update 5: Customer sex badge
+                                  Builder(builder: (ctx) {
+                                    final customerSex = job['customer_sex']?.toString() ?? '';
+                                    if (customerSex.isEmpty) return const SizedBox.shrink();
+                                    final isFemale = customerSex.toUpperCase() == 'FEMALE';
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: isFemale ? const Color(0x1AEC4899) : const Color(0x1A3B82F6),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: isFemale ? const Color(0x80EC4899) : const Color(0x803B82F6)),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(isFemale ? '👩' : '👨', style: const TextStyle(fontSize: 12)),
+                                          const SizedBox(width: 4),
+                                          Text(isFemale ? 'Female' : 'Male', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isFemale ? const Color(0xFFEC4899) : const Color(0xFF3B82F6))),
+                                        ],
+                                      ),
+                                    );
+                                  }),
+                                ],
+                              ),
                               const SizedBox(height: 6),
                               Row(
                                 children: [
@@ -155,7 +181,15 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                 children: [
                                   const Icon(Icons.navigation_outlined, color: ProColors.primary, size: 14),
                                   const SizedBox(width: 6),
-                                  Text('Distance: ${dist} km from your live GPS location', style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                                  Builder(builder: (ctx) {
+                                    final distKm = job['distance_km']?.toString() ?? dist;
+                                    final travelCharge = job['travel_charge'];
+                                    final basePrice = job['base_price'] ?? job['total_amount'];
+                                    if (travelCharge != null) {
+                                      return Text('$distKm km · Base ₹$basePrice + Travel ₹$travelCharge', style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600));
+                                    }
+                                    return Text('Distance: $distKm km', style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600));
+                                  }),
                                 ],
                               ),
                               const SizedBox(height: 16),

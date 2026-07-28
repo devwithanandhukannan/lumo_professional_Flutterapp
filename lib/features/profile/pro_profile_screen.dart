@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
@@ -35,6 +36,9 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
           'acceptanceRate': 95.0,
           'verificationStatus': ProSessionStorage.verificationStatus,
           'coverageRadiusKm': ProSessionStorage.coverageRadiusKm,
+          'serviceArea': 'Kochi, Kerala, India',
+          'latitude': 9.9312,
+          'longitude': 76.2673,
         });
       }
     } finally {
@@ -120,7 +124,7 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 24),
 
                     if (_health != null) ...[
                       GridView.count(
@@ -137,7 +141,15 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
                           _StatTile('Acceptance Rate', '${_health!['acceptanceRate']?.toString() ?? '95'}%', ProColors.primary),
                         ],
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 20),
+
+                      // Service Location Google Map (Read-Only Preview)
+                      _ServiceLocationMapCard(
+                        serviceArea: _health?['serviceArea']?.toString() ?? _health?['assignedRegion']?.toString() ?? 'Kochi, Kerala',
+                        coverageRadiusKm: (_health?['coverageRadiusKm'] as num?)?.toDouble() ?? 50.0,
+                        latitude: (_health?['latitude'] as num?)?.toDouble() ?? 9.9312,
+                        longitude: (_health?['longitude'] as num?)?.toDouble() ?? 76.2673,
+                      ),
                     ],
 
                     _Tile(
@@ -199,6 +211,150 @@ class _StatTile extends StatelessWidget {
           Text(label, style: const TextStyle(fontSize: 10, color: ProColors.textMuted, fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ServiceLocationMapCard extends StatelessWidget {
+  final String serviceArea;
+  final double coverageRadiusKm;
+  final double latitude;
+  final double longitude;
+
+  const _ServiceLocationMapCard({
+    required this.serviceArea,
+    required this.coverageRadiusKm,
+    required this.latitude,
+    required this.longitude,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final LatLng center = LatLng(
+      latitude != 0.0 ? latitude : 9.9312,
+      longitude != 0.0 ? longitude : 76.2673,
+    );
+
+    final Set<Marker> markers = {
+      Marker(
+        markerId: const MarkerId('pro_service_location'),
+        position: center,
+        infoWindow: InfoWindow(
+          title: 'Registered Service Center',
+          snippet: serviceArea,
+        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+      ),
+    };
+
+    final Set<Circle> circles = {
+      Circle(
+        circleId: const CircleId('service_coverage_area'),
+        center: center,
+        radius: coverageRadiusKm * 1000,
+        fillColor: const Color(0x2210B981),
+        strokeColor: ProColors.primary,
+        strokeWidth: 2,
+      ),
+    };
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: ProColors.cardBg,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ProColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.location_on_outlined, color: ProColors.primary, size: 20),
+                    const SizedBox(width: 8),
+                    const Text('Service Location & Coverage', style: ProText.label),
+                    const Spacer(),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: const Color(0x26FFBF00),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0x66FFBF00)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.lock_outline, color: Colors.amber, size: 11),
+                          SizedBox(width: 4),
+                          Text(
+                            'READ ONLY',
+                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.amber),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  serviceArea.isNotEmpty ? serviceArea : 'Kochi, Kerala, India',
+                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    const Text(
+                      'Coverage Radius: ',
+                      style: TextStyle(color: ProColors.textMuted, fontSize: 12),
+                    ),
+                    Text(
+                      '${coverageRadiusKm.toStringAsFixed(0)} km around pin',
+                      style: const TextStyle(color: ProColors.primary, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          Container(
+            height: 180,
+            width: double.infinity,
+            margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: ProColors.border),
+            ),
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: center,
+                zoom: 9.5,
+              ),
+              markers: markers,
+              circles: circles,
+              zoomControlsEnabled: false,
+              myLocationButtonEnabled: false,
+              mapToolbarEnabled: false,
+              scrollGesturesEnabled: true,
+              zoomGesturesEnabled: true,
+            ),
+          ),
+
+          const Padding(
+            padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
+            child: Text(
+              'ℹ️ Location is locked upon verification. Contact LUMO Admin to request a location change.',
+              style: TextStyle(color: ProColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+            ),
+          ),
         ],
       ),
     );

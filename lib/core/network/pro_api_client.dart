@@ -17,8 +17,8 @@ class ProApiClient {
   static String _defaultBaseUrl() {
     if (kIsWeb) return 'http://localhost:8000';
     try {
-      if (Platform.isAndroid) return 'http://10.0.2.2:8000';
-      if (Platform.isIOS) return 'http://127.0.0.1:8000';
+      if (Platform.isAndroid) return 'http://192.168.1.8:8000';
+      if (Platform.isIOS) return 'http://192.168.1.8:8000';
     } catch (_) {}
     return 'http://192.168.1.8:8000';
   }
@@ -45,8 +45,9 @@ class ProApiClient {
   ) async {
     final candidateUrls = <String>{
       baseUrl,
-      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
       'http://192.168.1.8:8000',
+      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
+      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:5000',
       'http://127.0.0.1:8000',
       'http://localhost:8000',
     }.toList();
@@ -55,18 +56,9 @@ class ProApiClient {
 
     for (final candidate in candidateUrls) {
       try {
-        final response = await requestFn(candidate).timeout(const Duration(milliseconds: 1000));
-        final bodyStr = response.body.trim();
-        final isHtml = bodyStr.startsWith('<!DOCTYPE') ||
-            bodyStr.startsWith('<html') ||
-            (response.headers['content-type']?.contains('text/html') ?? false);
-
-        if (isHtml) {
-          lastError = Exception('Received HTML response from $candidate');
-          continue;
-        }
-
-        baseUrl = candidate; // Retain active working gateway URL
+        final response = await requestFn(candidate).timeout(const Duration(seconds: 2));
+        baseUrl = candidate;
+        _checkResponseForUserError(response);
         return response;
       } catch (e) {
         lastError = e;
@@ -78,7 +70,7 @@ class ProApiClient {
           lastError.toString().contains('No route to host') ||
           lastError.toString().contains('TimeoutException')) {
         throw Exception(
-          'Backend API Gateway unreachable at $baseUrl. Ensure ./run-all.sh is running in backend directory and phone is on same Wi-Fi network.',
+          'Backend API Gateway unreachable at $baseUrl. Ensure ./run-all.sh is running in backend directory and your phone is on the same Wi-Fi network.',
         );
       }
       throw lastError;
@@ -131,6 +123,17 @@ class ProApiClient {
     final body = jsonDecode(res.body);
     if (res.statusCode == 200) return body;
     throw Exception(body['message'] ?? 'Invalid email or password');
+  }
+
+  /// Update 2: Check if phone number is already registered (pre-flight, no auth needed)
+  static Future<Map<String, dynamic>> checkPhoneExists(String phoneNumber) async {
+    final res = await _requestWithFallback((url) => http.get(
+          Uri.parse('$url/api/v1/auth/check-phone?phone=${Uri.encodeComponent(phoneNumber)}'),
+          headers: _publicHeaders,
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) return body;
+    return {'data': {'exists': false, 'role': null}};
   }
 
   /// Send Phone OTP Code
