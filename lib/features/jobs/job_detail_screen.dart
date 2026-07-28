@@ -19,6 +19,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   String _jobState = 'NAVIGATING';
   bool _verifyingOtp = false;
+  Map<String, dynamic>? _liveJobData;
 
   @override
   void initState() {
@@ -26,9 +27,30 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final status = (widget.job['status'] as String? ?? '').toUpperCase();
     if (status == 'IN_PROGRESS') {
       _jobState = 'IN_PROGRESS';
-    } else {
+    } else if (status == 'COMPLETED') {
+      _jobState = 'COMPLETED';
+    } else if (status == 'ACCEPTED' || status == 'NAVIGATING') {
       _jobState = 'NAVIGATING';
+    } else {
+      _jobState = status.isNotEmpty ? status : 'REQUESTED';
     }
+    _loadLiveJobData();
+  }
+
+  Future<void> _loadLiveJobData() async {
+    try {
+      final bookingId = widget.job['id']?.toString() ?? '';
+      if (bookingId.isNotEmpty) {
+        final data = await ProApiClient.getJobById(bookingId);
+        if (data.isNotEmpty && mounted) {
+          setState(() {
+            _liveJobData = data;
+            final st = (data['status'] as String? ?? '').toUpperCase();
+            if (st.isNotEmpty) _jobState = st;
+          });
+        }
+      }
+    } catch (_) {}
   }
 
   @override
@@ -210,12 +232,13 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final amount = widget.job['total_amount']?.toString() ?? '0';
-    final serviceName = widget.job['service_name']?.toString() ?? 'Service';
-    final address = widget.job['customer_address']?.toString() ?? 'Address';
-    final bookingId = widget.job['id']?.toString() ?? '';
-    final customerName = widget.job['customer_name']?.toString() ?? 'Customer';
-    final customerPhone = widget.job['customer_phone']?.toString() ?? '+91 98765 43210';
+    final jobMap = _liveJobData ?? widget.job;
+    final amount = jobMap['total_amount']?.toString() ?? '0';
+    final serviceName = jobMap['service_name']?.toString() ?? 'Service';
+    final address = jobMap['address_text']?.toString() ?? jobMap['customer_address']?.toString() ?? jobMap['address']?.toString() ?? 'Thottikkanam, Kerala';
+    final bookingId = jobMap['id']?.toString() ?? '';
+    final customerName = jobMap['customer_name']?.toString() ?? 'Customer';
+    final customerPhone = jobMap['customer_phone']?.toString() ?? '+91 98765 43210';
 
     return Scaffold(
       backgroundColor: ProColors.background,

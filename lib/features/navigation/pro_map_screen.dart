@@ -17,8 +17,8 @@ class ProMapScreen extends StatefulWidget {
 class _ProMapScreenState extends State<ProMapScreen> {
   GoogleMapController? _mapController;
 
-  LatLng _proLocation = const LatLng(12.9716, 77.5946);
-  LatLng _customerLocation = const LatLng(12.9783, 77.6408);
+  LatLng _proLocation = const LatLng(9.9484, 77.1931);
+  LatLng _customerLocation = const LatLng(9.9492, 77.1925);
 
   Set<Marker> _markers = {};
   Set<Polyline> _polylines = {};
@@ -33,8 +33,8 @@ class _ProMapScreenState extends State<ProMapScreen> {
 
   Future<void> _initCoordinatesAndRoute() async {
     // 1. Extract customer coordinates if available from job payload
-    final custLat = double.tryParse(widget.job['latitude']?.toString() ?? '') ?? 12.9783;
-    final custLng = double.tryParse(widget.job['longitude']?.toString() ?? '') ?? 77.6408;
+    final custLat = double.tryParse(widget.job['latitude']?.toString() ?? '') ?? 9.9492;
+    final custLng = double.tryParse(widget.job['longitude']?.toString() ?? '') ?? 77.1925;
     _customerLocation = LatLng(custLat, custLng);
 
     // 2. Fetch high-accuracy live GPS location from device via Geolocator

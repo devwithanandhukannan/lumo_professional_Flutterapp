@@ -387,6 +387,16 @@ class ProApiClient {
     throw Exception(body['message'] ?? 'Failed to load jobs');
   }
 
+  static Future<Map<String, dynamic>> getJobById(String bookingId) async {
+    final res = await _requestWithFallback((url) => http.get(
+          Uri.parse('$url/api/v1/bookings/$bookingId'),
+          headers: _authHeaders,
+        ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) return (body['data'] as Map<String, dynamic>?) ?? {};
+    throw Exception(body['message'] ?? 'Failed to load booking details');
+  }
+
   static Future<List<dynamic>> getJobHistory() => getMyJobs();
 
   static Future<void> acceptJob(String bookingId) async {

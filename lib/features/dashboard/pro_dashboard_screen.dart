@@ -367,54 +367,65 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
               ),
 
               if (_isOnline) ...[
-                const SizedBox(height: 16),
+                const SizedBox(height: 12),
                 Container(
-                  padding: const EdgeInsets.all(20),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0x33EF4444), Color(0x1AEF4444)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xAAEF4444), width: 1.5),
-                    boxShadow: const [
-                      BoxShadow(color: Color(0x33EF4444), blurRadius: 16, offset: Offset(0, 6)),
-                    ],
+                    color: const Color(0x22EF4444),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0x66EF4444)),
                   ),
-                  child: Column(
+                  child: Row(
                     children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(10),
+                      const Icon(Icons.shield_rounded, color: Color(0xFFEF4444), size: 18),
+                      const SizedBox(width: 10),
+                      const Text(
+                        '24/7 SOS MONITORING',
+                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      ),
+                      const Spacer(),
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: () {
+                            showModalBottomSheet(
+                              context: context,
+                              isScrollControlled: true,
+                              backgroundColor: Colors.transparent,
+                              builder: (_) => Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF0F172A),
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                ),
+                                child: const Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ProSosWidget(isFullScreenModal: true),
+                                    SizedBox(height: 20),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0x44EF4444),
+                              color: const Color(0xFFEF4444),
                               borderRadius: BorderRadius.circular(12),
+                              boxShadow: const [BoxShadow(color: Color(0x44EF4444), blurRadius: 8)],
                             ),
-                            child: const Icon(Icons.shield_outlined, color: Color(0xFFEF4444), size: 24),
-                          ),
-                          const SizedBox(width: 14),
-                          const Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: const Row(
                               children: [
-                                Text(
-                                  'SAFETY PROTOCOL ACTIVE',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
-                                ),
-                                SizedBox(height: 2),
-                                Text(
-                                  '24/7 SOS emergency monitoring enabled. Tap SOS below in any critical situation.',
-                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11, height: 1.3),
-                                ),
+                                Icon(Icons.sos_rounded, color: Colors.white, size: 16),
+                                SizedBox(width: 4),
+                                Text('EMERGENCY SOS', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
                               ],
                             ),
                           ),
-                        ],
+                        ),
                       ),
-                      const SizedBox(height: 20),
-                      const ProSosWidget(),
                     ],
                   ),
                 ),
@@ -514,7 +525,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                       SizedBox(height: 12),
                       Text('Searching Nearby Bookings...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
                       SizedBox(height: 4),
-                      Text('You are online in Bangalore region. Incoming job dispatches will appear here automatically.', textAlign: TextAlign.center, style: ProText.caption),
+                      Text('You are online in your coverage region. Incoming job dispatches will appear here automatically.', textAlign: TextAlign.center, style: ProText.caption),
                     ],
                   ),
                 ),
@@ -632,7 +643,7 @@ class _JobCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    job['customer_address']?.toString() ?? 'Indiranagar, Bangalore',
+                    job['address_text']?.toString() ?? job['customer_address']?.toString() ?? job['address']?.toString() ?? 'Thottikkanam, Kerala',
                     style: ProText.caption,
                     overflow: TextOverflow.ellipsis,
                   ),
