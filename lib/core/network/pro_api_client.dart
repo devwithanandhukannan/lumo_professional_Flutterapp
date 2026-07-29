@@ -553,4 +553,16 @@ class ProApiClient {
     if (res.statusCode == 200) return (body['data'] as List?) ?? [];
     throw Exception(body['message'] ?? 'Failed to load catalog services');
   }
+
+  static Future<void> cancelBooking(String bookingId, {String? reason}) async {
+    final res = await _requestWithFallback((url) => http.post(
+      Uri.parse('$url/api/v1/bookings/$bookingId/cancel'),
+      headers: _authHeaders,
+      body: jsonEncode({'reason': reason}),
+    ));
+    if (res.statusCode != 200) {
+      final body = jsonDecode(res.body);
+      throw Exception(body['message'] ?? 'Failed to cancel booking request');
+    }
+  }
 }

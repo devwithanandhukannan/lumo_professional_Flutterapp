@@ -70,6 +70,44 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
     }
   }
 
+  Future<void> _cancelRequest(String bookingId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: ProColors.cardBg,
+        title: const Text('Decline Request', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        content: const Text('Are you sure you want to decline / cancel this job request?', style: TextStyle(color: ProColors.textMuted)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Keep', style: TextStyle(color: ProColors.textMuted)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: ProColors.emergencyRed),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Decline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ProApiClient.cancelBooking(bookingId, reason: 'Declined by Professional');
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job request declined'), backgroundColor: ProColors.emergencyRed),
+        );
+        _loadRequests();
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Decline failed: ${e.toString()}'), backgroundColor: ProColors.emergencyRed),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -213,6 +251,12 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                               const SizedBox(height: 16),
                               Row(
                                 children: [
+                                  IconButton(
+                                    onPressed: () => _cancelRequest(id),
+                                    icon: const Icon(Icons.cancel_outlined, color: ProColors.emergencyRed),
+                                    tooltip: 'Decline',
+                                  ),
+                                  const SizedBox(width: 8),
                                   Expanded(
                                     child: OutlinedButton(
                                       onPressed: () {
@@ -226,7 +270,7 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                         side: const BorderSide(color: ProColors.border),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                       ),
-                                      child: const Text('VIEW DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                      child: const Text('DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -239,7 +283,7 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                       ),
                                       icon: const Icon(Icons.bolt, size: 18),
-                                      label: const Text('ACCEPT REQUEST', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                                      label: const Text('ACCEPT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                                     ),
                                   ),
                                 ],
