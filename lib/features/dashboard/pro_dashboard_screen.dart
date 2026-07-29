@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
@@ -22,12 +23,70 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   Map<String, dynamic>? _health;
   List<dynamic> _jobs = [];
   bool _loadingJobs = true;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _isOnline = ProSessionStorage.isOnline;
     _loadData();
+    _startAutoPolling();
+  }
+
+  void _startAutoPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted && _isOnline) {
+        _pollJobs();
+      }
+    });
+  }
+
+  Future<void> _pollJobs() async {
+    try {
+      final jobs = await ProApiClient.getMyJobs();
+      if (!mounted) return;
+
+      final oldRequestedIds = _jobs
+          .where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED')
+          .map((j) => j['id']?.toString() ?? '')
+          .toSet();
+
+      final newRequestedJobs = jobs
+          .where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED' && !oldRequestedIds.contains(j['id']?.toString() ?? ''))
+          .toList();
+
+      if (newRequestedJobs.isNotEmpty && _jobs.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.bolt_rounded, color: ProColors.warningAmber, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '⚡ NEW INSTANT REQUEST: ${newRequestedJobs.first['service_name'] ?? 'Service Request'}',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: ProColors.cardBg,
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+
+      setState(() {
+        _jobs = jobs;
+      });
+    } catch (_) {}
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadData() async {

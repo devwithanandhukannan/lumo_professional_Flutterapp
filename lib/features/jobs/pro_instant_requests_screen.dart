@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/theme/pro_theme.dart';
@@ -13,15 +14,32 @@ class ProInstantRequestsScreen extends StatefulWidget {
 class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
   bool _loading = true;
   List<dynamic> _requestedJobs = [];
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _loadRequests();
+    _startPolling();
   }
 
-  Future<void> _loadRequests() async {
-    setState(() => _loading = true);
+  void _startPolling() {
+    _pollTimer?.cancel();
+    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (mounted) {
+        _loadRequests(silent: true);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadRequests({bool silent = false}) async {
+    if (!silent) setState(() => _loading = true);
     try {
       final jobs = await ProApiClient.getMyJobs();
       final requested = jobs.where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED').toList();
@@ -32,7 +50,7 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _loading = false);
+      if (mounted && !silent) setState(() => _loading = false);
     }
   }
 
