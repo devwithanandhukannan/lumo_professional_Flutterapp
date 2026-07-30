@@ -382,7 +382,27 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                 ),
               ),
-            ] else if (_jobState == 'ACCEPTED' || _jobState == 'NAVIGATING' || _jobState == 'ARRIVED') ...[
+            ] else if (_jobState == 'ACCEPTED_PAYMENT_PENDING') ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.warningAmber)),
+                child: const Row(
+                  children: [
+                    Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 24),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Job Accepted! Awaiting Customer Platform Fee', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
+                          Text('Navigation unlocks automatically as soon as customer pays Platform Fee.', style: TextStyle(color: ProColors.warningAmber, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ] else if (_jobState == 'ACCEPTED' || _jobState == 'NAVIGATING' || _jobState == 'CONFIRMED' || _jobState == 'ARRIVED') ...[
               SizedBox(
                 height: 52,
                 child: ElevatedButton.icon(
@@ -408,6 +428,26 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   ),
                 ),
               ),
+            ] else if (_jobState == 'JOB_COMPLETED_PAYMENT_DUE') ...[
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.warningAmber)),
+                child: const Row(
+                  children: [
+                    Icon(Icons.mark_email_read_rounded, color: ProColors.warningAmber, size: 24),
+                    SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('End OTP Verified! Awaiting Customer Balance', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
+                          Text('Your earnings will be credited into your wallet as soon as customer pays balance.', style: TextStyle(color: ProColors.warningAmber, fontSize: 11)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ] else if (_jobState == 'COMPLETED') ...[
               Container(
                 padding: const EdgeInsets.all(16),
@@ -416,12 +456,14 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                   children: [
                     Icon(Icons.check_circle, color: ProColors.primary, size: 24),
                     SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('Job Completed Successfully!', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 15)),
-                        Text('Earnings have been credited to your withdrawable wallet.', style: TextStyle(color: ProColors.primary, fontSize: 12)),
-                      ],
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Job Completed & Payment Received!', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 15)),
+                          Text('100% of your service price has been credited to your withdrawable wallet.', style: TextStyle(color: ProColors.primary, fontSize: 11)),
+                        ],
+                      ),
                     ),
                   ],
                 ),
