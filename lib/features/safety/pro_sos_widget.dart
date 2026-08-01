@@ -185,8 +185,8 @@ class _ProSosWidgetState extends State<ProSosWidget>
                   height: 260,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF7F1D1D).withOpacity(0.15),
-                    border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.25), width: 1.5),
+                    color: const Color(0xFF7F1D1D).withValues(alpha: 0.15),
+                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.25), width: 1.5),
                   ),
                 ),
 
@@ -196,11 +196,11 @@ class _ProSosWidgetState extends State<ProSosWidget>
                   height: 210,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: const Color(0xFF991B1B).withOpacity(0.25),
-                    border: Border.all(color: const Color(0xFFEF4444).withOpacity(0.4), width: 2),
+                    color: const Color(0xFF991B1B).withValues(alpha: 0.25),
+                    border: Border.all(color: const Color(0xFFEF4444).withValues(alpha: 0.4), width: 2),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFDC2626).withOpacity(0.3),
+                        color: const Color(0xFFDC2626).withValues(alpha: 0.3),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -221,7 +221,7 @@ class _ProSosWidgetState extends State<ProSosWidget>
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEF4444).withOpacity(0.6),
+                        color: const Color(0xFFEF4444).withValues(alpha: 0.6),
                         blurRadius: 25,
                         spreadRadius: 4,
                       ),

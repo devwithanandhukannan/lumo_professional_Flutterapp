@@ -44,7 +44,9 @@ class _ProMapScreenState extends State<ProMapScreen> {
         perm = await Geolocator.requestPermission();
       }
       if (perm == LocationPermission.whileInUse || perm == LocationPermission.always) {
-        final pos = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(accuracy: LocationAccuracy.high),
+        );
         _proLocation = LatLng(pos.latitude, pos.longitude);
       }
     } catch (_) {}

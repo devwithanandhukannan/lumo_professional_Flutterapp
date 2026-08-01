@@ -236,6 +236,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                           }
                         } catch (e) {
                           setModalState(() => isSaving = false);
+                          if (!context.mounted) return;
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(content: Text('Failed: $e'), backgroundColor: ProColors.emergencyRed),
                           );
@@ -559,7 +560,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                   const SizedBox(width: 8),
                                   Switch(
                                     value: isActive,
-                                    activeColor: ProColors.primary,
+                                    activeThumbColor: ProColors.primary,
                                     onChanged: (val) => _toggleServiceActive(srv, val),
                                   ),
                                   IconButton(
@@ -689,7 +690,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                   ),
                                   Switch(
                                     value: isReqActive,
-                                    activeColor: ProColors.primary,
+                                    activeThumbColor: ProColors.primary,
                                     onChanged: (val) => _toggleCustomServiceActive(req, val),
                                   ),
                                 ],
