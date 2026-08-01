@@ -182,16 +182,34 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                               Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                     decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(12)),
                                     child: const Row(
                                       children: [
-                                        Icon(Icons.timer_outlined, color: ProColors.warningAmber, size: 14),
-                                        SizedBox(width: 4),
-                                        Text('5 MIN ACCEPTANCE TIMER', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: ProColors.warningAmber)),
+                                        Icon(Icons.timer_outlined, color: ProColors.warningAmber, size: 13),
+                                        SizedBox(width: 3),
+                                        Text('5 MIN TIMER', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: ProColors.warningAmber)),
                                       ],
                                     ),
                                   ),
+                                  const SizedBox(width: 6),
+                                  Builder(builder: (ctx) {
+                                    final totalVal = double.tryParse(amount) ?? 0.0;
+                                    final platformFeeVal = double.tryParse(job['platform_fee']?.toString() ?? '50') ?? 50.0;
+                                    final netPayoutVal = (totalVal - platformFeeVal) > 0 ? (totalVal - platformFeeVal) : totalVal;
+
+                                    return Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                      decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                                      child: Row(
+                                        children: [
+                                          const Icon(Icons.account_balance_wallet, color: ProColors.primary, size: 13),
+                                          const SizedBox(width: 3),
+                                          Text('YOU GET ₹${netPayoutVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ProColors.primary)),
+                                        ],
+                                      ),
+                                    );
+                                  }),
                                   const Spacer(),
                                   Text('₹$amount', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
                                 ],

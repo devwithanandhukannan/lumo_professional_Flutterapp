@@ -284,7 +284,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-                          const Text('Base + Per-KM Fee', style: TextStyle(fontSize: 9, color: ProColors.primary, fontWeight: FontWeight.bold)),
+                          const Text('Base + Travel Fee', style: TextStyle(fontSize: 9, color: ProColors.primary, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ],
@@ -303,47 +303,127 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
 
-            // Customer Contact & Safety Card
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: ProColors.border),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: ProColors.accentSoft,
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: const Icon(Icons.person, color: ProColors.accent, size: 22),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            // Net Earnings Payout Card
+            Builder(builder: (ctx) {
+              final totalVal = double.tryParse(amount) ?? 0.0;
+              final platformFeeVal = double.tryParse(jobMap['platform_fee']?.toString() ?? '50') ?? 50.0;
+              final netPayoutVal = (totalVal - platformFeeVal) > 0 ? (totalVal - platformFeeVal) : totalVal;
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ProColors.primarySoft,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: ProColors.primary.withAlpha(90)),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(customerName, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
-                        Text(customerPhone, style: ProText.caption.copyWith(fontFamily: 'monospace')),
+                        const Text('Customer Booking Total', style: TextStyle(fontSize: 12, color: ProColors.textMuted)),
+                        Text('₹${totalVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
                       ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.phone, color: ProColors.primary),
-                    onPressed: () {
-                      _showSnackBar('Calling customer $customerPhone...', isSuccess: true);
-                    },
-                    tooltip: 'Call Customer',
-                  ),
-                ],
-              ),
-            ),
+                    const SizedBox(height: 6),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text('Platform Fee Split Deduction', style: TextStyle(fontSize: 12, color: ProColors.textMuted)),
+                        Text('- ₹${platformFeeVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: ProColors.warningAmber)),
+                      ],
+                    ),
+                    const Divider(color: ProColors.border, height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Row(
+                          children: [
+                            Icon(Icons.account_balance_wallet_rounded, color: ProColors.primary, size: 18),
+                            SizedBox(width: 6),
+                            Text('YOUR NET EARNINGS PAYOUT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: ProColors.primary, letterSpacing: 0.5)),
+                          ],
+                        ),
+                        Text('₹${netPayoutVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: ProColors.primary)),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+            }),
+
+            const SizedBox(height: 16),
+
+            // Customer Contact Privacy Card
+            Builder(builder: (ctx) {
+              final isPlatformFeePaid = jobMap['platform_fee_paid'] == true ||
+                  ['CONFIRMED', 'NAVIGATING', 'ARRIVED', 'IN_PROGRESS', 'START_OTP_VERIFIED', 'JOB_COMPLETED_PAYMENT_DUE', 'COMPLETED'].contains(_jobState.toUpperCase());
+
+              return Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ProColors.cardBg,
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: isPlatformFeePaid ? ProColors.border : ProColors.warningAmber.withAlpha(100)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: isPlatformFeePaid ? ProColors.accentSoft : ProColors.warningAmberSoft,
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        isPlatformFeePaid ? Icons.person : Icons.lock_rounded,
+                        color: isPlatformFeePaid ? ProColors.accent : ProColors.warningAmber,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isPlatformFeePaid ? customerName : 'Customer Contact Locked 🔒',
+                            style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isPlatformFeePaid ? customerPhone : 'Pay Platform Fee to Unlock Contact',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: isPlatformFeePaid ? ProColors.textMuted : ProColors.warningAmber,
+                              fontFamily: isPlatformFeePaid ? 'monospace' : null,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (isPlatformFeePaid)
+                      IconButton(
+                        icon: const Icon(Icons.phone, color: ProColors.primary),
+                        onPressed: () {
+                          _showSnackBar('Calling customer $customerPhone...', isSuccess: true);
+                        },
+                        tooltip: 'Call Customer',
+                      )
+                    else
+                      IconButton(
+                        icon: const Icon(Icons.lock_clock_outlined, color: ProColors.textMuted),
+                        onPressed: () {
+                          _showSnackBar('Customer phone number unlocks automatically after customer pays Platform Fee.', isSuccess: false);
+                        },
+                        tooltip: 'Contact Details Locked',
+                      ),
+                  ],
+                ),
+              );
+            }),
 
             const SizedBox(height: 16),
 
