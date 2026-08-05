@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
+import 'pro_smooth_animations.dart';
 
 // ─── Color Palette ────────────────────────────────────────────────────────────
 class ProColors {
@@ -110,7 +111,7 @@ class GlassCard extends StatelessWidget {
     );
 
     if (onTap != null) {
-      return GestureDetector(onTap: onTap, child: content);
+      return ProBounceTap(onTap: onTap, child: content);
     }
     return content;
   }
@@ -168,7 +169,7 @@ class GradientButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return ProBounceTap(
       onTap: isLoading ? null : onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
@@ -215,6 +216,13 @@ class ProTheme {
         error: ProColors.emergencyRed,
         onPrimary: Colors.white,
         onSurface: ProColors.textPrimary,
+      ),
+      pageTransitionsTheme: const PageTransitionsTheme(
+        builders: {
+          TargetPlatform.android: ProPageTransitionsBuilder(),
+          TargetPlatform.iOS: ProPageTransitionsBuilder(),
+          TargetPlatform.macOS: ProPageTransitionsBuilder(),
+        },
       ),
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.transparent,

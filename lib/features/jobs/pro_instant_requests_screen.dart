@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/theme/pro_theme.dart';
+import '../../core/services/pro_haptic_service.dart';
 import 'job_detail_screen.dart';
 
 class ProInstantRequestsScreen extends StatefulWidget {
@@ -43,6 +44,11 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
     try {
       final jobs = await ProApiClient.getMyJobs();
       final requested = jobs.where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED').toList();
+
+      if (requested.length > _requestedJobs.length) {
+        ProHapticService.incomingJobRequest();
+      }
+
       if (mounted) {
         setState(() {
           _requestedJobs = requested;
@@ -55,6 +61,7 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
   }
 
   Future<void> _acceptRequest(String bookingId) async {
+    ProHapticService.jobAccepted();
     try {
       await ProApiClient.acceptJob(bookingId);
       if (!mounted) return;
