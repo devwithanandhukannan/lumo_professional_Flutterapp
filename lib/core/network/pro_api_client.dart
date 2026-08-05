@@ -568,4 +568,34 @@ class ProApiClient {
       throw Exception(body['message'] ?? 'Failed to cancel booking request');
     }
   }
+
+  // ─── EMERGENCY SERVICE SUSPENSION API ───
+
+  static Future<Map<String, dynamic>?> checkProServiceSuspension({
+    required double latitude,
+    required double longitude,
+    String? locationName,
+    String? pincode,
+  }) async {
+    try {
+      final res = await _requestWithFallback((url) => http.post(
+        Uri.parse('$url/api/v1/geo/check-suspension'),
+        headers: _publicHeaders,
+        body: jsonEncode({
+          'latitude': latitude,
+          'longitude': longitude,
+          if (locationName != null && locationName.isNotEmpty) 'locationName': locationName,
+          if (pincode != null && pincode.isNotEmpty) 'pincode': pincode,
+        }),
+      ));
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body);
+        if (body['isSuspended'] == true) {
+          return body['suspension'] ?? {};
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
 }
+

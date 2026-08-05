@@ -24,13 +24,58 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   List<dynamic> _jobs = [];
   bool _loadingJobs = true;
   Timer? _pollTimer;
+  Map<String, dynamic>? _activeSuspension;
 
   @override
   void initState() {
     super.initState();
     _isOnline = ProSessionStorage.isOnline;
     _loadData();
+    _checkSuspension();
     _startAutoPolling();
+  }
+
+  Future<void> _checkSuspension() async {
+    try {
+      final profileRes = await ProApiClient.getProfile();
+      final pro = profileRes['profile'] ?? profileRes['data']?['profile'] ?? profileRes['data'] ?? {};
+      
+      final lat = (pro['latitude'] != null) ? double.tryParse(pro['latitude'].toString()) ?? ProSessionStorage.currentLat ?? 12.9716 : ProSessionStorage.currentLat ?? 12.9716;
+      final lng = (pro['longitude'] != null) ? double.tryParse(pro['longitude'].toString()) ?? ProSessionStorage.currentLng ?? 77.5946 : ProSessionStorage.currentLng ?? 77.5946;
+      final String locName = (pro['assigned_region'] ?? pro['service_area'] ?? pro['address'] ?? ProSessionStorage.serviceArea).toString();
+      final String? pincode = pro['pincode']?.toString();
+
+      final suspension = await ProApiClient.checkProServiceSuspension(
+        latitude: lat,
+        longitude: lng,
+        locationName: locName,
+        pincode: pincode,
+      );
+      if (mounted) {
+        setState(() => _activeSuspension = suspension);
+        if (suspension != null && suspension['severity'] == 'FULL_BLACKOUT' && _isOnline) {
+          await ProApiClient.updateOnlineStatus(false);
+          await ProSessionStorage.setOnlineStatus(false);
+          setState(() => _isOnline = false);
+        }
+      }
+    } catch (_) {
+      final lat = ProSessionStorage.currentLat ?? 12.9716;
+      final lng = ProSessionStorage.currentLng ?? 77.5946;
+      final suspension = await ProApiClient.checkProServiceSuspension(
+        latitude: lat,
+        longitude: lng,
+        locationName: ProSessionStorage.serviceArea,
+      );
+      if (mounted) {
+        setState(() => _activeSuspension = suspension);
+        if (suspension != null && suspension['severity'] == 'FULL_BLACKOUT' && _isOnline) {
+          await ProApiClient.updateOnlineStatus(false);
+          await ProSessionStorage.setOnlineStatus(false);
+          setState(() => _isOnline = false);
+        }
+      }
+    }
   }
 
   void _startAutoPolling() {
@@ -128,6 +173,10 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   Future<void> _toggleOnline(bool val) async {
     setState(() => _togglingOnline = true);
 
+    if (val) {
+      await _checkSuspension();
+    }
+
     String currentStatus = ProSessionStorage.verificationStatus;
     try {
       final profileRes = await ProApiClient.getProfile();
@@ -137,6 +186,96 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
         await ProSessionStorage.updateVerificationStatus(currentStatus);
       }
     } catch (_) {}
+
+    if (val && _activeSuspension != null && (_activeSuspension!['severity'] == 'FULL_BLACKOUT' || _activeSuspension!['severity'] == null)) {
+      setState(() => _togglingOnline = false);
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            backgroundColor: ProColors.cardBg,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            title: const Row(
+              children: [
+                Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 26),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text('Emergency Service Closure', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _activeSuspension!['message'] ?? 'Service is currently paused in your area due to emergency blackout rules.',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                ),
+                const SizedBox(height: 12),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withAlpha(120),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.location_on_rounded, color: Color(0xFF34D399), size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'Location: ${_activeSuspension!['areaName'] ?? 'Fenced Blackout Zone'}',
+                              style: const TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.access_time_filled_rounded, color: ProColors.warningAmber, size: 14),
+                          const SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              _activeSuspension!['expiresAt'] != null
+                                  ? 'Resumption: ${DateTime.parse(_activeSuspension!['expiresAt']).toLocal().toString().substring(0, 16)}'
+                                  : 'Resumption: Indefinite / Active Safety Monitoring',
+                              style: const TextStyle(color: ProColors.warningAmber, fontSize: 11, fontWeight: FontWeight.bold),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              ElevatedButton(
+                onPressed: () => Navigator.pop(ctx),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: ProColors.emergencyRed,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                ),
+                child: const Text('OK, Got It', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      }
+      return;
+    }
 
     if (val && currentStatus != 'APPROVED') {
       setState(() => _togglingOnline = false);
@@ -262,6 +401,136 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_activeSuspension != null)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 18),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0x55EF4444), Color(0x221E1B4B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xAAEF4444), width: 1.5),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x33EF4444),
+                        blurRadius: 12,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  (_activeSuspension!['reasonCategory'] ?? 'EMERGENCY').toString().replaceAll('_', ' '),
+                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              _activeSuspension!['title'] ?? 'Emergency Regional Closure',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(120),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.location_on_rounded, color: Color(0xFF34D399), size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'FENCED LOCATION NAME:',
+                                    style: TextStyle(color: Colors.white54, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                                  ),
+                                  Text(
+                                    (_activeSuspension!['areaName'] ?? _activeSuspension!['title'] ?? ProSessionStorage.serviceArea).toString(),
+                                    style: const TextStyle(color: Color(0xFF34D399), fontSize: 12, fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        _activeSuspension!['message'] ?? 'Service is temporarily paused in your region for partner safety.',
+                        style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                      ),
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withAlpha(100),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.white.withAlpha(25)),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.access_time_filled_rounded, color: ProColors.warningAmber, size: 16),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                _activeSuspension!['expiresAt'] != null
+                                    ? 'Expected Resumption: ${DateTime.parse(_activeSuspension!['expiresAt']).toLocal().toString().substring(0, 16)}'
+                                    : 'Resumption: Indefinite / Active Safety Monitoring',
+                                style: const TextStyle(color: ProColors.warningAmber, fontSize: 11, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: const [
+                          Icon(Icons.lock_clock_rounded, color: Colors.redAccent, size: 14),
+                          SizedBox(width: 6),
+                          Expanded(
+                            child: Text(
+                              'On-Duty mode is locked in this region to protect partner safety.',
+                              style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'REJECTED') ...[
                 Container(
                   padding: const EdgeInsets.all(18),

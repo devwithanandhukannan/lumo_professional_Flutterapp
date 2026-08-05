@@ -14,6 +14,8 @@ class ProSessionStorage {
   static const _keyAge = 'pro_user_age';
   static const _keyServiceArea = 'pro_service_area';
   static const _keyOnboardingComplete = 'pro_is_onboarding_complete';
+  static const _keyCurrentLat = 'pro_current_lat';
+  static const _keyCurrentLng = 'pro_current_lng';
 
   static SharedPreferences? _prefs;
 
@@ -34,6 +36,8 @@ class ProSessionStorage {
   static int get age => _prefs?.getInt(_keyAge) ?? 0;
   static String get serviceArea => _prefs?.getString(_keyServiceArea) ?? 'Bangalore';
   static bool get isOnboardingComplete => _prefs?.getBool(_keyOnboardingComplete) ?? false;
+  static double? get currentLat => _prefs?.getDouble(_keyCurrentLat);
+  static double? get currentLng => _prefs?.getDouble(_keyCurrentLng);
 
   static Future<void> setSession({
     required String token,
@@ -74,6 +78,11 @@ class ProSessionStorage {
 
   static Future<void> setOnlineStatus(bool isOnline) async {
     await _prefs?.setBool(_keyIsOnline, isOnline);
+  }
+
+  static Future<void> updateLocation(double lat, double lng) async {
+    await _prefs?.setDouble(_keyCurrentLat, lat);
+    await _prefs?.setDouble(_keyCurrentLng, lng);
   }
 
   static Future<void> clearSession() async {
