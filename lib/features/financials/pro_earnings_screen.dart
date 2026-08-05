@@ -206,233 +206,205 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     // Wallet Balance Card
-                    Container(
+                    // Wallet Balance Card
+                    GlassCard(
                       padding: const EdgeInsets.all(22),
-                      decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [ProColors.cardBg, Color(0xFF1E293B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: ProColors.primary.withAlpha(80)),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x3310B981), blurRadius: 20, offset: Offset(0, 8)),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('WITHDRAWABLE BALANCE', style: ProText.label),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: ProColors.primarySoft,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: ProColors.primary),
-                        ),
-                        child: const Text('INSTANT PAYOUT', style: TextStyle(color: ProColors.primary, fontSize: 10, fontWeight: FontWeight.w900)),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Text('₹${_walletBalance.toStringAsFixed(2)}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
-                  const SizedBox(height: 18),
-                  SizedBox(
-                    height: 46,
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      onPressed: _showWithdrawalModal,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ProColors.primary,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      ),
-                      icon: const Icon(Icons.send_rounded, size: 16),
-                      label: const Text('WITHDRAW TO BANK / UPI', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 0.5)),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Summary Metrics Row
-            Row(
-              children: [
-                Expanded(
-                  child: _StatCard(
-                    title: "TODAY'S EARNINGS",
-                    value: '₹${_todayEarnings.toStringAsFixed(2)}',
-                    subtitle: '$_todayJobsCount Jobs Completed',
-                    icon: Icons.today,
-                    accentColor: ProColors.primary,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _StatCard(
-                    title: 'THIS WEEK',
-                    value: '₹${_thisWeekEarnings.toStringAsFixed(2)}',
-                    subtitle: '$_thisWeekJobsCount Jobs Completed',
-                    icon: Icons.date_range,
-                    accentColor: ProColors.accent,
-                  ),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: 24),
-
-            // Weekly Chart Section
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: ProColors.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('WEEKLY EARNINGS TREND', style: ProText.label),
-                      Text('Avg: ₹${(_thisWeekEarnings / 7).toStringAsFixed(0)} / day', style: ProText.caption.copyWith(color: ProColors.primary)),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  SizedBox(
-                    height: 140,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: _weeklyData.map((item) {
-                        final double amount = (item['amount'] as num).toDouble();
-                        final double heightPct = (amount / maxWeekly).clamp(0.15, 1.0);
-
-                        return Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            Text('₹${(amount / 1000).toStringAsFixed(1)}k', style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
-                            const SizedBox(height: 6),
-                            Container(
-                              width: 24,
-                              height: 90 * heightPct,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: amount > 2000
-                                      ? [ProColors.primary, ProColors.primaryDark]
-                                      : [ProColors.accent, ProColors.surface],
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
+                      borderRadius: 24,
+                      borderColor: ProColors.primary.withAlpha(100),
+                      gradientColors: const [Color(0x3310B981), Color(0x0C10B981)],
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('WITHDRAWABLE BALANCE', style: ProText.label),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: ProColors.primarySoft,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: ProColors.primary),
                                 ),
-                                borderRadius: BorderRadius.circular(8),
+                                child: const Text('INSTANT PAYOUT', style: TextStyle(color: ProColors.primary, fontSize: 10, fontWeight: FontWeight.w900)),
                               ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(item['day'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
-                          ],
-                        );
-                      }).toList(),
+                            ],
+                          ),
+                          const SizedBox(height: 10),
+                          Text('₹${_walletBalance.toStringAsFixed(2)}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
+                          const SizedBox(height: 18),
+                          GradientButton(
+                            height: 48,
+                            label: 'WITHDRAW TO BANK / UPI',
+                            onTap: _showWithdrawalModal,
+                            icon: Icons.send_rounded,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
 
-            const SizedBox(height: 24),
+                    const SizedBox(height: 24),
 
-            // Recent Transactions Ledger
-            const Text('RECENT PAYOUT LEDGER', style: ProText.label),
-            const SizedBox(height: 12),
+                    // Summary Metrics Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _StatCard(
+                            title: "TODAY'S EARNINGS",
+                            value: '₹${_todayEarnings.toStringAsFixed(2)}',
+                            subtitle: '$_todayJobsCount Jobs Completed',
+                            icon: Icons.today,
+                            accentColor: ProColors.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _StatCard(
+                            title: 'THIS WEEK',
+                            value: '₹${_thisWeekEarnings.toStringAsFixed(2)}',
+                            subtitle: '$_thisWeekJobsCount Jobs Completed',
+                            icon: Icons.date_range,
+                            accentColor: ProColors.accent,
+                          ),
+                        ),
+                      ],
+                    ),
 
-            if (_transactions.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: ProColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: ProColors.border),
-                ),
-                child: const Column(
-                  children: [
-                    Icon(Icons.account_balance_wallet_outlined, size: 36, color: ProColors.textMuted),
-                    SizedBox(height: 12),
-                    Text('No Payout Transactions Yet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                    SizedBox(height: 4),
-                    Text('Completed customer jobs and wallet payouts will appear here in real time.', textAlign: TextAlign.center, style: ProText.caption),
+                    const SizedBox(height: 24),
+
+                    // Weekly Chart Section
+                    GlassCard(
+                      padding: const EdgeInsets.all(18),
+                      borderRadius: 20,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('WEEKLY EARNINGS TREND', style: ProText.label),
+                              Text('Avg: ₹${(_thisWeekEarnings / 7).toStringAsFixed(0)} / day', style: ProText.caption.copyWith(color: ProColors.primary)),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+                          SizedBox(
+                            height: 140,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: _weeklyData.map((item) {
+                                final double amount = (item['amount'] as num).toDouble();
+                                final double heightPct = (amount / maxWeekly).clamp(0.15, 1.0);
+
+                                return Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    Text('₹${(amount / 1000).toStringAsFixed(1)}k', style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
+                                    const SizedBox(height: 6),
+                                    Container(
+                                      width: 24,
+                                      height: 90 * heightPct,
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: amount > 2000
+                                              ? [ProColors.primary, ProColors.primaryDark]
+                                              : [ProColors.accent, ProColors.surface],
+                                          begin: Alignment.topCenter,
+                                          end: Alignment.bottomCenter,
+                                        ),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    Text(item['day'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 24),
+
+                    // Recent Transactions Ledger
+                    const Text('RECENT PAYOUT LEDGER', style: ProText.label),
+                    const SizedBox(height: 12),
+
+                    if (_transactions.isEmpty)
+                      GlassCard(
+                        padding: const EdgeInsets.all(24),
+                        borderRadius: 20,
+                        child: const Column(
+                          children: [
+                            Icon(Icons.account_balance_wallet_outlined, size: 36, color: ProColors.textMuted),
+                            SizedBox(height: 12),
+                            Text('No Payout Transactions Yet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                            SizedBox(height: 4),
+                            Text('Completed customer jobs and wallet payouts will appear here in real time.', textAlign: TextAlign.center, style: ProText.caption),
+                          ],
+                        ),
+                      )
+                    else
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: _transactions.length,
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
+                        itemBuilder: (context, index) {
+                          final tx = _transactions[index];
+                          final bool isCredit = tx['isCredit'] as bool;
+
+                          return GlassCard(
+                            padding: const EdgeInsets.all(16),
+                            borderRadius: 16,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 40,
+                                  height: 40,
+                                  decoration: BoxDecoration(
+                                    color: isCredit ? ProColors.primarySoft : ProColors.emergencyRedSoft,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    isCredit ? Icons.add_circle_outline : Icons.remove_circle_outline,
+                                    color: isCredit ? ProColors.primary : ProColors.emergencyRed,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 14),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(tx['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
+                                      const SizedBox(height: 2),
+                                      Text(tx['service'] as String, style: ProText.caption),
+                                      Text(tx['date'] as String, style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  tx['amount'] as String,
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w900,
+                                    fontSize: 14,
+                                    color: isCredit ? ProColors.primary : ProColors.emergencyRed,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
                   ],
                 ),
-              )
-            else
-              ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: _transactions.length,
-                separatorBuilder: (ctx, idx) => const SizedBox(height: 10),
-                itemBuilder: (context, index) {
-                  final tx = _transactions[index];
-                  final bool isCredit = tx['isCredit'] as bool;
-
-                return Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: ProColors.cardBg,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: ProColors.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 40,
-                        height: 40,
-                        decoration: BoxDecoration(
-                          color: isCredit ? ProColors.primarySoft : ProColors.emergencyRedSoft,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          isCredit ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                          color: isCredit ? ProColors.primary : ProColors.emergencyRed,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 14),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(tx['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
-                            const SizedBox(height: 2),
-                            Text(tx['service'] as String, style: ProText.caption),
-                            Text(tx['date'] as String, style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
-                          ],
-                        ),
-                      ),
-                      Text(
-                        tx['amount'] as String,
-                        style: TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 14,
-                          color: isCredit ? ProColors.primary : ProColors.emergencyRed,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+              ),
             ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
+    );
+  }
 }
 
 class _StatCard extends StatelessWidget {
@@ -452,13 +424,9 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ProColors.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ProColors.border),
-      ),
+      borderRadius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

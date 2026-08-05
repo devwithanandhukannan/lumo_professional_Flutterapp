@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
 import '../dashboard/pro_dashboard_screen.dart';
@@ -32,41 +33,121 @@ class _ProMainNavigationScreenState extends State<ProMainNavigationScreen> {
         children: pages,
       ),
       bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          color: ProColors.surface,
-          border: Border(top: BorderSide(color: ProColors.border)),
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
+        height: 72,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0x2EFFFFFF), Color(0x12FFFFFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: ProColors.glassBorderBright, width: 1.2),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withAlpha(90), blurRadius: 20, offset: const Offset(0, 8)),
+                ],
+              ),
+              child: Row(
+                children: [
+                  _ProNavItem(
+                    icon: Icons.dashboard_outlined,
+                    activeIcon: Icons.dashboard_rounded,
+                    label: 'Dashboard',
+                    isSelected: _currentIndex == 0,
+                    onTap: () => setState(() => _currentIndex = 0),
+                  ),
+                  _ProNavItem(
+                    icon: Icons.bolt_outlined,
+                    activeIcon: Icons.bolt_rounded,
+                    label: 'Requests',
+                    isSelected: _currentIndex == 1,
+                    onTap: () => setState(() => _currentIndex = 1),
+                    activeColor: ProColors.warningAmber,
+                  ),
+                  _ProNavItem(
+                    icon: Icons.account_balance_wallet_outlined,
+                    activeIcon: Icons.account_balance_wallet_rounded,
+                    label: 'Earnings',
+                    isSelected: _currentIndex == 2,
+                    onTap: () => setState(() => _currentIndex = 2),
+                  ),
+                  _ProNavItem(
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
+                    label: 'Profile',
+                    isSelected: _currentIndex == 3,
+                    onTap: () => setState(() => _currentIndex = 3),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (idx) => setState(() => _currentIndex = idx),
-          backgroundColor: ProColors.surface,
-          selectedItemColor: ProColors.primary,
-          unselectedItemColor: ProColors.textMuted,
-          selectedLabelStyle: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
-          unselectedLabelStyle: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
-          type: BottomNavigationBarType.fixed,
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.dashboard_rounded),
-              activeIcon: Icon(Icons.dashboard_rounded, color: ProColors.primary),
-              label: 'Dashboard',
+      ),
+    );
+  }
+}
+
+class _ProNavItem extends StatelessWidget {
+  final IconData icon, activeIcon;
+  final String label;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final Color activeColor;
+
+  const _ProNavItem({
+    required this.icon,
+    required this.activeIcon,
+    required this.label,
+    required this.isSelected,
+    required this.onTap,
+    this.activeColor = ProColors.primary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          margin: const EdgeInsets.symmetric(horizontal: 2, vertical: 4),
+          decoration: BoxDecoration(
+            color: isSelected ? activeColor.withAlpha(35) : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? activeColor.withAlpha(140) : Colors.transparent,
+              width: 1,
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bolt_outlined),
-              activeIcon: Icon(Icons.bolt_rounded, color: ProColors.warningAmber),
-              label: 'Instant Requests',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet_outlined),
-              activeIcon: Icon(Icons.account_balance_wallet, color: ProColors.primary),
-              label: 'Earnings',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings_outlined),
-              activeIcon: Icon(Icons.settings_rounded, color: ProColors.primary),
-              label: 'Settings',
-            ),
-          ],
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                isSelected ? activeIcon : icon,
+                color: isSelected ? activeColor : ProColors.textMuted,
+                size: 22,
+              ),
+              const SizedBox(height: 3),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                  color: isSelected ? activeColor : ProColors.textMuted,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

@@ -18,8 +18,8 @@ class ProSettingsScreen extends StatelessWidget {
     return Scaffold(
       backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
-        title: const Text('Partner Account Settings', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+        backgroundColor: Colors.transparent,
+        title: const Text('Partner Account Settings', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18, color: Colors.white)),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -28,54 +28,57 @@ class ProSettingsScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Account Profile Header Card
-            GestureDetector(
+            GlassCard(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (_) => ProProfileScreen(onLogout: onLogout)),
                 );
               },
-              child: Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: ProColors.cardBg,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: ProColors.primary.withAlpha(80)),
-                ),
-                child: Row(
-                  children: [
-                    const CircleAvatar(
-                      radius: 26,
-                      backgroundColor: ProColors.primarySoft,
-                      child: Icon(Icons.person, color: ProColors.primary, size: 28),
+              padding: const EdgeInsets.all(18),
+              borderRadius: 22,
+              borderColor: ProColors.primary.withAlpha(100),
+              gradientColors: const [Color(0x2810B981), Color(0x0C10B981)],
+              child: Row(
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      gradient: ProColors.primaryGradient,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(color: ProColors.primary.withAlpha(80), blurRadius: 12, offset: const Offset(0, 4)),
+                      ],
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.verified, color: ProColors.primary, size: 16),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(phone, style: const TextStyle(fontSize: 12, color: ProColors.textMuted)),
-                          if (email.isNotEmpty) Text(email, style: const TextStyle(fontSize: 11, color: ProColors.textMuted)),
-                        ],
-                      ),
+                    child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Text(name.isNotEmpty ? name : 'Partner Pro', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            const SizedBox(width: 6),
+                            const Icon(Icons.verified, color: ProColors.primary, size: 16),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(phone, style: const TextStyle(fontSize: 12, color: ProColors.textMuted)),
+                        if (email.isNotEmpty) Text(email, style: const TextStyle(fontSize: 11, color: ProColors.textMuted)),
+                      ],
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
-                      child: Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: ProColors.primary)),
-                    ),
-                    const SizedBox(width: 6),
-                    const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 20),
-                  ],
-                ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                    child: Text(status, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: ProColors.primary)),
+                  ),
+                  const SizedBox(width: 6),
+                  const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 20),
+                ],
               ),
             ),
             const SizedBox(height: 24),
@@ -119,19 +122,19 @@ class ProSettingsScreen extends StatelessWidget {
             ),
 
             const SizedBox(height: 32),
-            ElevatedButton.icon(
-              onPressed: onLogout,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0x22EF4444),
-                foregroundColor: ProColors.emergencyRed,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
-                  side: const BorderSide(color: ProColors.emergencyRed),
-                ),
+            GlassCard(
+              onTap: onLogout,
+              gradientColors: const [Color(0x26EF4444), Color(0x0AEF4444)],
+              borderColor: ProColors.emergencyRedBorder,
+              borderRadius: 16,
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.logout_rounded, color: ProColors.emergencyRed, size: 20),
+                  SizedBox(width: 10),
+                  Text('LOG OUT OF ACCOUNT', style: TextStyle(color: ProColors.emergencyRed, fontWeight: FontWeight.w900, fontSize: 14)),
+                ],
               ),
-              icon: const Icon(Icons.logout_rounded),
-              label: const Text('LOG OUT OF ACCOUNT', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
             ),
           ],
         ),
@@ -156,21 +159,31 @@ class _SettingTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: ProColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ProColors.border),
-      ),
-      child: ListTile(
+      child: GlassCard(
         onTap: onTap,
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, color: ProColors.primary, size: 20),
+        padding: const EdgeInsets.all(16),
+        borderRadius: 16,
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+              child: Icon(icon, color: ProColors.primary, size: 20),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 13)),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: ProText.caption, maxLines: 1, overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 18),
+          ],
         ),
-        title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-        subtitle: Text(subtitle, style: const TextStyle(color: ProColors.textMuted, fontSize: 11)),
-        trailing: const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 18),
       ),
     );
   }
