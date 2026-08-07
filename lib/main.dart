@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'core/theme/pro_theme.dart';
 import 'core/storage/pro_session_storage.dart';
+import 'core/services/notification_service.dart';
 import 'core/network/pro_api_client.dart';
 import 'features/auth/pro_auth_screen.dart';
 import 'features/onboarding/pro_registration_basics_screen.dart';
@@ -9,6 +10,7 @@ import 'features/navigation/pro_main_navigation_screen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ProSessionStorage.init();
+  await NotificationService.initialize();
   runApp(const LumoProApp());
 }
 
@@ -103,6 +105,7 @@ class _ProAuthGateState extends State<_ProAuthGate> {
           _isOnboardingComplete = isFullyRegistered;
           _isLoading = false;
         });
+        NotificationService.syncFcmTokenAfterLogin();
       }
     } catch (_) {
       await ProSessionStorage.clearSession();

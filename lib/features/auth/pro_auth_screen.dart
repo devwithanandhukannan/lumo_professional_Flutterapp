@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
+import '../../core/services/notification_service.dart';
 
 class CountryRegion {
   final String code;
@@ -169,6 +170,9 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         verificationStatus: data['verificationStatus']?.toString() ?? 'PENDING',
         isOnboardingComplete: isFullyRegistered,
       );
+
+      // Sync FCM token now that auth token is saved — enables push notifications
+      await NotificationService.syncFcmTokenAfterLogin();
 
       if (mounted) widget.onLoginSuccess();
     } catch (e) {

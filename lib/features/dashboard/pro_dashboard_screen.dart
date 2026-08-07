@@ -25,6 +25,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   bool _loadingJobs = true;
   Timer? _pollTimer;
   Map<String, dynamic>? _activeSuspension;
+  int _selectedJobTabIndex = 0; // 0: Active & Pending, 1: Expired & History
 
   @override
   void initState() {
@@ -810,76 +811,184 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
 
               const SizedBox(height: 24),
 
+              const SizedBox(height: 24),
+
               const Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('ACTIVE JOB DISPATCHES', style: ProText.label),
+                  Text('JOB DISPATCHES', style: ProText.label),
                   Text('Live GPS Telemetry Active', style: TextStyle(fontSize: 10, color: ProColors.primary, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 12),
 
-              if (!_isOnline) ...[
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: ProColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: ProColors.border),
-                  ),
-                  child: const Column(
-                    children: [
-                      Icon(Icons.portable_wifi_off_rounded, size: 36, color: ProColors.textMuted),
-                      SizedBox(height: 12),
-                      Text('You are currently Offline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                      SizedBox(height: 4),
-                      Text('Toggle On-Duty switch above to start receiving live job requests in your 50km area.', textAlign: TextAlign.center, style: ProText.caption),
-                    ],
-                  ),
-                ),
-              ] else if (_loadingJobs) ...[
-                const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: ProColors.primary))),
-              ] else if (_jobs.isEmpty) ...[
-                Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    color: ProColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: ProColors.border),
-                  ),
-                  child: const Column(
-                    children: [
-                      Icon(Icons.search_rounded, size: 36, color: ProColors.primary),
-                      SizedBox(height: 12),
-                      Text('Searching Nearby Bookings...', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                      SizedBox(height: 4),
-                      Text('You are online in your coverage region. Incoming job dispatches will appear here automatically.', textAlign: TextAlign.center, style: ProText.caption),
-                    ],
-                  ),
-                ),
-              ] else ...[
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _jobs.length,
-                  separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
-                  itemBuilder: (context, index) {
-                    final job = _jobs[index];
-                    return _JobCard(
-                      job: job,
-                      onAccept: () => _acceptJob(job['id']?.toString() ?? ''),
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => JobDetailScreen(job: job),
+              Builder(builder: (context) {
+                final activeJobs = _jobs.where((j) {
+                  final st = (j['status'] ?? '').toString().toUpperCase();
+                  return ['REQUESTED', 'CONFIRMED', 'NAVIGATING', 'ARRIVED', 'IN_PROGRESS', 'START_OTP_VERIFIED', 'JOB_COMPLETED_PAYMENT_DUE'].contains(st);
+                }).toList();
+
+                final expiredJobs = _jobs.where((j) {
+                  final st = (j['status'] ?? '').toString().toUpperCase();
+                  return ['EXPIRED', 'CANCELLED', 'COMPLETED'].contains(st);
+                }).toList();
+
+                final currentDisplayedJobs = _selectedJobTabIndex == 0 ? activeJobs : expiredJobs;
+
+                return Column(
+                  children: [
+                    // 2-Tab Selector Bar (Active & Pending vs Expired & History)
+                    Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: BoxDecoration(
+                        color: ProColors.surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: ProColors.border),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedJobTabIndex = 0),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: _selectedJobTabIndex == 0 ? ProColors.primary : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: _selectedJobTabIndex == 0
+                                      ? [const BoxShadow(color: Color(0x3310B981), blurRadius: 8)]
+                                      : [],
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.bolt_rounded, size: 14, color: _selectedJobTabIndex == 0 ? Colors.white : ProColors.textMuted),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Active (${activeJobs.length})',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: _selectedJobTabIndex == 0 ? Colors.white : ProColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
-                        ).then((_) => _loadData());
-                      },
-                    );
-                  },
-                ),
-              ],
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () => setState(() => _selectedJobTabIndex = 1),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: _selectedJobTabIndex == 1 ? const Color(0xFF334155) : Colors.transparent,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.history_rounded, size: 14, color: _selectedJobTabIndex == 1 ? Colors.white : ProColors.textMuted),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      'Expired & Past (${expiredJobs.length})',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: _selectedJobTabIndex == 1 ? Colors.white : ProColors.textMuted,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 14),
+
+                    if (!_isOnline) ...[
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: ProColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: ProColors.border),
+                        ),
+                        child: const Column(
+                          children: [
+                            Icon(Icons.portable_wifi_off_rounded, size: 36, color: ProColors.textMuted),
+                            SizedBox(height: 12),
+                            Text('You are currently Offline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                            SizedBox(height: 4),
+                            Text('Toggle On-Duty switch above to start receiving live job requests in your 50km area.', textAlign: TextAlign.center, style: ProText.caption),
+                          ],
+                        ),
+                      ),
+                    ] else if (_loadingJobs) ...[
+                      const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: ProColors.primary))),
+                    ] else if (currentDisplayedJobs.isEmpty) ...[
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: ProColors.surface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: ProColors.border),
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              _selectedJobTabIndex == 0 ? Icons.search_rounded : Icons.history_rounded,
+                              size: 36,
+                              color: _selectedJobTabIndex == 0 ? ProColors.primary : ProColors.textMuted,
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              _selectedJobTabIndex == 0 ? 'No Active Job Dispatches' : 'No Expired or Past Jobs',
+                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              _selectedJobTabIndex == 0
+                                  ? 'You are online in your coverage region. Incoming active job dispatches will appear here.'
+                                  : 'Expired or completed job history will appear in this tab.',
+                              textAlign: TextAlign.center,
+                              style: ProText.caption,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ] else ...[
+                      ListView.separated(
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: currentDisplayedJobs.length,
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
+                        itemBuilder: (context, index) {
+                          final job = currentDisplayedJobs[index];
+                          return _JobCard(
+                            job: job,
+                            onAccept: () => _acceptJob(job['id']?.toString() ?? ''),
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => JobDetailScreen(job: job),
+                                ),
+                              ).then((_) => _loadData());
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ],
+                );
+              }),
             ],
           ),
         ),
@@ -925,20 +1034,62 @@ class _JobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = (job['status'] ?? 'REQUESTED').toString().toUpperCase();
+    
+    // Determine status colors, background gradient & dimming
+    final bool isExpiredOrCancelled = status == 'EXPIRED' || status == 'CANCELLED';
+    final bool isInProgress = status == 'IN_PROGRESS' || status == 'NAVIGATING' || status == 'ARRIVED';
+    final bool isCompleted = status == 'COMPLETED';
+
     Color statusColor = ProColors.primary;
-    if (status == 'ACCEPTED' || status == 'NAVIGATING') statusColor = ProColors.accent;
-    if (status == 'IN_PROGRESS') statusColor = ProColors.warningAmber;
+    Color borderColor = ProColors.primary.withAlpha(120);
+    Gradient cardGradient = const LinearGradient(
+      colors: [Color(0xFF0F172A), Color(0x2210B981)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+
+    if (isInProgress) {
+      statusColor = ProColors.warningAmber;
+      borderColor = ProColors.warningAmber;
+      cardGradient = const LinearGradient(
+        colors: [Color(0xFF1E293B), Color(0x33F59E0B)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (isCompleted) {
+      statusColor = const Color(0xFF3B82F6);
+      borderColor = const Color(0xFF3B82F6).withAlpha(150);
+      cardGradient = const LinearGradient(
+        colors: [Color(0xFF0F172A), Color(0x223B82F6)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    } else if (isExpiredOrCancelled) {
+      statusColor = const Color(0xFF94A3B8);
+      borderColor = const Color(0x4464748B);
+      cardGradient = const LinearGradient(
+        colors: [Color(0x990F172A), Color(0x770F172A)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      );
+    }
+
+    final Color textColor = isExpiredOrCancelled ? const Color(0xFF94A3B8) : Colors.white;
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
-          color: ProColors.cardBg,
+          gradient: cardGradient,
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: statusColor.withAlpha(120)),
+          border: Border.all(color: borderColor, width: isInProgress ? 1.5 : 1.0),
           boxShadow: [
-            BoxShadow(color: statusColor.withAlpha(20), blurRadius: 12, offset: const Offset(0, 4)),
+            if (isInProgress)
+              const BoxShadow(color: Color(0x33F59E0B), blurRadius: 14, offset: Offset(0, 4))
+            else if (!isExpiredOrCancelled)
+              BoxShadow(color: statusColor.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4)),
           ],
         ),
         child: Column(
@@ -949,34 +1100,62 @@ class _JobCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.build_circle_outlined, color: ProColors.primary, size: 20),
+                    Icon(
+                      isExpiredOrCancelled ? Icons.timer_off_outlined : Icons.build_circle_outlined,
+                      color: isExpiredOrCancelled ? const Color(0xFF64748B) : statusColor,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       job['service_name']?.toString() ?? 'Home Service Request',
-                      style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: textColor,
+                        fontSize: 14,
+                        decoration: isExpiredOrCancelled ? TextDecoration.lineThrough : null,
+                      ),
                     ),
                   ],
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: statusColor.withAlpha(30), borderRadius: BorderRadius.circular(20), border: Border.all(color: statusColor)),
-                  child: Text(status, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: statusColor)),
+                  decoration: BoxDecoration(
+                    color: isExpiredOrCancelled ? const Color(0x2294A3B8) : statusColor.withAlpha(30),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: isExpiredOrCancelled ? const Color(0x4494A3B8) : statusColor),
+                  ),
+                  child: Text(
+                    status,
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      color: statusColor,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Row(
               children: [
-                const Icon(Icons.location_on, color: ProColors.emergencyRed, size: 14),
+                Icon(Icons.location_on, color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.emergencyRed, size: 14),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
                     job['address_text']?.toString() ?? job['customer_address']?.toString() ?? job['address']?.toString() ?? 'Thottikkanam, Kerala',
-                    style: ProText.caption,
+                    style: TextStyle(fontSize: 12, color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.textMuted),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text('₹${job['total_amount']}', style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.white, fontSize: 16)),
+                Text(
+                  '₹${job['total_amount']}',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: isExpiredOrCancelled ? const Color(0xFF64748B) : Colors.white,
+                    fontSize: 16,
+                  ),
+                ),
               ],
             ),
             if (status == 'REQUESTED') ...[
@@ -999,11 +1178,21 @@ class _JobCard extends StatelessWidget {
               const SizedBox(height: 14),
               Row(
                 children: [
-                  const Icon(Icons.arrow_forward_ios, color: ProColors.primary, size: 12),
+                  Icon(
+                    isExpiredOrCancelled ? Icons.info_outline_rounded : Icons.arrow_forward_ios,
+                    color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.primary,
+                    size: 12,
+                  ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'Tap for Live Navigation & Start/End OTP Verification',
-                    style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w700),
+                  Text(
+                    isExpiredOrCancelled
+                        ? 'Request expired or cancelled. Tap to view job record.'
+                        : 'Tap for Live Navigation & Start/End OTP Verification',
+                    style: TextStyle(
+                      color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.primary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),

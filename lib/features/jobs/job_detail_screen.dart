@@ -394,7 +394,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            isPlatformFeePaid ? customerPhone : 'Pay Platform Fee to Unlock Contact',
+                            isPlatformFeePaid ? customerPhone : 'Waiting for Customer Platform Fee Payment',
                             style: TextStyle(
                               fontSize: 11,
                               color: isPlatformFeePaid ? ProColors.textMuted : ProColors.warningAmber,
@@ -416,7 +416,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       IconButton(
                         icon: const Icon(Icons.lock_clock_outlined, color: ProColors.textMuted),
                         onPressed: () {
-                          _showSnackBar('Customer phone number unlocks automatically after customer pays Platform Fee.', isSuccess: false);
+                          _showSnackBar('Customer contact details will unlock automatically as soon as the customer pays the Platform Fee.', isSuccess: false);
                         },
                         tooltip: 'Contact Details Locked',
                       ),
