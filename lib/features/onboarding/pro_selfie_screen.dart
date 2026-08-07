@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
+import 'widgets/onboarding_stepper_header.dart';
 
 class ProSelfieScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -256,11 +257,9 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    _buildStepBar(),
-                    const SizedBox(height: 28),
+                    const OnboardingStepperHeader(currentStep: 4),
+                    const SizedBox(height: 4),
 
-                    const Text('STEP 4 OF 4 (Part 2)', style: ProText.label),
-                    const SizedBox(height: 6),
                     const Text('Live Face Verification', style: ProText.heading1),
                     const SizedBox(height: 6),
                     const Text('We need a real-time selfie to verify your identity. Make sure you\'re in good lighting, face clearly visible.', style: ProText.body),
@@ -396,17 +395,4 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
       ),
     );
   }
-
-  Widget _buildStepBar() => Row(
-    children: List.generate(4, (i) => Expanded(
-      child: Container(
-        margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
-        height: 4,
-        decoration: BoxDecoration(
-          color: i < 3 ? ProColors.primary : ProColors.primary.withAlpha(160),
-          borderRadius: BorderRadius.circular(2),
-        ),
-      ),
-    )),
-  );
 }

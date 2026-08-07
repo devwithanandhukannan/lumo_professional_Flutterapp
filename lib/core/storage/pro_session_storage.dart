@@ -16,6 +16,10 @@ class ProSessionStorage {
   static const _keyOnboardingComplete = 'pro_is_onboarding_complete';
   static const _keyCurrentLat = 'pro_current_lat';
   static const _keyCurrentLng = 'pro_current_lng';
+  static const _keySoundAlerts = 'pro_sound_alerts_enabled';
+  static const _keyVibrationAlerts = 'pro_vibration_alerts_enabled';
+  static const _keyAutoAcceptJobs = 'pro_auto_accept_jobs';
+  static const _keyAlertTone = 'pro_alert_tone';
 
   static SharedPreferences? _prefs;
 
@@ -38,6 +42,17 @@ class ProSessionStorage {
   static bool get isOnboardingComplete => _prefs?.getBool(_keyOnboardingComplete) ?? false;
   static double? get currentLat => _prefs?.getDouble(_keyCurrentLat);
   static double? get currentLng => _prefs?.getDouble(_keyCurrentLng);
+
+  static bool get soundAlertsEnabled => _prefs?.getBool(_keySoundAlerts) ?? true;
+  static bool get vibrationAlertsEnabled => _prefs?.getBool(_keyVibrationAlerts) ?? true;
+  static bool get autoAcceptInstantJobs => _prefs?.getBool(_keyAutoAcceptJobs) ?? false;
+  static String get alertTone => _prefs?.getString(_keyAlertTone) ?? 'Loud Alarm Chime';
+
+  static Future<void> setSoundAlertsEnabled(bool val) async => await _prefs?.setBool(_keySoundAlerts, val);
+  static Future<void> setVibrationAlertsEnabled(bool val) async => await _prefs?.setBool(_keyVibrationAlerts, val);
+  static Future<void> setAutoAcceptInstantJobs(bool val) async => await _prefs?.setBool(_keyAutoAcceptJobs, val);
+  static Future<void> setAlertTone(String tone) async => await _prefs?.setString(_keyAlertTone, tone);
+  static Future<void> setCoverageRadiusKm(double radius) async => await _prefs?.setDouble(_keyCoverageRadiusKm, radius);
 
   static Future<void> setSession({
     required String token,

@@ -219,17 +219,16 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
           children: [
             if (!widget.isStandaloneManagement) ...[
               const OnboardingStepperHeader(currentStep: 2),
-              const Text('Step 2 of 4: Professional Catalog & Rates', style: ProText.label),
               const SizedBox(height: 4),
             ],
 
-            const Text('Your Services & Rates', style: ProText.heading2),
+            const Text('Your Services & Rates', style: ProText.heading1),
             const SizedBox(height: 6),
             Text(
               widget.isStandaloneManagement
                   ? 'Select the admin services you offer and set your custom pricing rates.'
-                  : 'Select services you offer. Set your custom rates (base price shown for reference, commission is handled by admin).',
-              style: ProText.caption,
+                  : 'Select services you offer. Set your custom rates and travel fee per km.',
+              style: ProText.body,
             ),
             const SizedBox(height: 20),
 
@@ -254,9 +253,9 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: const Color(0x0AFFFFFF),
+                  color: ProColors.surface,
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ProColors.glassBorder),
+                  border: Border.all(color: ProColors.border),
                 ),
                 child: const Column(
                   children: [
@@ -280,61 +279,114 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
                 itemCount: _catalogServices.length,
-                separatorBuilder: (ctx, index) => const SizedBox(height: 10),
+                separatorBuilder: (ctx, index) => const SizedBox(height: 12),
                 itemBuilder: (context, index) {
                   final service = _catalogServices[index];
                   final id = service['id'].toString();
                   final isChecked = _selected[id] == true;
 
-                  return Container(
-                    padding: const EdgeInsets.all(14),
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
-                      color: isChecked ? ProColors.primarySoft : ProColors.cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: isChecked ? ProColors.primary : ProColors.border),
+                      color: isChecked ? ProColors.cardBg : ProColors.surface,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: isChecked ? ProColors.primary : ProColors.border,
+                        width: isChecked ? 1.5 : 1,
+                      ),
                     ),
-                    child: Row(
+                    child: Column(
                       children: [
-                        Checkbox(
-                          value: isChecked,
-                          activeColor: ProColors.primary,
-                          onChanged: (val) => setState(() => _selected[id] = val ?? false),
-                        ),
-                        Text(service['icon']?.toString() ?? '🔧', style: const TextStyle(fontSize: 22)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(service['name']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
-                              Text('Base: ₹${service['base_price']}', style: ProText.caption),
-                            ],
+                        InkWell(
+                          onTap: () => setState(() => _selected[id] = !isChecked),
+                          borderRadius: BorderRadius.circular(18),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                            child: Row(
+                              children: [
+                                Checkbox(
+                                  value: isChecked,
+                                  activeColor: ProColors.primary,
+                                  onChanged: (val) => setState(() => _selected[id] = val ?? false),
+                                ),
+                                Text(service['icon']?.toString() ?? '🔧', style: const TextStyle(fontSize: 22)),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        service['name']?.toString() ?? '',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: isChecked ? Colors.white : ProColors.textMuted,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                      Text('Base Price: ₹${service['base_price']}', style: ProText.caption),
+                                    ],
+                                  ),
+                                ),
+                                if (isChecked)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: ProColors.primarySoft,
+                                      borderRadius: BorderRadius.circular(6),
+                                    ),
+                                    child: const Text(
+                                      'SELECTED',
+                                      style: TextStyle(color: ProColors.primary, fontSize: 9, fontWeight: FontWeight.bold),
+                                    ),
+                                  ),
+                              ],
+                            ),
                           ),
                         ),
                         if (isChecked) ...[
-                          const SizedBox(width: 8),
-                          SizedBox(
-                            width: 72,
-                            child: TextField(
-                              controller: _priceControllers[id],
-                              keyboardType: TextInputType.number,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                              decoration: proInputDecoration(hint: '₹ Rate').copyWith(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          SizedBox(
-                            width: 72,
-                            child: TextField(
-                              controller: _kmChargeControllers[id],
-                              keyboardType: TextInputType.number,
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
-                              decoration: proInputDecoration(hint: '₹/km').copyWith(
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                                hintStyle: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11),
-                              ),
+                          const Divider(color: ProColors.border, height: 1),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('YOUR CUSTOM RATE (₹)', style: TextStyle(color: ProColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      TextField(
+                                        controller: _priceControllers[id],
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                        decoration: proInputDecoration(hint: '₹ Rate').copyWith(
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                          prefixIcon: const Icon(Icons.currency_rupee, color: ProColors.accent, size: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text('TRAVEL FEE (₹/KM)', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 10, fontWeight: FontWeight.bold)),
+                                      const SizedBox(height: 4),
+                                      TextField(
+                                        controller: _kmChargeControllers[id],
+                                        keyboardType: TextInputType.number,
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                                        decoration: proInputDecoration(hint: '₹/km').copyWith(
+                                          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                                          prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFF59E0B), size: 16),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -354,9 +406,9 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: const Color(0x0AFFFFFF),
+                  color: ProColors.surface,
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: ProColors.glassBorder),
+                  border: Border.all(color: ProColors.border),
                 ),
                 child: Row(
                   children: [
@@ -384,13 +436,17 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: ProColors.purpleSoft,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: const Color(0x338B5CF6)),
+                  color: ProColors.surface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ProColors.primary.withAlpha(80)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.add_circle_outline_rounded, color: ProColors.purple, size: 22),
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(10)),
+                      child: const Icon(Icons.add_circle_outline_rounded, color: ProColors.primary, size: 20),
+                    ),
                     const SizedBox(width: 12),
                     const Expanded(
                       child: Column(
@@ -446,16 +502,10 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                       decoration: proInputDecoration(hint: '499'),
                     ),
                     const SizedBox(height: 14),
-                    ElevatedButton(
-                      onPressed: _submittingCustom ? null : _submitCustomService,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: ProColors.purple,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: _submittingCustom
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text('SUBMIT FOR ADMIN REVIEW', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    GradientButton(
+                      label: _submittingCustom ? 'SUBMITTING TO ADMIN...' : 'SUBMIT FOR ADMIN REVIEW',
+                      icon: Icons.send_rounded,
+                      onTap: _submittingCustom ? null : _submitCustomService,
                     ),
                   ],
                 ),
@@ -464,27 +514,12 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
 
             const SizedBox(height: 28),
 
-            SizedBox(
-              height: 52,
-              child: ElevatedButton(
-                onPressed: _isSaving ? null : _saveServices,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ProColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: _isSaving
-                    ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                    : FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          widget.isStandaloneManagement
-                              ? 'SAVE OFFERED SERVICES'
-                              : 'PROCEED TO STEP 3 (DOCUMENT VAULT)',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.8),
-                        ),
-                      ),
-              ),
+            GradientButton(
+              label: widget.isStandaloneManagement
+                  ? 'SAVE OFFERED SERVICES'
+                  : 'PROCEED TO STEP 3 (DOCUMENT VAULT)',
+              icon: Icons.arrow_forward_rounded,
+              onTap: _isSaving ? null : _saveServices,
             ),
           ],
         ),

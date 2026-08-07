@@ -6,6 +6,201 @@ import '../onboarding/pro_service_setup_screen.dart';
 class ProServicesCustomScreen extends StatefulWidget {
   const ProServicesCustomScreen({super.key});
 
+  static Future<void> showCustomServiceModal(BuildContext context, {VoidCallback? onSuccess}) async {
+    final nameCtrl = TextEditingController();
+    final descCtrl = TextEditingController();
+    final priceCtrl = TextEditingController();
+    final kmChargeCtrl = TextEditingController(text: '15');
+    String? modalError;
+    bool isSubmitting = false;
+
+    await showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: ProColors.cardBg,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalCtx, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(modalCtx).viewInsets.bottom + 20,
+            top: 20,
+            left: 20,
+            right: 20,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                    child: const Icon(Icons.add_task_rounded, color: ProColors.primary, size: 22),
+                  ),
+                  const SizedBox(width: 12),
+                  const Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Request Custom Service',
+                          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        ),
+                        Text(
+                          'Service name & scope will be submitted for Admin approval',
+                          style: TextStyle(color: ProColors.textMuted, fontSize: 11),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(icon: const Icon(Icons.close, color: ProColors.textMuted), onPressed: () => Navigator.pop(ctx)),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(color: ProColors.border, height: 1),
+              const SizedBox(height: 16),
+
+              if (modalError != null) ...[
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(color: const Color(0x22EF4444), borderRadius: BorderRadius.circular(10), border: Border.all(color: ProColors.emergencyRed)),
+                  child: Text(modalError!, style: const TextStyle(color: ProColors.emergencyRed, fontSize: 12, fontWeight: FontWeight.bold)),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              const Text('CUSTOM SERVICE NAME', style: ProText.label),
+              const SizedBox(height: 6),
+              TextField(
+                controller: nameCtrl,
+                style: const TextStyle(color: Colors.white, fontSize: 14),
+                decoration: InputDecoration(
+                  hintText: 'e.g. Full Villa AC Duct Sanitation',
+                  hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                  filled: true,
+                  fillColor: ProColors.surface,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                  prefixIcon: const Icon(Icons.build_rounded, color: ProColors.primary, size: 18),
+                ),
+              ),
+
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('PROPOSED RATE (₹)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: priceCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 799',
+                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            prefixIcon: const Icon(Icons.currency_rupee_rounded, color: ProColors.accent, size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('TRAVEL FEE (₹/KM)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: kmChargeCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 15',
+                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFF59E0B), size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 14),
+              const Text('WORK DESCRIPTION / SCOPE', style: ProText.label),
+              const SizedBox(height: 6),
+              TextField(
+                controller: descCtrl,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'Describe equipment, materials, and scope of work included...',
+                  hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 12),
+                  filled: true,
+                  fillColor: ProColors.surface,
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+              GradientButton(
+                label: isSubmitting ? 'SUBMITTING TO ADMIN...' : 'SUBMIT FOR ADMIN APPROVAL',
+                icon: Icons.send_rounded,
+                onTap: isSubmitting
+                    ? null
+                    : () async {
+                        final name = nameCtrl.text.trim();
+                        final priceStr = priceCtrl.text.trim();
+                        final kmStr = kmChargeCtrl.text.trim();
+                        if (name.isEmpty) {
+                          setModalState(() => modalError = 'Please enter service name');
+                          return;
+                        }
+
+                        setModalState(() {
+                          isSubmitting = true;
+                          modalError = null;
+                        });
+
+                        try {
+                          await ProApiClient.requestCustomService(
+                            serviceName: name,
+                            description: descCtrl.text.trim(),
+                            suggestedPrice: double.tryParse(priceStr),
+                            kmCharge: double.tryParse(kmStr),
+                          );
+                          if (ctx.mounted) {
+                            Navigator.pop(ctx);
+                            onSuccess?.call();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Custom service submitted for Admin review! ✓'), backgroundColor: ProColors.primary),
+                            );
+                          }
+                        } catch (e) {
+                          setModalState(() {
+                            isSubmitting = false;
+                            modalError = e.toString().replaceAll('Exception: ', '');
+                          });
+                        }
+                      },
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   State<ProServicesCustomScreen> createState() => _ProServicesCustomScreenState();
 }
@@ -147,7 +342,9 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
     final srvId = service['service_id']?.toString() ?? service['id']?.toString() ?? '';
     final srvName = service['service_name']?.toString() ?? 'Service';
     final currentCustom = service['custom_price'] ?? service['base_price'] ?? 499;
+    final currentKmCharge = service['km_charge_per_km'] ?? service['per_km_rate'] ?? 15;
     final priceCtrl = TextEditingController(text: currentCustom.toString());
+    final kmChargeCtrl = TextEditingController(text: currentKmCharge.toString());
     bool isSaving = false;
 
     showModalBottomSheet(
@@ -179,7 +376,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('Edit Custom Rate (Instant)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Text('Edit Custom Rates (Instant)', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
                         Text(srvName, style: const TextStyle(color: ProColors.textMuted, fontSize: 12)),
                       ],
                     ),
@@ -196,42 +393,75 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                     Icon(Icons.bolt_rounded, color: ProColors.primary, size: 18),
                     SizedBox(width: 8),
                     Expanded(
-                      child: Text('Rate updates take effect instantly for customer bookings! No Admin approval needed.', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
+                      child: Text('Rate & Travel fee updates take effect instantly for customer bookings! No Admin approval needed.', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              const Text('YOUR CUSTOM RATE (₹)', style: ProText.label),
-              const SizedBox(height: 6),
-              TextField(
-                controller: priceCtrl,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  prefixIcon: const Icon(Icons.currency_rupee_rounded, color: ProColors.accent),
-                  filled: true,
-                  fillColor: ProColors.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('YOUR CUSTOM RATE (₹)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: priceCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.currency_rupee_rounded, color: ProColors.accent),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('TRAVEL FEE (₹/KM)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: kmChargeCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFF59E0B)),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
               GradientButton(
-                label: isSaving ? 'SAVING...' : 'SAVE RATE INSTANTLY',
+                label: isSaving ? 'SAVING...' : 'SAVE RATES INSTANTLY',
                 icon: Icons.check_circle_rounded,
                 onTap: isSaving
                     ? null
                     : () async {
                         final val = double.tryParse(priceCtrl.text.trim());
+                        final kmVal = double.tryParse(kmChargeCtrl.text.trim());
                         if (val == null || val <= 0) return;
                         setModalState(() => isSaving = true);
                         try {
-                          await ProApiClient.updateCustomServicePrice(srvId, val);
+                          await ProApiClient.updateCustomServicePrice(srvId, val, kmCharge: kmVal);
                           if (ctx.mounted) {
                             Navigator.pop(ctx);
                             _loadData();
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Custom rate updated instantly! ✓'), backgroundColor: ProColors.primary),
+                              const SnackBar(content: Text('Custom rate & travel fee updated instantly! ✓'), backgroundColor: ProColors.primary),
                             );
                           }
                         } catch (e) {
@@ -256,6 +486,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
     final nameCtrl = TextEditingController(text: existingReq?['service_name']?.toString() ?? '');
     final descCtrl = TextEditingController(text: existingReq?['description']?.toString() ?? '');
     final priceCtrl = TextEditingController(text: existingReq?['suggested_price']?.toString() ?? '');
+    final kmChargeCtrl = TextEditingController(text: existingReq?['km_charge_per_km']?.toString() ?? '15');
     String? modalError;
     bool isSubmitting = false;
 
@@ -331,20 +562,54 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
               ),
 
               const SizedBox(height: 14),
-              const Text('PROPOSED RATE (₹)', style: ProText.label),
-              const SizedBox(height: 6),
-              TextField(
-                controller: priceCtrl,
-                keyboardType: TextInputType.number,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: InputDecoration(
-                  hintText: 'e.g. 799',
-                  hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
-                  filled: true,
-                  fillColor: ProColors.surface,
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
-                  prefixIcon: const Icon(Icons.currency_rupee_rounded, color: ProColors.accent, size: 18),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('PROPOSED RATE (₹)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: priceCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 799',
+                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            prefixIcon: const Icon(Icons.currency_rupee_rounded, color: ProColors.accent, size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('TRAVEL FEE (₹/KM)', style: ProText.label),
+                        const SizedBox(height: 6),
+                        TextField(
+                          controller: kmChargeCtrl,
+                          keyboardType: TextInputType.number,
+                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          decoration: InputDecoration(
+                            hintText: 'e.g. 15',
+                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            filled: true,
+                            fillColor: ProColors.surface,
+                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+                            prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFF59E0B), size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
 
               const SizedBox(height: 14),
@@ -372,6 +637,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                     : () async {
                         final name = nameCtrl.text.trim();
                         final priceStr = priceCtrl.text.trim();
+                        final kmStr = kmChargeCtrl.text.trim();
                         if (name.isEmpty) {
                           setModalState(() => modalError = 'Please enter service name');
                           return;
@@ -387,6 +653,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                             serviceName: name,
                             description: descCtrl.text.trim(),
                             suggestedPrice: double.tryParse(priceStr),
+                            kmCharge: double.tryParse(kmStr),
                           );
                           if (ctx.mounted) {
                             Navigator.pop(ctx);
@@ -576,23 +843,35 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('Your Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
-                                      Text('₹${srv['custom_price'] ?? srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.w900, fontSize: 15)),
+                                      Row(
+                                        children: [
+                                          const Text('Your Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                                          Text('₹${srv['custom_price'] ?? srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.w900, fontSize: 15)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          const Text('Travel Fee: ', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                                          Text('₹${srv['km_charge_per_km'] ?? srv['per_km_rate'] ?? 15}/km', style: const TextStyle(color: ProColors.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                                        ],
+                                      ),
                                     ],
                                   ),
                                   InkWell(
                                     onTap: () => _openInstantPriceEditModal(srv),
                                     child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                                       decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(8)),
                                       child: const Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(Icons.edit, color: ProColors.primary, size: 12),
                                           SizedBox(width: 4),
-                                          Text('Edit Rate', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
+                                          Text('Edit Rate & Fee', style: TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ),
@@ -700,8 +979,24 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                               const SizedBox(height: 8),
                               Row(
                                 children: [
-                                  const Text('Proposed Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
-                                  Text('₹${req['suggested_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        children: [
+                                          const Text('Proposed Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                                          Text('₹${req['suggested_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.bold, fontSize: 14)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Row(
+                                        children: [
+                                          const Text('Travel Fee: ', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                                          Text('₹${req['km_charge_per_km'] ?? 15}/km', style: const TextStyle(color: ProColors.primary, fontWeight: FontWeight.bold, fontSize: 11)),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
                                   const Spacer(),
                                   TextButton.icon(
                                     onPressed: () => _openCustomServiceModal(req),

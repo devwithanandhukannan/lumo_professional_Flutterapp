@@ -306,18 +306,19 @@ class ProApiClient {
     throw Exception(body['message'] ?? 'Failed to save offered services');
   }
 
-  static Future<void> updateCustomServicePrice(String serviceId, double customPrice) async {
+  static Future<void> updateCustomServicePrice(String serviceId, double? customPrice, {double? kmCharge}) async {
     final res = await _requestWithFallback((url) => http.post(
           Uri.parse('$url/api/v1/pro/offered-services/update-price'),
           headers: _authHeaders,
           body: jsonEncode({
             'serviceId': serviceId,
             'customPrice': customPrice,
+            'kmCharge': kmCharge,
           }),
         ));
     if (res.statusCode != 200) {
       final body = jsonDecode(res.body);
-      throw Exception(body['message'] ?? 'Failed to update custom price');
+      throw Exception(body['message'] ?? 'Failed to update custom price & travel charge');
     }
   }
 
@@ -517,6 +518,7 @@ class ProApiClient {
     required String serviceName,
     String? description,
     double? suggestedPrice,
+    double? kmCharge,
     String? categoryId,
   }) async {
     final res = await _requestWithFallback((url) => http.post(
@@ -526,6 +528,7 @@ class ProApiClient {
             'serviceName': serviceName,
             'description': description,
             if (suggestedPrice != null) 'suggestedPrice': suggestedPrice,
+            if (kmCharge != null) 'kmCharge': kmCharge,
             if (categoryId != null) 'categoryId': categoryId,
           }),
         ));

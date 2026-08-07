@@ -6,6 +6,7 @@ import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
 import 'pro_service_setup_screen.dart';
+import 'widgets/onboarding_stepper_header.dart';
 import 'widgets/pro_location_picker_modal.dart';
 
 class ProRegistrationBasicsScreen extends StatefulWidget {
@@ -222,11 +223,9 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        _buildStepIndicator(),
-                        const SizedBox(height: 20),
-
-                        const Text('STEP 2 OF 4', style: ProText.label),
+                        const OnboardingStepperHeader(currentStep: 1),
                         const SizedBox(height: 4),
+
                         const Text('Tell Us About Yourself', style: ProText.heading1),
                         const SizedBox(height: 6),
                         const Text('Basic information to create your professional profile.', style: ProText.body),
@@ -379,28 +378,7 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
     );
   }
 
-  Widget _buildStepIndicator() {
-    return Row(
-      children: List.generate(4, (i) {
-        final active = i == 1;
-        final done = i == 0;
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
-            height: 4,
-            decoration: BoxDecoration(
-              color: done
-                  ? ProColors.primary
-                  : active
-                      ? ProColors.primary.withAlpha(180)
-                      : ProColors.glassBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        );
-      }),
-    );
-  }
+
 
   Widget _buildBgBlobs() {
     return Positioned(

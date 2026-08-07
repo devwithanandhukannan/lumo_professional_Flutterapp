@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/theme/pro_theme.dart';
 import 'pro_selfie_screen.dart';
+import 'widgets/onboarding_stepper_header.dart';
 
 class ProDocumentUploadScreen extends StatefulWidget {
   final VoidCallback onCompleted;
@@ -378,11 +379,9 @@ startxref
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        _buildStepBar(3),
-                        const SizedBox(height: 20),
+                        const OnboardingStepperHeader(currentStep: 3),
+                        const SizedBox(height: 4),
 
-                        const Text('STEP 4 OF 4 (Part 1)', style: ProText.label),
-                        const SizedBox(height: 6),
                         const Text('Upload Verification Proofs', style: ProText.heading1),
                         const SizedBox(height: 6),
                         const Text('Upload your government ID and police clearance certificate PDF. All files will be stored in the backend proff_cert folder.', style: ProText.body),
@@ -509,28 +508,7 @@ startxref
     );
   }
 
-  Widget _buildStepBar(int activeStepIndex) {
-    return Row(
-      children: List.generate(4, (i) {
-        final active = i == activeStepIndex;
-        final done = i < activeStepIndex;
-        return Expanded(
-          child: Container(
-            margin: EdgeInsets.only(right: i < 3 ? 6 : 0),
-            height: 4,
-            decoration: BoxDecoration(
-              color: done
-                  ? ProColors.primary
-                  : active
-                      ? ProColors.primary.withAlpha(180)
-                      : ProColors.glassBorder,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-        );
-      }),
-    );
-  }
+
 
   Widget _errorBanner(String msg) {
     return Container(
