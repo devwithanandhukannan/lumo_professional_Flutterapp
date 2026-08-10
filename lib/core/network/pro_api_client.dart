@@ -8,7 +8,7 @@ class ProApiClient {
   static void Function()? onUnauthorizedOrNotFound;
 
   static void _checkResponseForUserError(http.Response res) {
-    if (res.statusCode == 401 || res.statusCode == 404) {
+    if (res.statusCode == 401) {
       ProSessionStorage.clearSession();
       onUnauthorizedOrNotFound?.call();
     }
@@ -17,10 +17,10 @@ class ProApiClient {
   static String _defaultBaseUrl() {
     if (kIsWeb) return 'http://localhost:8000';
     try {
-      if (Platform.isAndroid) return 'http://192.168.1.9:8000';
-      if (Platform.isIOS) return 'http://192.168.1.9:8000';
+      if (Platform.isAndroid) return 'http://192.168.1.2:8000';
+      if (Platform.isIOS) return 'http://192.168.1.2:8000';
     } catch (_) {}
-    return 'http://192.168.1.9:8000';
+    return 'http://192.168.1.2:8000';
   }
 
   static String baseUrl = _defaultBaseUrl();
@@ -43,57 +43,48 @@ class ProApiClient {
   static Future<http.Response> _requestWithFallback(
     Future<http.Response> Function(String currentUrl) requestFn,
   ) async {
-    final candidateUrls = <String>{
-      baseUrl,
-      'http://192.168.1.9:8000',
-      'http://192.168.1.3:8000',
-      'http://192.168.1.2:8000',
-      'http://192.168.1.4:8000',
-      'http://192.168.1.5:8000',
-      'http://192.168.1.6:8000',
-      'http://192.168.1.7:8000',
-      'http://192.168.1.8:8000',
-      'http://192.168.1.10:8000',
-      'http://192.168.1.11:8000',
-      'http://192.168.1.12:8000',
-      'http://192.168.1.13:8000',
-      'http://192.168.1.14:8000',
-      'http://192.168.1.15:8000',
-      'http://192.168.0.9:8000',
-      'http://192.168.0.3:8000',
-      'http://192.168.0.2:8000',
-      'http://192.168.0.4:8000',
-      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
-      if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:5000',
-      'http://127.0.0.1:8000',
-      'http://localhost:8000',
-    }.toList();
+    // 1. Try active baseUrl first
+    try {
+      final response = await requestFn(baseUrl).timeout(const Duration(seconds: 5));
+      _checkResponseForUserError(response);
+      return response;
+    } catch (primaryErr) {
+      // 2. Fallback to candidate hosts with fast fail
+      final candidateUrls = <String>{
+        'http://192.168.1.2:8000',
+        'http://192.168.1.9:8000',
+        if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
+        'http://localhost:8000',
+        'http://127.0.0.1:8000',
+        'http://192.168.1.3:8000',
+        'http://192.168.0.2:8000',
+        'http://192.168.0.9:8000',
+      }.where((u) => u != baseUrl).toList();
 
-    Object? lastError;
-
-    for (final candidate in candidateUrls) {
-      try {
-        final response = await requestFn(candidate).timeout(const Duration(seconds: 2));
-        baseUrl = candidate;
-        _checkResponseForUserError(response);
-        return response;
-      } catch (e) {
-        lastError = e;
+      Object? lastError = primaryErr;
+      for (final candidate in candidateUrls) {
+        try {
+          final response = await requestFn(candidate).timeout(const Duration(seconds: 2));
+          baseUrl = candidate;
+          _checkResponseForUserError(response);
+          return response;
+        } catch (e) {
+          lastError = e;
+        }
       }
-    }
 
-    if (lastError != null) {
-      if (lastError.toString().contains('Socket') ||
-          lastError.toString().contains('No route to host') ||
-          lastError.toString().contains('TimeoutException')) {
-        throw Exception(
-          'Backend API Gateway unreachable at $baseUrl. Ensure ./run-all.sh is running in backend directory and your phone is on the same Wi-Fi network (System IP: 192.168.1.9).',
-        );
+      if (lastError != null) {
+        if (lastError.toString().contains('Socket') ||
+            lastError.toString().contains('No route to host') ||
+            lastError.toString().contains('TimeoutException')) {
+          throw Exception(
+            'Backend API Gateway unreachable at $baseUrl. Ensure ./run-all.sh is running in backend directory and your phone is on the same Wi-Fi network.',
+          );
+        }
+        throw lastError;
       }
-      throw lastError;
+      throw Exception('Connection failed');
     }
-
-    throw Exception('Connection failed');
   }
 
   // ─── AUTH ─────────────────────────────────────────────────────────────────

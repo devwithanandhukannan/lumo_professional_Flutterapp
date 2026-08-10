@@ -75,15 +75,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         Navigator.pop(context);
         _showSnackBar('✅ START OTP VERIFIED! Service in progress.', isSuccess: true);
       }
-    } catch (_) {
-      if (code == widget.job['start_otp']?.toString() || code == '4821' || code == '4920') {
-        if (mounted) {
-          setState(() => _jobState = 'IN_PROGRESS');
-          Navigator.pop(context);
-          _showSnackBar('✅ START OTP VERIFIED! Service in progress.', isSuccess: true);
-        }
-      } else {
-        if (mounted) _showSnackBar('❌ Invalid OTP. Try again.', isSuccess: false);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('❌ ${e.toString().replaceAll('Exception: ', '')}', isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _verifyingOtp = false);
@@ -105,15 +99,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
         Navigator.pop(context);
         _showSnackBar('🎉 JOB COMPLETED! Payout ₹${widget.job['total_amount']} credited.', isSuccess: true);
       }
-    } catch (_) {
-      if (code == widget.job['end_otp']?.toString() || code == '9940' || code == '8103') {
-        if (mounted) {
-          setState(() => _jobState = 'COMPLETED');
-          Navigator.pop(context);
-          _showSnackBar('🎉 JOB COMPLETED! Payout ₹${widget.job['total_amount']} credited.', isSuccess: true);
-        }
-      } else {
-        if (mounted) _showSnackBar('❌ Invalid OTP. Try again.', isSuccess: false);
+    } catch (e) {
+      if (mounted) {
+        _showSnackBar('❌ ${e.toString().replaceAll('Exception: ', '')}', isSuccess: false);
       }
     } finally {
       if (mounted) setState(() => _verifyingOtp = false);
