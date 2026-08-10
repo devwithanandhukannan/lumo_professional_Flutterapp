@@ -135,9 +135,7 @@ class _ProTrainingScreenState extends State<ProTrainingScreen> {
     final double completionPct = completedCount / _modules.length;
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Compliance & Safety Academy'),
       ),
       body: SingleChildScrollView(
@@ -176,8 +174,7 @@ class _ProTrainingScreenState extends State<ProTrainingScreen> {
                     child: LinearProgressIndicator(
                       value: completionPct,
                       minHeight: 8,
-                      backgroundColor: ProColors.background,
-                      color: ProColors.primary,
+                                      color: ProColors.primary,
                     ),
                   ),
                   const SizedBox(height: 12),

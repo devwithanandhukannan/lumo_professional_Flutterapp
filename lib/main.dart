@@ -7,6 +7,8 @@ import 'features/auth/pro_auth_screen.dart';
 import 'features/onboarding/pro_registration_basics_screen.dart';
 import 'features/navigation/pro_main_navigation_screen.dart';
 
+import 'core/theme/pro_theme_controller.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await ProSessionStorage.init();
@@ -19,12 +21,16 @@ class LumoProApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'LUMO Partner — Verified Professionals',
-      debugShowCheckedModeBanner: false,
-      themeMode: ThemeMode.dark,
-      darkTheme: ProTheme.darkTheme,
-      home: const _ProAuthGate(),
+    return AnimatedBuilder(
+      animation: ProThemeController.instance,
+      builder: (context, _) => MaterialApp(
+        title: 'LUMO Partner — Verified Professionals',
+        debugShowCheckedModeBanner: false,
+        themeMode: ProThemeController.instance.themeMode,
+        theme: ProTheme.lightTheme,
+        darkTheme: ProTheme.darkTheme,
+        home: const _ProAuthGate(),
+      ),
     );
   }
 }
@@ -132,8 +138,7 @@ class _ProAuthGateState extends State<_ProAuthGate> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return const Scaffold(
-        backgroundColor: ProColors.background,
-        body: Center(
+          body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

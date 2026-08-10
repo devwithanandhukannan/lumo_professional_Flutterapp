@@ -357,7 +357,6 @@ startxref
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       body: Stack(
         children: [
           Positioned(bottom: -80, right: -80, child: Container(

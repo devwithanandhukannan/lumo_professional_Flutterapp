@@ -162,9 +162,7 @@ class _ProMapScreenState extends State<ProMapScreen> {
     final address = widget.job['customer_address']?.toString() ?? 'Address';
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: Text('Navigation: $serviceName'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),

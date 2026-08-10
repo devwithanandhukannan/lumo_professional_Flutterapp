@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ProSessionStorage {
@@ -20,6 +21,7 @@ class ProSessionStorage {
   static const _keyVibrationAlerts = 'pro_vibration_alerts_enabled';
   static const _keyAutoAcceptJobs = 'pro_auto_accept_jobs';
   static const _keyAlertTone = 'pro_alert_tone';
+  static const _keyThemeMode = 'pro_theme_mode';
 
   static SharedPreferences? _prefs;
 
@@ -47,6 +49,35 @@ class ProSessionStorage {
   static bool get vibrationAlertsEnabled => _prefs?.getBool(_keyVibrationAlerts) ?? true;
   static bool get autoAcceptInstantJobs => _prefs?.getBool(_keyAutoAcceptJobs) ?? false;
   static String get alertTone => _prefs?.getString(_keyAlertTone) ?? 'Loud Alarm Chime';
+
+  static ThemeMode get themeModePreference {
+    final mode = _prefs?.getString(_keyThemeMode) ?? 'SYSTEM';
+    switch (mode) {
+      case 'DARK':
+        return ThemeMode.dark;
+      case 'LIGHT':
+        return ThemeMode.light;
+      case 'SYSTEM':
+      default:
+        return ThemeMode.system;
+    }
+  }
+
+  static Future<void> setThemeModePreference(ThemeMode mode) async {
+    String val;
+    switch (mode) {
+      case ThemeMode.dark:
+        val = 'DARK';
+        break;
+      case ThemeMode.light:
+        val = 'LIGHT';
+        break;
+      case ThemeMode.system:
+        val = 'SYSTEM';
+        break;
+    }
+    await _prefs?.setString(_keyThemeMode, val);
+  }
 
   static Future<void> setSoundAlertsEnabled(bool val) async => await _prefs?.setBool(_keySoundAlerts, val);
   static Future<void> setVibrationAlertsEnabled(bool val) async => await _prefs?.setBool(_keyVibrationAlerts, val);

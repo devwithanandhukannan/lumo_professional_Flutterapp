@@ -47,7 +47,6 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     with TickerProviderStateMixin {
   bool _isRegisterMode = true;
 
-  // Region & phone selection
   CountryRegion _selectedRegion = defaultCountryRegions.first;
   final _phoneCtrl = TextEditingController();
   final _otpCtrl = TextEditingController();
@@ -64,7 +63,8 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   @override
   void initState() {
     super.initState();
-    _fadeCtrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 500));
+    _fadeCtrl = AnimationController(
+        vsync: this, duration: const Duration(milliseconds: 500));
     _fadeAnim = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
     _fadeCtrl.forward();
   }
@@ -79,47 +79,54 @@ class _ProAuthScreenState extends State<ProAuthScreen>
 
   String get _normalizedPhone {
     String digits = _phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '');
-    if (digits.startsWith('91') && digits.length > 10 && _selectedRegion.dialCode == '+91') {
+    if (digits.startsWith('91') &&
+        digits.length > 10 &&
+        _selectedRegion.dialCode == '+91') {
       digits = digits.substring(2);
     }
     return '${_selectedRegion.dialCode}$digits';
   }
 
   Future<void> _sendOtp() async {
-    final digits = _phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '');
-    if (digits.isEmpty || (digits.length < 7 && _selectedRegion.code != 'IN') || (digits.length < 10 && _selectedRegion.code == 'IN')) {
+    final digits =
+        _phoneCtrl.text.trim().replaceAll(RegExp(r'\D'), '');
+    if (digits.isEmpty ||
+        (digits.length < 7 && _selectedRegion.code != 'IN') ||
+        (digits.length < 10 && _selectedRegion.code == 'IN')) {
       setState(() => _error = 'Enter a valid mobile phone number');
       return;
     }
-    setState(() { _isSendingOtp = true; _error = null; });
+    setState(() {
+      _isSendingOtp = true;
+      _error = null;
+    });
     try {
       final phone = _normalizedPhone;
 
-      // Update 2: Pre-flight phone check — block re-registration of existing pros
       if (_isRegisterMode) {
         try {
           final checkRes = await ProApiClient.checkPhoneExists(phone);
-          final checkData = (checkRes['data'] ?? checkRes) as Map<String, dynamic>;
+          final checkData =
+              (checkRes['data'] ?? checkRes) as Map<String, dynamic>;
           if (checkData['exists'] == true) {
             if (mounted) {
               setState(() {
                 _isRegisterMode = false;
-                _infoMessage = 'Phone already registered — switched to Sign In.';
+                _infoMessage =
+                    'Phone already registered — switched to Sign In.';
               });
             }
           }
-        } catch (_) {
-          // Non-blocking: if pre-check fails, proceed normally
-        }
+        } catch (_) {}
       }
 
-      final res = await ProApiClient.sendOtp(phone, isSignInMode: !_isRegisterMode);
+      final res =
+          await ProApiClient.sendOtp(phone, isSignInMode: !_isRegisterMode);
       setState(() {
         _otpSent = true;
         final debugOtp = res['debugOtp']?.toString();
-        _infoMessage = debugOtp != null
-            ? 'Dev OTP: $debugOtp'
-            : 'OTP sent to $phone';
+        _infoMessage =
+            debugOtp != null ? 'Dev OTP: $debugOtp' : 'OTP sent to $phone';
       });
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception: ', ''));
@@ -134,7 +141,10 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       setState(() => _error = 'Enter the 6-digit OTP');
       return;
     }
-    setState(() { _isVerifyingOtp = true; _error = null; });
+    setState(() {
+      _isVerifyingOtp = true;
+      _error = null;
+    });
     try {
       final phone = _normalizedPhone;
       final res = await ProApiClient.verifyOtp(
@@ -143,7 +153,8 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         isSignInMode: !_isRegisterMode,
       );
       final data = res['data'] ?? res;
-      final token = data['tokens']?['accessToken'] ?? data['accessToken'] ?? '';
+      final token =
+          data['tokens']?['accessToken'] ?? data['accessToken'] ?? '';
       final user = data['user'] ?? {};
       final pro = data['profile'] ?? {};
       final isRegistered = data['isRegistered'] == true;
@@ -152,13 +163,15 @@ class _ProAuthScreenState extends State<ProAuthScreen>
           user['fullName'].toString().trim().isNotEmpty &&
           user['fullName'] != 'New User' &&
           user['fullName'] != 'Professional';
-
-      final bool hasLocation = (user['serviceArea'] != null && user['serviceArea'].toString().trim().isNotEmpty) ||
-          (pro['service_area'] != null && pro['service_area'].toString().trim().isNotEmpty);
-
-      final bool hasSelfie = pro['face_verification_url'] != null && pro['face_verification_url'].toString().trim().isNotEmpty;
-
-      final bool isFullyRegistered = isRegistered && hasFullName && hasLocation && hasSelfie;
+      final bool hasLocation =
+          (user['serviceArea'] != null &&
+              user['serviceArea'].toString().trim().isNotEmpty) ||
+          (pro['service_area'] != null &&
+              pro['service_area'].toString().trim().isNotEmpty);
+      final bool hasSelfie = pro['face_verification_url'] != null &&
+          pro['face_verification_url'].toString().trim().isNotEmpty;
+      final bool isFullyRegistered =
+          isRegistered && hasFullName && hasLocation && hasSelfie;
 
       await ProSessionStorage.setSession(
         token: token,
@@ -167,13 +180,12 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         name: user['fullName']?.toString() ?? 'Professional',
         gender: user['gender']?.toString() ?? 'OTHER',
         userId: user['id']?.toString(),
-        verificationStatus: data['verificationStatus']?.toString() ?? 'PENDING',
+        verificationStatus:
+            data['verificationStatus']?.toString() ?? 'PENDING',
         isOnboardingComplete: isFullyRegistered,
       );
 
-      // Sync FCM token now that auth token is saved — enables push notifications
       await NotificationService.syncFcmTokenAfterLogin();
-
       if (mounted) widget.onLoginSuccess();
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception: ', ''));
@@ -185,17 +197,22 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   void _showRegionPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: ProColors.cardBg,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      backgroundColor: ProColors.surface,
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Padding(
             padding: EdgeInsets.all(20),
-            child: Text('Select Country / Region Code', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            child: Text('Select Country / Region Code',
+                style: TextStyle(
+                    color: ProColors.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16)),
           ),
-          const Divider(color: ProColors.border, height: 1),
+          const Divider(color: Color(0xFF1A2A40), height: 1),
           Flexible(
             child: ListView.builder(
               shrinkWrap: true,
@@ -204,9 +221,22 @@ class _ProAuthScreenState extends State<ProAuthScreen>
                 final region = defaultCountryRegions[i];
                 final isSelected = region.code == _selectedRegion.code;
                 return ListTile(
-                  leading: Text(region.flag, style: const TextStyle(fontSize: 24)),
-                  title: Text(region.name, style: TextStyle(color: isSelected ? ProColors.primary : Colors.white, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
-                  trailing: Text(region.dialCode, style: TextStyle(color: isSelected ? ProColors.primary : ProColors.textMuted, fontWeight: FontWeight.bold)),
+                  leading: Text(region.flag,
+                      style: const TextStyle(fontSize: 24)),
+                  title: Text(region.name,
+                      style: TextStyle(
+                          color: isSelected
+                              ? ProColors.primaryLight
+                              : ProColors.textPrimary,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal)),
+                  trailing: Text(region.dialCode,
+                      style: TextStyle(
+                          color: isSelected
+                              ? ProColors.primaryLight
+                              : ProColors.textMuted,
+                          fontWeight: FontWeight.bold)),
                   onTap: () {
                     setState(() => _selectedRegion = region);
                     Navigator.pop(ctx);
@@ -224,7 +254,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
+      // Always dark background for auth screen
       body: Stack(
         children: [
           _buildBackgroundBlobs(),
@@ -232,16 +262,19 @@ class _ProAuthScreenState extends State<ProAuthScreen>
             child: FadeTransition(
               opacity: _fadeAnim,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildHeader(),
                     const SizedBox(height: 32),
                     _buildTabSwitcher(),
+                    const SizedBox(height: 20),
+                    _isRegisterMode
+                        ? _buildRegisterCard()
+                        : _buildSignInCard(),
                     const SizedBox(height: 28),
-                    _isRegisterMode ? _buildRegisterCard() : _buildSignInCard(),
-                    const SizedBox(height: 24),
                     _buildFooter(),
                   ],
                 ),
@@ -257,26 +290,28 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     return Stack(
       children: [
         Positioned(
-          top: -100, right: -80,
+          top: -80, right: -60,
           child: Container(
-            width: 300, height: 300,
+            width: 260, height: 260,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [ProColors.primary.withAlpha(40), Colors.transparent],
-              ),
+              gradient: RadialGradient(colors: [
+                ProColors.primary.withAlpha(35),
+                Colors.transparent
+              ]),
             ),
           ),
         ),
         Positioned(
-          bottom: 50, left: -100,
+          bottom: 80, left: -80,
           child: Container(
-            width: 250, height: 250,
+            width: 220, height: 220,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              gradient: RadialGradient(
-                colors: [ProColors.accent.withAlpha(30), Colors.transparent],
-              ),
+              gradient: RadialGradient(colors: [
+                ProColors.accent.withAlpha(25),
+                Colors.transparent
+              ]),
             ),
           ),
         ),
@@ -287,37 +322,77 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   Widget _buildHeader() {
     return Column(
       children: [
+        const SizedBox(height: 24),
         Container(
-          width: 72, height: 72,
+          width: 72,
+          height: 72,
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [ProColors.primary, ProColors.primaryDark],
+              colors: [ProColors.primaryLight, ProColors.primary],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(22),
             boxShadow: [
-              BoxShadow(color: ProColors.primary.withAlpha(80), blurRadius: 30, offset: const Offset(0, 12)),
+              BoxShadow(
+                  color: ProColors.primary.withAlpha(90),
+                  blurRadius: 28,
+                  offset: const Offset(0, 10)),
             ],
           ),
           child: const Icon(Icons.shield_rounded, size: 36, color: Colors.white),
         ),
         const SizedBox(height: 16),
-        const Text('LUMO Partner', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w900, color: Colors.white, letterSpacing: 0.5)),
+        const Text(
+          'LUMO Partner',
+          style: TextStyle(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: ProColors.textPrimary,
+              letterSpacing: 0.3),
+        ),
         const SizedBox(height: 4),
-        const Text('Verified Professional Portal', style: ProText.caption),
+        const Text('Verified Professional Portal',
+            style: ProText.caption),
       ],
     );
   }
 
   Widget _buildTabSwitcher() {
-    return GlassCard(
+    return Container(
       padding: const EdgeInsets.all(4),
-      borderRadius: 16,
+      decoration: BoxDecoration(
+        color: ProColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFF1A2A40), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(100),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+              spreadRadius: -2),
+        ],
+      ),
       child: Row(
         children: [
-          _tab('Create Account', _isRegisterMode, () => setState(() { _isRegisterMode = true; _otpSent = false; _error = null; })),
-          _tab('Sign In', !_isRegisterMode, () => setState(() { _isRegisterMode = false; _otpSent = false; _error = null; })),
+          _tab(
+            'Create Account',
+            _isRegisterMode,
+            () => setState(() {
+              _isRegisterMode = true;
+              _otpSent = false;
+              _error = null;
+            }),
+          ),
+          _tab(
+            'Sign In',
+            !_isRegisterMode,
+            () => setState(() {
+              _isRegisterMode = false;
+              _otpSent = false;
+              _error = null;
+            }),
+          ),
         ],
       ),
     );
@@ -333,13 +408,23 @@ class _ProAuthScreenState extends State<ProAuthScreen>
           decoration: BoxDecoration(
             color: selected ? ProColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(12),
+            boxShadow: selected
+                ? [
+                    BoxShadow(
+                        color: ProColors.primary.withAlpha(70),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4))
+                  ]
+                : null,
           ),
           child: Text(
             label,
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 13, fontWeight: FontWeight.w700,
-              color: selected ? Colors.white : ProColors.textMuted,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color:
+                  selected ? Colors.white : ProColors.textMuted,
             ),
           ),
         ),
@@ -347,6 +432,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     );
   }
 
+  // ── Phone + Region Input ────────────────────────────────────────────────────
   Widget _buildPhoneAndRegionInput() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -355,39 +441,51 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         const SizedBox(height: 8),
         Row(
           children: [
-            // Region Selector Dropdown Button
             GestureDetector(
               onTap: _showRegionPicker,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 15),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 decoration: BoxDecoration(
-                  color: ProColors.surface,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: ProColors.glassBorder),
+                  color: ProColors.surfaceHigh,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                      color: const Color(0xFF1A2A40), width: 0.8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(_selectedRegion.flag, style: const TextStyle(fontSize: 20)),
+                    Text(_selectedRegion.flag,
+                        style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 6),
-                    Text(_selectedRegion.dialCode, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                    Text(
+                      _selectedRegion.dialCode,
+                      style: const TextStyle(
+                          color: ProColors.textPrimary,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14),
+                    ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_drop_down, color: ProColors.textMuted, size: 20),
+                    const Icon(Icons.arrow_drop_down,
+                        color: ProColors.textMuted, size: 20),
                   ],
                 ),
               ),
             ),
             const SizedBox(width: 10),
-            // Phone number textfield
             Expanded(
               child: TextField(
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(color: ProColors.textPrimary, fontSize: 16, letterSpacing: 1),
+                style: const TextStyle(
+                    color: ProColors.textPrimary,
+                    fontSize: 16,
+                    letterSpacing: 1),
                 decoration: proInputDecoration(
                   hint: '98765 43210',
-                  prefix: const Icon(Icons.phone_android, color: ProColors.primary, size: 20),
+                  prefix: const Icon(Icons.phone_android,
+                      color: ProColors.primaryLight, size: 20),
                 ),
               ),
             ),
@@ -397,36 +495,37 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     );
   }
 
+  // ── Form Cards ──────────────────────────────────────────────────────────────
   Widget _buildRegisterCard() {
-    return GlassCard(
-      borderRadius: 24,
+    return _authCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('NEW PROFESSIONAL ACCOUNT', style: ProText.label),
           const SizedBox(height: 4),
-          const Text('4-Step Onboarding Pipeline', style: ProText.heading3),
+          const Text('4-Step Onboarding Pipeline',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: ProColors.textPrimary)),
           const SizedBox(height: 6),
-          const Text('Select your country region and enter your mobile number to start.', style: ProText.caption),
+          const Text(
+              'Select your country region and enter your mobile number to start.',
+              style: ProText.caption),
           const SizedBox(height: 20),
-
           if (_error != null) _errorBanner(_error!),
-
           if (_infoMessage != null) _infoBanner(_infoMessage!),
-
           _buildPhoneAndRegionInput(),
           const SizedBox(height: 20),
-
           GradientButton(
             label: 'SEND OTP TO REGISTER',
             onTap: _sendOtp,
             isLoading: _isSendingOtp,
             icon: Icons.send_rounded,
           ),
-
           if (_otpSent) ...[
             const SizedBox(height: 20),
-            const Divider(color: ProColors.glassBorder),
+            const Divider(color: Color(0xFF1A2A40)),
             const SizedBox(height: 16),
             const Text('VERIFICATION CODE', style: ProText.label),
             const SizedBox(height: 8),
@@ -435,16 +534,21 @@ class _ProAuthScreenState extends State<ProAuthScreen>
               keyboardType: TextInputType.number,
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 28, letterSpacing: 12, fontWeight: FontWeight.w800),
-              decoration: proInputDecoration(hint: '· · · · · ·').copyWith(counterText: ''),
+              style: const TextStyle(
+                  color: ProColors.textPrimary,
+                  fontSize: 28,
+                  letterSpacing: 12,
+                  fontWeight: FontWeight.w800),
+              decoration: proInputDecoration(hint: '· · · · · ·')
+                  .copyWith(counterText: ''),
             ),
             const SizedBox(height: 16),
             GradientButton(
-              label: 'VERIFY & PROCEED TO STEP 2',
+              label: 'VERIFY & PROCEED',
               onTap: _verifyOtpAndSignIn,
               isLoading: _isVerifyingOtp,
               icon: Icons.arrow_forward_rounded,
-              colors: const [ProColors.accent, Color(0xFF059669)],
+              colors: const [ProColors.accent, Color(0xFF1D4ED8)],
             ),
           ],
         ],
@@ -453,35 +557,35 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   }
 
   Widget _buildSignInCard() {
-    return GlassCard(
-      borderRadius: 24,
+    return _authCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const Text('EXISTING PARTNER', style: ProText.label),
           const SizedBox(height: 4),
-          const Text('Welcome Back', style: ProText.heading3),
+          const Text('Welcome Back',
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: ProColors.textPrimary)),
           const SizedBox(height: 6),
-          const Text('Select your region and enter your registered mobile number.', style: ProText.caption),
+          const Text(
+              'Select your region and enter your registered mobile number.',
+              style: ProText.caption),
           const SizedBox(height: 20),
-
           if (_error != null) _errorBanner(_error!),
-
           if (_infoMessage != null) _infoBanner(_infoMessage!),
-
           _buildPhoneAndRegionInput(),
           const SizedBox(height: 20),
-
           GradientButton(
             label: 'SEND OTP CODE',
             onTap: _sendOtp,
             isLoading: _isSendingOtp,
             icon: Icons.sms_rounded,
           ),
-
           if (_otpSent) ...[
             const SizedBox(height: 20),
-            const Divider(color: ProColors.glassBorder),
+            const Divider(color: Color(0xFF1A2A40)),
             const SizedBox(height: 16),
             const Text('VERIFICATION CODE', style: ProText.label),
             const SizedBox(height: 8),
@@ -490,8 +594,13 @@ class _ProAuthScreenState extends State<ProAuthScreen>
               keyboardType: TextInputType.number,
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Colors.white, fontSize: 28, letterSpacing: 12, fontWeight: FontWeight.w800),
-              decoration: proInputDecoration(hint: '· · · · · ·').copyWith(counterText: ''),
+              style: const TextStyle(
+                  color: ProColors.textPrimary,
+                  fontSize: 28,
+                  letterSpacing: 12,
+                  fontWeight: FontWeight.w800),
+              decoration: proInputDecoration(hint: '· · · · · ·')
+                  .copyWith(counterText: ''),
             ),
             const SizedBox(height: 16),
             GradientButton(
@@ -499,11 +608,31 @@ class _ProAuthScreenState extends State<ProAuthScreen>
               onTap: _verifyOtpAndSignIn,
               isLoading: _isVerifyingOtp,
               icon: Icons.login_rounded,
-              colors: const [ProColors.primary, ProColors.primaryDark],
+              colors: const [ProColors.primaryLight, ProColors.primary],
             ),
           ],
         ],
       ),
+    );
+  }
+
+  /// Always-dark auth card — not theme-dependent
+  Widget _authCard({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        color: ProColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0xFF1A2A40), width: 0.8),
+        boxShadow: [
+          BoxShadow(
+              color: Colors.black.withAlpha(120),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+              spreadRadius: -4),
+        ],
+      ),
+      child: child,
     );
   }
 
@@ -518,9 +647,13 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: ProColors.emergencyRed, size: 18),
+          const Icon(Icons.error_outline,
+              color: ProColors.emergencyRed, size: 18),
           const SizedBox(width: 10),
-          Expanded(child: Text(msg, style: const TextStyle(color: ProColors.emergencyRed, fontSize: 13))),
+          Expanded(
+              child: Text(msg,
+                  style: const TextStyle(
+                      color: ProColors.emergencyRed, fontSize: 13))),
         ],
       ),
     );
@@ -537,9 +670,15 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline, color: ProColors.primary, size: 18),
+          const Icon(Icons.info_outline,
+              color: ProColors.primaryLight, size: 18),
           const SizedBox(width: 10),
-          Expanded(child: Text(msg, style: const TextStyle(color: ProColors.primary, fontSize: 12, height: 1.4))),
+          Expanded(
+              child: Text(msg,
+                  style: const TextStyle(
+                      color: ProColors.primaryLight,
+                      fontSize: 12,
+                      height: 1.4))),
         ],
       ),
     );
@@ -551,13 +690,20 @@ class _ProAuthScreenState extends State<ProAuthScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.shield_outlined, color: ProColors.accent, size: 16),
+            Icon(Icons.shield_outlined,
+                color: ProColors.primaryLight, size: 15),
             SizedBox(width: 6),
-            Text('Bank-Grade Security & Verification Audit', style: TextStyle(fontSize: 11, color: ProColors.textMuted)),
+            Text('Bank-Grade Security & Verification Audit',
+                style: TextStyle(
+                    fontSize: 11, color: ProColors.textMuted)),
           ],
         ),
-        SizedBox(height: 12),
-        Text('By proceeding, you agree to LUMO Partner Terms & Security Guidelines.', textAlign: TextAlign.center, style: TextStyle(fontSize: 10, color: ProColors.textMuted)),
+        SizedBox(height: 10),
+        Text(
+          'By proceeding, you agree to LUMO Partner Terms & Security Guidelines.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 10, color: ProColors.textDisabled),
+        ),
       ],
     );
   }

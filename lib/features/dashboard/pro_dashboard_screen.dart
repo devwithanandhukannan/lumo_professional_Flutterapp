@@ -348,9 +348,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     final String proName = ProSessionStorage.userName;
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: Row(
           children: [
             Container(

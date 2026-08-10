@@ -680,9 +680,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('My Services & Rates'),
         elevation: 0,
       ),

@@ -373,8 +373,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       FloatingActionButton.small(
                         heroTag: 'mapTypeBtn',
                         onPressed: _toggleMapType,
-                        backgroundColor: ProColors.surface,
-                        child: Icon(
+                                        child: Icon(
                           _currentMapType == MapType.normal ? Icons.satellite_alt_rounded : Icons.map_rounded,
                           color: ProColors.accent, size: 20,
                         ),
@@ -385,8 +384,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       FloatingActionButton.small(
                         heroTag: 'myLocBtn',
                         onPressed: _locateCurrentPos,
-                        backgroundColor: ProColors.surface,
-                        child: const Icon(Icons.my_location_rounded, color: ProColors.primary, size: 20),
+                                        child: const Icon(Icons.my_location_rounded, color: ProColors.primary, size: 20),
                       ),
                       const SizedBox(height: 8),
 
@@ -394,8 +392,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       FloatingActionButton.small(
                         heroTag: 'zoomInBtn',
                         onPressed: _zoomIn,
-                        backgroundColor: ProColors.surface,
-                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
                       ),
                       const SizedBox(height: 8),
 
@@ -403,8 +400,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       FloatingActionButton.small(
                         heroTag: 'zoomOutBtn',
                         onPressed: _zoomOut,
-                        backgroundColor: ProColors.surface,
-                        child: const Icon(Icons.remove_rounded, color: Colors.white, size: 22),
+                                        child: const Icon(Icons.remove_rounded, color: Colors.white, size: 22),
                       ),
                     ],
                   ),

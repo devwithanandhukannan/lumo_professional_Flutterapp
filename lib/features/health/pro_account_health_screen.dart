@@ -21,9 +21,7 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
     final bool isHealthy = _healthScore >= 80;
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Account Health & Compliance'),
       ),
       body: RefreshIndicator(
@@ -69,8 +67,7 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
                         child: CircularProgressIndicator(
                           value: _healthScore / 100,
                           strokeWidth: 10,
-                          backgroundColor: ProColors.surface,
-                          color: isHealthy ? ProColors.primary : ProColors.warningAmber,
+                                            color: isHealthy ? ProColors.primary : ProColors.warningAmber,
                         ),
                       ),
                       Column(

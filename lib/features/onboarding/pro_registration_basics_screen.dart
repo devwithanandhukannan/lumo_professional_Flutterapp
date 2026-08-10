@@ -195,7 +195,6 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       body: Stack(
         children: [
           _buildBgBlobs(),

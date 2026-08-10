@@ -89,7 +89,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: ProColors.surface,
+      backgroundColor: ProColors.surf(context),
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -182,9 +182,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
     final double maxWeekly = _weeklyData.fold(0.0, (max, item) => (item['amount'] as num) > max ? (item['amount'] as num).toDouble() : max);
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Financials & Wallet'),
         actions: [
           IconButton(

@@ -73,9 +73,7 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Partner Profile'),
         actions: [
           TextButton.icon(

@@ -68,9 +68,7 @@ class _ProPendingScreenState extends State<ProPendingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Account Verification Audit'),
         actions: [
           IconButton(

@@ -227,7 +227,6 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       body: Stack(
         children: [
           // Background glow

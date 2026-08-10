@@ -229,9 +229,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final customerPhone = jobMap['customer_phone']?.toString() ?? '+91 98765 43210';
 
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

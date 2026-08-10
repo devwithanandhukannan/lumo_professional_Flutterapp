@@ -54,9 +54,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Text('Earnings & Settlement Ledger', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
       ),
       body: _loading

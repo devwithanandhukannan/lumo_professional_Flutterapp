@@ -206,9 +206,7 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: Text(widget.isStandaloneManagement ? 'Manage Offered Services' : 'Service Configuration'),
         automaticallyImplyLeading: widget.isStandaloneManagement,
       ),

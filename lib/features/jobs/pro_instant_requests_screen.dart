@@ -118,9 +118,7 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ProColors.background,
       appBar: AppBar(
-        backgroundColor: ProColors.surface,
         title: const Row(
           children: [
             Icon(Icons.bolt_rounded, color: ProColors.warningAmber, size: 20),
