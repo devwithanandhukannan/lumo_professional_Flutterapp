@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/network/pro_api_client.dart';
 import '../../core/storage/pro_session_storage.dart';
 import '../../core/theme/pro_theme.dart';
-import '../earnings/pro_earnings_screen.dart';
+import '../financials/pro_earnings_screen.dart';
 import '../jobs/job_detail_screen.dart';
 import '../onboarding/pro_document_upload_screen.dart';
 import '../safety/pro_sos_widget.dart';
@@ -40,10 +40,15 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     try {
       final profileRes = await ProApiClient.getProfile();
       final pro = profileRes['profile'] ?? profileRes['data']?['profile'] ?? profileRes['data'] ?? {};
-      
-      final lat = (pro['latitude'] != null) ? double.tryParse(pro['latitude'].toString()) ?? ProSessionStorage.currentLat ?? 12.9716 : ProSessionStorage.currentLat ?? 12.9716;
-      final lng = (pro['longitude'] != null) ? double.tryParse(pro['longitude'].toString()) ?? ProSessionStorage.currentLng ?? 77.5946 : ProSessionStorage.currentLng ?? 77.5946;
-      final String locName = (pro['assigned_region'] ?? pro['service_area'] ?? pro['address'] ?? ProSessionStorage.serviceArea).toString();
+
+      final lat = (pro['latitude'] != null)
+          ? double.tryParse(pro['latitude'].toString()) ?? ProSessionStorage.currentLat ?? 12.9716
+          : ProSessionStorage.currentLat ?? 12.9716;
+      final lng = (pro['longitude'] != null)
+          ? double.tryParse(pro['longitude'].toString()) ?? ProSessionStorage.currentLng ?? 77.5946
+          : ProSessionStorage.currentLng ?? 77.5946;
+      final String locName =
+          (pro['assigned_region'] ?? pro['service_area'] ?? pro['address'] ?? ProSessionStorage.serviceArea).toString();
       final String? pincode = pro['pincode']?.toString();
 
       final suspension = await ProApiClient.checkProServiceSuspension(
@@ -99,7 +104,9 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
           .toSet();
 
       final newRequestedJobs = jobs
-          .where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED' && !oldRequestedIds.contains(j['id']?.toString() ?? ''))
+          .where((j) =>
+              (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED' &&
+              !oldRequestedIds.contains(j['id']?.toString() ?? ''))
           .toList();
 
       if (newRequestedJobs.isNotEmpty && _jobs.isNotEmpty) {
@@ -117,7 +124,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 ),
               ],
             ),
-            backgroundColor: ProColors.cardBg,
+            backgroundColor: ProColors.surf(context),
             duration: const Duration(seconds: 4),
           ),
         );
@@ -141,7 +148,8 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     try {
       final profileRes = await ProApiClient.getProfile();
       final pro = profileRes['profile'] ?? profileRes['data']?['profile'] ?? profileRes['data'] ?? {};
-      final latestStatus = pro['verification_status']?.toString() ?? profileRes['verificationStatus']?.toString() ?? 'PENDING';
+      final latestStatus =
+          pro['verification_status']?.toString() ?? profileRes['verificationStatus']?.toString() ?? 'PENDING';
       await ProSessionStorage.updateVerificationStatus(latestStatus);
     } catch (_) {}
 
@@ -151,13 +159,13 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
     } catch (_) {
       if (mounted) {
         setState(() => _health = {
-          'accountHealthScore': 100.0,
-          'ratingAvg': 5.0,
-          'totalJobsCompleted': 0,
-          'acceptanceRate': 100.0,
-          'verificationStatus': ProSessionStorage.verificationStatus,
-          'coverageRadiusKm': ProSessionStorage.coverageRadiusKm,
-        });
+              'accountHealthScore': 100.0,
+              'ratingAvg': 5.0,
+              'totalJobsCompleted': 0,
+              'acceptanceRate': 100.0,
+              'verificationStatus': ProSessionStorage.verificationStatus,
+              'coverageRadiusKm': ProSessionStorage.coverageRadiusKm,
+            });
       }
     }
 
@@ -188,20 +196,29 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
       }
     } catch (_) {}
 
-    if (val && _activeSuspension != null && (_activeSuspension!['severity'] == 'FULL_BLACKOUT' || _activeSuspension!['severity'] == null)) {
+    if (val &&
+        _activeSuspension != null &&
+        (_activeSuspension!['severity'] == 'FULL_BLACKOUT' || _activeSuspension!['severity'] == null)) {
       setState(() => _togglingOnline = false);
       if (mounted) {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: ProColors.cardBg,
+            backgroundColor: ProColors.surf(context),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 26),
-                SizedBox(width: 8),
+                const Icon(Icons.warning_amber_rounded, color: ProColors.emergencyRed, size: 26),
+                const SizedBox(width: 8),
                 Expanded(
-                  child: Text('Emergency Service Closure', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    'Emergency Service Closure',
+                    style: TextStyle(
+                      color: ProColors.txt(context),
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -210,29 +227,31 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _activeSuspension!['message'] ?? 'Service is currently paused in your area due to emergency blackout rules.',
-                  style: const TextStyle(color: Colors.white70, fontSize: 13, height: 1.4),
+                  _activeSuspension!['message'] ??
+                      'Service is currently paused in your area due to emergency blackout rules.',
+                  style: TextStyle(color: ProColors.txtSec(context), fontSize: 13, height: 1.4),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(120),
+                    color: ProColors.surfHigh(context),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                    border: Border.all(color: ProColors.emergencyRed.withAlpha(80)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.location_on_rounded, color: Color(0xFF34D399), size: 14),
+                          const Icon(Icons.location_on_rounded, color: ProColors.primaryLight, size: 14),
                           const SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               'Location: ${_activeSuspension!['areaName'] ?? 'Fenced Blackout Zone'}',
-                              style: const TextStyle(color: Color(0xFF34D399), fontSize: 11, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: ProColors.primaryLight, fontSize: 11, fontWeight: FontWeight.bold),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -249,7 +268,8 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                               _activeSuspension!['expiresAt'] != null
                                   ? 'Resumption: ${DateTime.parse(_activeSuspension!['expiresAt']).toLocal().toString().substring(0, 16)}'
                                   : 'Resumption: Indefinite / Active Safety Monitoring',
-                              style: const TextStyle(color: ProColors.warningAmber, fontSize: 11, fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                  color: ProColors.warningAmber, fontSize: 11, fontWeight: FontWeight.bold),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -284,18 +304,21 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
         showDialog(
           context: context,
           builder: (ctx) => AlertDialog(
-            backgroundColor: ProColors.cardBg,
+            backgroundColor: ProColors.surf(context),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: const Row(
+            title: Row(
               children: [
-                Icon(Icons.lock_clock_outlined, color: ProColors.warningAmber, size: 24),
-                SizedBox(width: 8),
-                Text('Account Verification Required', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+                const Icon(Icons.lock_clock_outlined, color: ProColors.warningAmber, size: 24),
+                const SizedBox(width: 8),
+                Text(
+                  'Account Verification Required',
+                  style: TextStyle(color: ProColors.txt(context), fontSize: 15, fontWeight: FontWeight.bold),
+                ),
               ],
             ),
             content: Text(
               'Cannot go online. Account verification status is $currentStatus. Super Admin document audit and approval required before starting duty.',
-              style: ProText.caption,
+              style: ProText.captionStyle(context),
             ),
             actions: [
               ElevatedButton(
@@ -346,35 +369,60 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final String proName = ProSessionStorage.userName;
+    final isDark = ProColors.isDark(context);
 
     return Scaffold(
       appBar: AppBar(
+        titleSpacing: 16,
         title: Row(
           children: [
-            Container(
-              width: 10,
-              height: 10,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 300),
+              width: 12,
+              height: 12,
               decoration: BoxDecoration(
-                color: _isOnline ? ProColors.primary : ProColors.textMuted,
+                color: _isOnline ? ProColors.primaryLight : ProColors.txtMuted(context),
                 shape: BoxShape.circle,
                 boxShadow: [
-                  if (_isOnline) const BoxShadow(color: ProColors.primary, blurRadius: 8, spreadRadius: 2),
+                  if (_isOnline)
+                    BoxShadow(
+                      color: ProColors.primaryLight.withAlpha(160),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
                 ],
               ),
             ),
             const SizedBox(width: 10),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Text('Partner Portal · $proName', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.white)),
-                Text(_isOnline ? 'ONLINE & RECEIVING JOBS' : 'OFFLINE (ON-DUTY TOGGLE OFF)', style: TextStyle(fontSize: 10, color: _isOnline ? ProColors.primary : ProColors.textMuted, fontWeight: FontWeight.bold)),
+                Text(
+                  'Partner Portal · $proName',
+                  style: TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                    color: ProColors.txt(context),
+                    letterSpacing: -0.2,
+                  ),
+                ),
+                Text(
+                  _isOnline ? 'ONLINE & RECEIVING JOBS' : 'OFFLINE (ON-DUTY TOGGLE OFF)',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: _isOnline ? ProColors.primaryAccent(context) : ProColors.txtMuted(context),
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.4,
+                  ),
+                ),
               ],
             ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_rounded, color: ProColors.primary),
+            icon: Icon(Icons.account_balance_wallet_rounded, color: ProColors.primaryAccent(context)),
             onPressed: () {
               Navigator.push(
                 context,
@@ -384,41 +432,30 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
             tooltip: 'Earnings Ledger',
           ),
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded, color: ProColors.txtMuted(context)),
             onPressed: _loadData,
             tooltip: 'Refresh Jobs',
           ),
+          const SizedBox(width: 4),
         ],
       ),
-      floatingActionButton: null,
       body: RefreshIndicator(
         onRefresh: _loadData,
         color: ProColors.primary,
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           physics: const AlwaysScrollableScrollPhysics(),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_activeSuspension != null)
+              if (_activeSuspension != null) ...[
                 Container(
-                  margin: const EdgeInsets.only(bottom: 18),
+                  margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0x55EF4444), Color(0x221E1B4B)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: isDark ? const Color(0x33EF4444) : const Color(0xFFFEE2E2),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xAAEF4444), width: 1.5),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0x33EF4444),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                      ),
-                    ],
+                    border: Border.all(color: ProColors.emergencyRedBorder, width: 1.2),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,7 +465,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444),
+                              color: ProColors.emergencyRed,
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -437,8 +474,14 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                                 const Icon(Icons.warning_amber_rounded, color: Colors.white, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
-                                  (_activeSuspension!['reasonCategory'] ?? 'EMERGENCY').toString().replaceAll('_', ' '),
-                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5),
+                                  (_activeSuspension!['reasonCategory'] ?? 'EMERGENCY')
+                                      .toString()
+                                      .replaceAll('_', ' '),
+                                  style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5),
                                 ),
                               ],
                             ),
@@ -447,7 +490,8 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                           Expanded(
                             child: Text(
                               _activeSuspension!['title'] ?? 'Emergency Regional Closure',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              style: TextStyle(
+                                  color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 13),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -458,25 +502,35 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(120),
+                          color: isDark ? Colors.black.withAlpha(120) : Colors.white,
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.redAccent.withAlpha(80)),
+                          border: Border.all(color: ProColors.emergencyRed.withAlpha(60)),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.location_on_rounded, color: Color(0xFF34D399), size: 16),
+                            const Icon(Icons.location_on_rounded, color: ProColors.primaryLight, size: 16),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
+                                  Text(
                                     'FENCED LOCATION NAME:',
-                                    style: TextStyle(color: Colors.white54, fontSize: 9, fontWeight: FontWeight.w700, letterSpacing: 0.5),
+                                    style: TextStyle(
+                                        color: ProColors.txtMuted(context),
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.w700,
+                                        letterSpacing: 0.5),
                                   ),
                                   Text(
-                                    (_activeSuspension!['areaName'] ?? _activeSuspension!['title'] ?? ProSessionStorage.serviceArea).toString(),
-                                    style: const TextStyle(color: Color(0xFF34D399), fontSize: 12, fontWeight: FontWeight.bold),
+                                    (_activeSuspension!['areaName'] ??
+                                            _activeSuspension!['title'] ??
+                                            ProSessionStorage.serviceArea)
+                                        .toString(),
+                                    style: const TextStyle(
+                                        color: ProColors.primaryLight,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
@@ -488,41 +542,20 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        _activeSuspension!['message'] ?? 'Service is temporarily paused in your region for partner safety.',
-                        style: const TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withAlpha(100),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white.withAlpha(25)),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.access_time_filled_rounded, color: ProColors.warningAmber, size: 16),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _activeSuspension!['expiresAt'] != null
-                                    ? 'Expected Resumption: ${DateTime.parse(_activeSuspension!['expiresAt']).toLocal().toString().substring(0, 16)}'
-                                    : 'Resumption: Indefinite / Active Safety Monitoring',
-                                style: const TextStyle(color: ProColors.warningAmber, fontSize: 11, fontWeight: FontWeight.w600),
-                              ),
-                            ),
-                          ],
-                        ),
+                        _activeSuspension!['message'] ??
+                            'Service is temporarily paused in your region for partner safety.',
+                        style: TextStyle(color: ProColors.txtSec(context), fontSize: 12, height: 1.4),
                       ),
                       const SizedBox(height: 10),
                       Row(
                         children: const [
-                          Icon(Icons.lock_clock_rounded, color: Colors.redAccent, size: 14),
+                          Icon(Icons.lock_clock_rounded, color: ProColors.emergencyRed, size: 14),
                           SizedBox(width: 6),
                           Expanded(
                             child: Text(
                               'On-Duty mode is locked in this region to protect partner safety.',
-                              style: TextStyle(color: Colors.redAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                  color: ProColors.emergencyRed, fontSize: 11, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
@@ -530,17 +563,15 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                     ],
                   ),
                 ),
+              ],
               if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'REJECTED') ...[
                 Container(
+                  margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0x33EF4444), Color(0x1AEF4444)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: isDark ? const Color(0x33EF4444) : const Color(0xFFFEE2E2),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0x88EF4444)),
+                    border: Border.all(color: ProColors.emergencyRedBorder),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -550,24 +581,31 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: const Color(0x33EF4444),
+                              color: ProColors.emergencyRed.withAlpha(40),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Icon(Icons.error_outline, color: Color(0xFFEF4444), size: 24),
+                            child: const Icon(Icons.error_outline, color: ProColors.emergencyRed, size: 24),
                           ),
                           const SizedBox(width: 14),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   'APPLICATION RETURNED FOR CORRECTION',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                                  style: TextStyle(
+                                      color: ProColors.txt(context),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                      letterSpacing: 0.5),
                                 ),
-                                SizedBox(height: 2),
+                                const SizedBox(height: 2),
                                 Text(
                                   'Super Admin requested document re-upload. Please upload clear photos of your Govt ID and Certificate.',
-                                  style: TextStyle(color: Color(0xFFFCA5A5), fontSize: 11, height: 1.3),
+                                  style: TextStyle(
+                                      color: isDark ? const Color(0xFFFCA5A5) : const Color(0xFF991B1B),
+                                      fontSize: 11,
+                                      height: 1.3),
                                 ),
                               ],
                             ),
@@ -593,42 +631,42 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                             ).then((_) => _loadData());
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFEF4444),
+                            backgroundColor: ProColors.emergencyRed,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
                           icon: const Icon(Icons.upload_file_rounded, size: 18),
-                          label: const Text('RE-UPLOAD DOCUMENTS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          label: const Text('RE-UPLOAD DOCUMENTS',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(height: 16),
               ] else if ((_health?['verificationStatus'] ?? ProSessionStorage.verificationStatus) == 'PENDING') ...[
-                Container(
+                GlassCard(
                   padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: ProColors.surface,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: ProColors.border),
-                  ),
-                  child: const Row(
+                  borderRadius: 20,
+                  child: Row(
                     children: [
-                      Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 28),
-                      SizedBox(width: 14),
+                      const Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 28),
+                      const SizedBox(width: 14),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'VERIFICATION PENDING AUDIT',
-                              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 0.5),
+                              style: TextStyle(
+                                  color: ProColors.txt(context),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  letterSpacing: 0.5),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
                               'Your profile details & documents are under review by Super Admin. You will be notified once approved to receive bookings.',
-                              style: TextStyle(color: Color(0xFFCBD5E1), fontSize: 11, height: 1.3),
+                              style: ProText.captionStyle(context),
                             ),
                           ],
                         ),
@@ -639,28 +677,29 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 const SizedBox(height: 16),
               ],
 
-              Container(
+              // ── Master On-Duty Card ──────────────────────────────────────
+              GlassCard(
+                borderRadius: 22,
                 padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: ProColors.cardBg,
-                  borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: _isOnline ? ProColors.primary : ProColors.border, width: _isOnline ? 1.5 : 1),
-                  boxShadow: [
-                    if (_isOnline) const BoxShadow(color: Color(0x3310B981), blurRadius: 18, offset: Offset(0, 6)),
-                  ],
-                ),
+                borderColor: _isOnline ? ProColors.primary.withAlpha(120) : Colors.transparent,
+                borderWidth: _isOnline ? 1.5 : 0,
                 child: Row(
                   children: [
                     Container(
-                      width: 48,
-                      height: 48,
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        color: _isOnline ? ProColors.primarySoft : ProColors.surface,
+                        color: _isOnline ? ProColors.primarySoft : ProColors.surfHigh(context),
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _isOnline
+                              ? ProColors.primary.withAlpha(100)
+                              : ProColors.brd(context),
+                        ),
                       ),
                       child: Icon(
                         _isOnline ? Icons.sensors_rounded : Icons.sensors_off_rounded,
-                        color: _isOnline ? ProColors.primary : ProColors.textMuted,
+                        color: _isOnline ? ProColors.primaryAccent(context) : ProColors.txtMuted(context),
                         size: 26,
                       ),
                     ),
@@ -671,19 +710,32 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                         children: [
                           Text(
                             _isOnline ? 'YOU ARE ON-DUTY' : 'YOU ARE OFF-DUTY',
-                            style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: _isOnline ? Colors.white : ProColors.textMuted),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              color: _isOnline
+                                  ? ProColors.primaryAccent(context)
+                                  : ProColors.txt(context),
+                              letterSpacing: 0.3,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            _isOnline ? 'Broadcast live GPS telemetry to receive nearby job dispatches' : 'Toggle switch ON to start receiving nearby customer bookings',
-                            style: ProText.caption,
+                            _isOnline
+                                ? 'Broadcasting live GPS telemetry for nearby customer job dispatches'
+                                : 'Toggle switch ON to start receiving nearby customer bookings',
+                            style: ProText.captionStyle(context),
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(width: 8),
                     _togglingOnline
-                        ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: ProColors.primary, strokeWidth: 2.5))
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: ProColors.primary, strokeWidth: 2.5),
+                          )
                         : Switch(
                             value: _isOnline,
                             activeTrackColor: ProColors.primary,
@@ -693,22 +745,28 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 ),
               ),
 
+              // ── 24/7 SOS Banner (when online) ────────────────────────────
               if (_isOnline) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   decoration: BoxDecoration(
-                    color: const Color(0x22EF4444),
+                    color: isDark ? const Color(0x22EF4444) : const Color(0xFFFEE2E2),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0x66EF4444)),
+                    border: Border.all(color: ProColors.emergencyRedBorder),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.shield_rounded, color: Color(0xFFEF4444), size: 18),
+                      const Icon(Icons.shield_rounded, color: ProColors.emergencyRed, size: 18),
                       const SizedBox(width: 10),
-                      const Text(
-                        '24/7 SOS MONITORING',
-                        style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 0.5),
+                      Text(
+                        '24/7 SOS MONITORING ACTIVE',
+                        style: TextStyle(
+                          color: ProColors.txt(context),
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.5,
+                        ),
                       ),
                       const Spacer(),
                       Material(
@@ -721,9 +779,9 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                               backgroundColor: Colors.transparent,
                               builder: (_) => Container(
                                 padding: const EdgeInsets.all(20),
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFF0F172A),
-                                  borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                                decoration: BoxDecoration(
+                                  color: ProColors.surf(context),
+                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                                 ),
                                 child: const Column(
                                   mainAxisSize: MainAxisSize.min,
@@ -739,7 +797,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEF4444),
+                              color: ProColors.emergencyRed,
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: const [BoxShadow(color: Color(0x44EF4444), blurRadius: 8)],
                             ),
@@ -747,7 +805,14 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                               children: [
                                 Icon(Icons.sos_rounded, color: Colors.white, size: 16),
                                 SizedBox(width: 4),
-                                Text('EMERGENCY SOS', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w900)),
+                                Text(
+                                  'SOS',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
@@ -758,15 +823,12 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 ),
               ],
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 16),
 
-              Container(
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [ProColors.surface, ProColors.cardBg]),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: ProColors.border),
-                ),
+              // ── Summary Metrics Row ──────────────────────────────────────
+              GlassCard(
+                borderRadius: 20,
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
                 child: Builder(
                   builder: (context) {
                     double todayTotal = 0.0;
@@ -775,7 +837,9 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                         todayTotal += (double.tryParse(j['total_amount']?.toString() ?? '0') ?? 0.0);
                       }
                     }
-                    final healthScore = (_health?['accountHealthScore'] as num?)?.toInt() ?? (_health?['account_health_score'] as num?)?.toInt() ?? 100;
+                    final healthScore = (_health?['accountHealthScore'] as num?)?.toInt() ??
+                        (_health?['account_health_score'] as num?)?.toInt() ??
+                        100;
                     final ratingAvg = _health?['ratingAvg'] ?? _health?['rating_avg'] ?? '5.0';
 
                     return Row(
@@ -784,17 +848,17 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                         _QuickSummaryItem(
                           label: "TODAY'S EARNINGS",
                           value: '₹${todayTotal.toStringAsFixed(2)}',
-                          icon: Icons.account_balance_wallet,
-                          color: ProColors.primary,
+                          icon: Icons.account_balance_wallet_rounded,
+                          color: ProColors.primaryAccent(context),
                         ),
-                        Container(width: 1, height: 36, color: ProColors.border),
+                        Container(width: 1, height: 36, color: ProColors.brd(context)),
                         _QuickSummaryItem(
                           label: 'ACCOUNT HEALTH',
                           value: '$healthScore / 100',
                           icon: Icons.shield_rounded,
                           color: ProColors.accent,
                         ),
-                        Container(width: 1, height: 36, color: ProColors.border),
+                        Container(width: 1, height: 36, color: ProColors.brd(context)),
                         _QuickSummaryItem(
                           label: 'AVG RATING',
                           value: '⭐ $ratingAvg',
@@ -807,23 +871,52 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
+              const SizedBox(height: 22),
 
-              const SizedBox(height: 24),
-
-              const Row(
+              // ── Job Dispatches Header ────────────────────────────────────
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('JOB DISPATCHES', style: ProText.label),
-                  Text('Live GPS Telemetry Active', style: TextStyle(fontSize: 10, color: ProColors.primary, fontWeight: FontWeight.bold)),
+                  Text('JOB DISPATCHES', style: ProText.labelStyle(context)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 6,
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: ProColors.primaryAccent(context),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        'Live GPS Active',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: ProColors.primaryAccent(context),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
 
+              // ── Tab Selector & Job List ──────────────────────────────────
               Builder(builder: (context) {
                 final activeJobs = _jobs.where((j) {
                   final st = (j['status'] ?? '').toString().toUpperCase();
-                  return ['REQUESTED', 'CONFIRMED', 'NAVIGATING', 'ARRIVED', 'IN_PROGRESS', 'START_OTP_VERIFIED', 'JOB_COMPLETED_PAYMENT_DUE'].contains(st);
+                  return [
+                    'REQUESTED',
+                    'CONFIRMED',
+                    'NAVIGATING',
+                    'ARRIVED',
+                    'IN_PROGRESS',
+                    'START_OTP_VERIFIED',
+                    'JOB_COMPLETED_PAYMENT_DUE'
+                  ].contains(st);
                 }).toList();
 
                 final expiredJobs = _jobs.where((j) {
@@ -835,13 +928,13 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
 
                 return Column(
                   children: [
-                    // 2-Tab Selector Bar (Active & Pending vs Expired & History)
+                    // Segmented Tab Selector Bar
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: ProColors.surface,
+                        color: ProColors.surfHigh(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: ProColors.border),
+                        border: Border.all(color: ProColors.brd(context), width: 0.8),
                       ),
                       child: Row(
                         children: [
@@ -852,23 +945,33 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: _selectedJobTabIndex == 0 ? ProColors.primary : Colors.transparent,
+                                  color: _selectedJobTabIndex == 0
+                                      ? ProColors.primary
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(12),
                                   boxShadow: _selectedJobTabIndex == 0
-                                      ? [const BoxShadow(color: Color(0x3310B981), blurRadius: 8)]
-                                      : [],
+                                      ? ProColors.neuAccentGlow(ProColors.primary)
+                                      : null,
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.bolt_rounded, size: 14, color: _selectedJobTabIndex == 0 ? Colors.white : ProColors.textMuted),
+                                    Icon(
+                                      Icons.bolt_rounded,
+                                      size: 15,
+                                      color: _selectedJobTabIndex == 0
+                                          ? Colors.white
+                                          : ProColors.txtMuted(context),
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       'Active (${activeJobs.length})',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: _selectedJobTabIndex == 0 ? Colors.white : ProColors.textMuted,
+                                        fontWeight: FontWeight.w800,
+                                        color: _selectedJobTabIndex == 0
+                                            ? Colors.white
+                                            : ProColors.txtMuted(context),
                                       ),
                                     ),
                                   ],
@@ -883,20 +986,30 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                                 duration: const Duration(milliseconds: 200),
                                 padding: const EdgeInsets.symmetric(vertical: 10),
                                 decoration: BoxDecoration(
-                                  color: _selectedJobTabIndex == 1 ? const Color(0xFF334155) : Colors.transparent,
+                                  color: _selectedJobTabIndex == 1
+                                      ? (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0))
+                                      : Colors.transparent,
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Icon(Icons.history_rounded, size: 14, color: _selectedJobTabIndex == 1 ? Colors.white : ProColors.textMuted),
+                                    Icon(
+                                      Icons.history_rounded,
+                                      size: 15,
+                                      color: _selectedJobTabIndex == 1
+                                          ? ProColors.txt(context)
+                                          : ProColors.txtMuted(context),
+                                    ),
                                     const SizedBox(width: 6),
                                     Text(
                                       'Expired & Past (${expiredJobs.length})',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: _selectedJobTabIndex == 1 ? Colors.white : ProColors.textMuted,
+                                        fontWeight: FontWeight.w800,
+                                        color: _selectedJobTabIndex == 1
+                                            ? ProColors.txt(context)
+                                            : ProColors.txtMuted(context),
                                       ),
                                     ),
                                   ],
@@ -911,52 +1024,75 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                     const SizedBox(height: 14),
 
                     if (!_isOnline) ...[
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: ProColors.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: ProColors.border),
-                        ),
-                        child: const Column(
+                      GlassCard(
+                        padding: const EdgeInsets.all(28),
+                        borderRadius: 20,
+                        child: Column(
                           children: [
-                            Icon(Icons.portable_wifi_off_rounded, size: 36, color: ProColors.textMuted),
-                            SizedBox(height: 12),
-                            Text('You are currently Offline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                            SizedBox(height: 4),
-                            Text('Toggle On-Duty switch above to start receiving live job requests in your 50km area.', textAlign: TextAlign.center, style: ProText.caption),
+                            Container(
+                              width: 56,
+                              height: 56,
+                              decoration: BoxDecoration(
+                                color: ProColors.surfHigh(context),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(Icons.portable_wifi_off_rounded,
+                                  size: 28, color: ProColors.txtMuted(context)),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'You are currently Offline',
+                              style: TextStyle(
+                                color: ProColors.txt(context),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Toggle On-Duty switch above to start receiving live job requests in your 50km area.',
+                              textAlign: TextAlign.center,
+                              style: ProText.captionStyle(context),
+                            ),
                           ],
                         ),
                       ),
                     ] else if (_loadingJobs) ...[
-                      const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator(color: ProColors.primary))),
-                    ] else if (currentDisplayedJobs.isEmpty) ...[
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: ProColors.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: ProColors.border),
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: CircularProgressIndicator(color: ProColors.primary),
                         ),
+                      ),
+                    ] else if (currentDisplayedJobs.isEmpty) ...[
+                      GlassCard(
+                        padding: const EdgeInsets.all(28),
+                        borderRadius: 20,
                         child: Column(
                           children: [
                             Icon(
                               _selectedJobTabIndex == 0 ? Icons.search_rounded : Icons.history_rounded,
                               size: 36,
-                              color: _selectedJobTabIndex == 0 ? ProColors.primary : ProColors.textMuted,
+                              color: _selectedJobTabIndex == 0
+                                  ? ProColors.primaryAccent(context)
+                                  : ProColors.txtMuted(context),
                             ),
                             const SizedBox(height: 12),
                             Text(
                               _selectedJobTabIndex == 0 ? 'No Active Job Dispatches' : 'No Expired or Past Jobs',
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                              style: TextStyle(
+                                color: ProColors.txt(context),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               _selectedJobTabIndex == 0
-                                  ? 'You are online in your coverage region. Incoming active job dispatches will appear here.'
+                                  ? 'You are online in your coverage region. Incoming active job dispatches will appear here in real time.'
                                   : 'Expired or completed job history will appear in this tab.',
                               textAlign: TextAlign.center,
-                              style: ProText.caption,
+                              style: ProText.captionStyle(context),
                             ),
                           ],
                         ),
@@ -966,7 +1102,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                         shrinkWrap: true,
                         physics: const NeverScrollableScrollPhysics(),
                         itemCount: currentDisplayedJobs.length,
-                        separatorBuilder: (ctx, idx) => const SizedBox(height: 14),
+                        separatorBuilder: (ctx, idx) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final job = currentDisplayedJobs[index];
                           return _JobCard(
@@ -987,6 +1123,7 @@ class _ProDashboardScreenState extends State<ProDashboardScreen> {
                   ],
                 );
               }),
+              const SizedBox(height: 20),
             ],
           ),
         ),
@@ -1014,9 +1151,24 @@ class _QuickSummaryItem extends StatelessWidget {
       children: [
         Icon(icon, size: 18, color: color),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 13, color: Colors.white)),
+        Text(
+          value,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 13,
+            color: ProColors.txt(context),
+          ),
+        ),
         const SizedBox(height: 2),
-        Text(label, style: const TextStyle(fontSize: 8, color: ProColors.textMuted, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 8,
+            color: ProColors.txtMuted(context),
+            fontWeight: FontWeight.bold,
+            letterSpacing: 0.4,
+          ),
+        ),
       ],
     );
   }
@@ -1032,171 +1184,147 @@ class _JobCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final status = (job['status'] ?? 'REQUESTED').toString().toUpperCase();
-    
-    // Determine status colors, background gradient & dimming
+
     final bool isExpiredOrCancelled = status == 'EXPIRED' || status == 'CANCELLED';
     final bool isInProgress = status == 'IN_PROGRESS' || status == 'NAVIGATING' || status == 'ARRIVED';
     final bool isCompleted = status == 'COMPLETED';
 
-    Color statusColor = ProColors.primary;
-    Color borderColor = ProColors.primary.withAlpha(120);
-    Gradient cardGradient = const LinearGradient(
-      colors: [Color(0xFF0F172A), Color(0x2210B981)],
-      begin: Alignment.topLeft,
-      end: Alignment.bottomRight,
-    );
-
+    Color statusColor = ProColors.primaryAccent(context);
     if (isInProgress) {
       statusColor = ProColors.warningAmber;
-      borderColor = ProColors.warningAmber;
-      cardGradient = const LinearGradient(
-        colors: [Color(0xFF1E293B), Color(0x33F59E0B)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
     } else if (isCompleted) {
-      statusColor = const Color(0xFF3B82F6);
-      borderColor = const Color(0xFF3B82F6).withAlpha(150);
-      cardGradient = const LinearGradient(
-        colors: [Color(0xFF0F172A), Color(0x223B82F6)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+      statusColor = ProColors.accent;
     } else if (isExpiredOrCancelled) {
-      statusColor = const Color(0xFF94A3B8);
-      borderColor = const Color(0x4464748B);
-      cardGradient = const LinearGradient(
-        colors: [Color(0x990F172A), Color(0x770F172A)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      );
+      statusColor = ProColors.txtMuted(context);
     }
 
-    final Color textColor = isExpiredOrCancelled ? const Color(0xFF94A3B8) : Colors.white;
+    final Color textColor = isExpiredOrCancelled
+        ? ProColors.txtMuted(context)
+        : ProColors.txt(context);
 
-    return GestureDetector(
+    return GlassCard(
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: cardGradient,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: borderColor, width: isInProgress ? 1.5 : 1.0),
-          boxShadow: [
-            if (isInProgress)
-              const BoxShadow(color: Color(0x33F59E0B), blurRadius: 14, offset: Offset(0, 4))
-            else if (!isExpiredOrCancelled)
-              BoxShadow(color: statusColor.withAlpha(20), blurRadius: 10, offset: const Offset(0, 4)),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+      borderRadius: 18,
+      padding: const EdgeInsets.all(16),
+      borderColor: isInProgress ? ProColors.warningAmber.withAlpha(140) : Colors.transparent,
+      borderWidth: isInProgress ? 1.5 : 0,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
                     Icon(
                       isExpiredOrCancelled ? Icons.timer_off_outlined : Icons.build_circle_outlined,
-                      color: isExpiredOrCancelled ? const Color(0xFF64748B) : statusColor,
+                      color: statusColor,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      job['service_name']?.toString() ?? 'Home Service Request',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w800,
-                        color: textColor,
-                        fontSize: 14,
-                        decoration: isExpiredOrCancelled ? TextDecoration.lineThrough : null,
+                    Expanded(
+                      child: Text(
+                        job['service_name']?.toString() ?? 'Home Service Request',
+                        style: TextStyle(
+                          fontWeight: FontWeight.w800,
+                          color: textColor,
+                          fontSize: 14,
+                          decoration: isExpiredOrCancelled ? TextDecoration.lineThrough : null,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isExpiredOrCancelled ? const Color(0x2294A3B8) : statusColor.withAlpha(30),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: isExpiredOrCancelled ? const Color(0x4494A3B8) : statusColor),
-                  ),
-                  child: Text(
-                    status,
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      color: statusColor,
-                      letterSpacing: 0.5,
-                    ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: statusColor.withAlpha(25),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: statusColor.withAlpha(80), width: 0.8),
+                ),
+                child: Text(
+                  status,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: statusColor,
+                    letterSpacing: 0.5,
                   ),
                 ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Icon(Icons.location_on,
+                  color: isExpiredOrCancelled ? ProColors.txtMuted(context) : ProColors.emergencyRed,
+                  size: 14),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  job['address_text']?.toString() ??
+                      job['customer_address']?.toString() ??
+                      job['address']?.toString() ??
+                      'Thottikkanam, Kerala',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: ProColors.txtSec(context),
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '₹${job['total_amount']}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  color: isExpiredOrCancelled
+                      ? ProColors.txtMuted(context)
+                      : ProColors.primaryAccent(context),
+                  fontSize: 16,
+                ),
+              ),
+            ],
+          ),
+          if (status == 'REQUESTED') ...[
+            const SizedBox(height: 14),
+            GradientButton(
+              height: 42,
+              label: 'ACCEPT JOB REQUEST',
+              onTap: onAccept,
+              icon: Icons.check_circle_outline,
             ),
+          ] else ...[
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.location_on, color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.emergencyRed, size: 14),
+                Icon(
+                  isExpiredOrCancelled ? Icons.info_outline_rounded : Icons.arrow_forward_ios,
+                  color: statusColor,
+                  size: 12,
+                ),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
-                    job['address_text']?.toString() ?? job['customer_address']?.toString() ?? job['address']?.toString() ?? 'Thottikkanam, Kerala',
-                    style: TextStyle(fontSize: 12, color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.textMuted),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-                Text(
-                  '₹${job['total_amount']}',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: isExpiredOrCancelled ? const Color(0xFF64748B) : Colors.white,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-            if (status == 'REQUESTED') ...[
-              const SizedBox(height: 14),
-              SizedBox(
-                width: double.infinity,
-                height: 42,
-                child: ElevatedButton.icon(
-                  onPressed: onAccept,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: ProColors.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  icon: const Icon(Icons.check_circle_outline, size: 18),
-                  label: const Text('ACCEPT JOB REQUEST', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5)),
-                ),
-              ),
-            ] else ...[
-              const SizedBox(height: 14),
-              Row(
-                children: [
-                  Icon(
-                    isExpiredOrCancelled ? Icons.info_outline_rounded : Icons.arrow_forward_ios,
-                    color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.primary,
-                    size: 12,
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
                     isExpiredOrCancelled
                         ? 'Request expired or cancelled. Tap to view job record.'
                         : 'Tap for Live Navigation & Start/End OTP Verification',
                     style: TextStyle(
-                      color: isExpiredOrCancelled ? const Color(0xFF64748B) : ProColors.primary,
+                      color: statusColor,
                       fontSize: 11,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+              ],
+            ),
           ],
-        ),
+        ],
       ),
     );
   }

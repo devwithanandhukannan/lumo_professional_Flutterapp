@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../../core/theme/pro_theme.dart';
-
 import '../../core/network/pro_api_client.dart';
 
 class ProEarningsScreen extends StatefulWidget {
@@ -107,33 +106,43 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Instant Wallet Payout', style: ProText.heading2),
+                Text(
+                  'Instant Wallet Payout',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: ProColors.txt(context),
+                  ),
+                ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: ProColors.textMuted),
+                  icon: Icon(Icons.close, color: ProColors.txtMuted(context)),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
             ),
             const SizedBox(height: 6),
-            Text('Available Balance: ₹${_walletBalance.toStringAsFixed(2)}', style: ProText.caption),
+            Text(
+              'Available Balance: ₹${_walletBalance.toStringAsFixed(2)}',
+              style: ProText.captionStyle(context),
+            ),
             const SizedBox(height: 20),
 
-            const Text('WITHDRAWAL AMOUNT (₹)', style: ProText.label),
+            Text('WITHDRAWAL AMOUNT (₹)', style: ProText.labelStyle(context)),
             const SizedBox(height: 6),
             TextField(
               controller: amountCtrl,
               keyboardType: TextInputType.number,
-              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-              decoration: proInputDecoration(hint: 'Enter amount'),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ProColors.txt(context)),
+              decoration: proInputDecoration(hint: 'Enter amount', context: context),
             ),
             const SizedBox(height: 14),
 
-            const Text('UPI ID / BANK ACCOUNT', style: ProText.label),
+            Text('UPI ID / BANK ACCOUNT', style: ProText.labelStyle(context)),
             const SizedBox(height: 6),
             TextField(
               controller: upiCtrl,
-              style: const TextStyle(fontSize: 14, color: Colors.white),
-              decoration: proInputDecoration(hint: 'mobile@upi'),
+              style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
+              decoration: proInputDecoration(hint: 'mobile@upi', context: context),
             ),
             const SizedBox(height: 24),
 
@@ -168,7 +177,8 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
-                child: const Text('CONFIRM INSTANT PAYOUT', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                child: const Text('CONFIRM INSTANT PAYOUT',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
               ),
             ),
           ],
@@ -179,17 +189,30 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final double maxWeekly = _weeklyData.fold(0.0, (max, item) => (item['amount'] as num) > max ? (item['amount'] as num).toDouble() : max);
+    final double maxWeekly = _weeklyData.fold(
+        0.0,
+        (max, item) => (item['amount'] as num) > max
+            ? (item['amount'] as num).toDouble()
+            : max);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Financials & Wallet'),
+        titleSpacing: 16,
+        title: Text(
+          'Financials & Wallet',
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 16,
+            color: ProColors.txt(context),
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_balance_wallet_outlined, color: ProColors.primary),
+            icon: Icon(Icons.account_balance_wallet_outlined, color: ProColors.primaryAccent(context)),
             onPressed: _showWithdrawalModal,
             tooltip: 'Payout',
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: _loading
@@ -199,24 +222,23 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
               color: ProColors.primary,
               child: SingleChildScrollView(
                 physics: const AlwaysScrollableScrollPhysics(),
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Wallet Balance Card
                     // Wallet Balance Card
                     GlassCard(
                       padding: const EdgeInsets.all(22),
                       borderRadius: 24,
                       borderColor: ProColors.primary.withAlpha(100),
-                      gradientColors: const [Color(0x3310B981), Color(0x0C10B981)],
+                      borderWidth: 1.2,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('WITHDRAWABLE BALANCE', style: ProText.label),
+                              Text('WITHDRAWABLE BALANCE', style: ProText.labelStyle(context)),
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
@@ -224,12 +246,26 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(color: ProColors.primary),
                                 ),
-                                child: const Text('INSTANT PAYOUT', style: TextStyle(color: ProColors.primary, fontSize: 10, fontWeight: FontWeight.w900)),
+                                child: const Text(
+                                  'INSTANT PAYOUT',
+                                  style: TextStyle(
+                                    color: ProColors.primary,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                           const SizedBox(height: 10),
-                          Text('₹${_walletBalance.toStringAsFixed(2)}', style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w900, color: Colors.white)),
+                          Text(
+                            '₹${_walletBalance.toStringAsFixed(2)}',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w900,
+                              color: ProColors.txt(context),
+                            ),
+                          ),
                           const SizedBox(height: 18),
                           GradientButton(
                             height: 48,
@@ -241,7 +277,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
                     // Summary Metrics Row
                     Row(
@@ -251,8 +287,8 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                             title: "TODAY'S EARNINGS",
                             value: '₹${_todayEarnings.toStringAsFixed(2)}',
                             subtitle: '$_todayJobsCount Jobs Completed',
-                            icon: Icons.today,
-                            accentColor: ProColors.primary,
+                            icon: Icons.today_rounded,
+                            accentColor: ProColors.primaryAccent(context),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -261,14 +297,14 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                             title: 'THIS WEEK',
                             value: '₹${_thisWeekEarnings.toStringAsFixed(2)}',
                             subtitle: '$_thisWeekJobsCount Jobs Completed',
-                            icon: Icons.date_range,
+                            icon: Icons.date_range_rounded,
                             accentColor: ProColors.accent,
                           ),
                         ),
                       ],
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
 
                     // Weekly Chart Section
                     GlassCard(
@@ -280,8 +316,15 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              const Text('WEEKLY EARNINGS TREND', style: ProText.label),
-                              Text('Avg: ₹${(_thisWeekEarnings / 7).toStringAsFixed(0)} / day', style: ProText.caption.copyWith(color: ProColors.primary)),
+                              Text('WEEKLY EARNINGS TREND', style: ProText.labelStyle(context)),
+                              Text(
+                                'Avg: ₹${(_thisWeekEarnings / 7).toStringAsFixed(0)} / day',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  color: ProColors.primaryAccent(context),
+                                ),
+                              ),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -297,7 +340,8 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                 return Column(
                                   mainAxisAlignment: MainAxisAlignment.end,
                                   children: [
-                                    Text('₹${(amount / 1000).toStringAsFixed(1)}k', style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
+                                    Text('₹${(amount / 1000).toStringAsFixed(1)}k',
+                                        style: TextStyle(fontSize: 10, color: ProColors.txtMuted(context))),
                                     const SizedBox(height: 6),
                                     Container(
                                       width: 24,
@@ -306,7 +350,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                         gradient: LinearGradient(
                                           colors: amount > 2000
                                               ? [ProColors.primary, ProColors.primaryDark]
-                                              : [ProColors.accent, ProColors.surface],
+                                              : [ProColors.accent, ProColors.surfHigh(context)],
                                           begin: Alignment.topCenter,
                                           end: Alignment.bottomCenter,
                                         ),
@@ -314,7 +358,14 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                       ),
                                     ),
                                     const SizedBox(height: 8),
-                                    Text(item['day'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                                    Text(
+                                      item['day'] as String,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                        color: ProColors.txt(context),
+                                      ),
+                                    ),
                                   ],
                                 );
                               }).toList(),
@@ -324,23 +375,35 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
                     // Recent Transactions Ledger
-                    const Text('RECENT PAYOUT LEDGER', style: ProText.label),
-                    const SizedBox(height: 12),
+                    Text('RECENT PAYOUT LEDGER', style: ProText.labelStyle(context)),
+                    const SizedBox(height: 10),
 
                     if (_transactions.isEmpty)
                       GlassCard(
                         padding: const EdgeInsets.all(24),
                         borderRadius: 20,
-                        child: const Column(
+                        child: Column(
                           children: [
-                            Icon(Icons.account_balance_wallet_outlined, size: 36, color: ProColors.textMuted),
-                            SizedBox(height: 12),
-                            Text('No Payout Transactions Yet', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-                            SizedBox(height: 4),
-                            Text('Completed customer jobs and wallet payouts will appear here in real time.', textAlign: TextAlign.center, style: ProText.caption),
+                            Icon(Icons.account_balance_wallet_outlined,
+                                size: 36, color: ProColors.txtMuted(context)),
+                            const SizedBox(height: 12),
+                            Text(
+                              'No Payout Transactions Yet',
+                              style: TextStyle(
+                                color: ProColors.txt(context),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Completed customer jobs and wallet payouts will appear here in real time.',
+                              textAlign: TextAlign.center,
+                              style: ProText.captionStyle(context),
+                            ),
                           ],
                         ),
                       )
@@ -363,12 +426,18 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                   width: 40,
                                   height: 40,
                                   decoration: BoxDecoration(
-                                    color: isCredit ? ProColors.primarySoft : ProColors.emergencyRedSoft,
+                                    color: isCredit
+                                        ? ProColors.primarySoft
+                                        : ProColors.emergencyRedSoft,
                                     shape: BoxShape.circle,
                                   ),
                                   child: Icon(
-                                    isCredit ? Icons.add_circle_outline : Icons.remove_circle_outline,
-                                    color: isCredit ? ProColors.primary : ProColors.emergencyRed,
+                                    isCredit
+                                        ? Icons.add_circle_outline
+                                        : Icons.remove_circle_outline,
+                                    color: isCredit
+                                        ? ProColors.primary
+                                        : ProColors.emergencyRed,
                                     size: 20,
                                   ),
                                 ),
@@ -377,10 +446,20 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(tx['title'] as String, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
+                                      Text(
+                                        tx['title'] as String,
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.w700,
+                                          color: ProColors.txt(context),
+                                          fontSize: 13,
+                                        ),
+                                      ),
                                       const SizedBox(height: 2),
-                                      Text(tx['service'] as String, style: ProText.caption),
-                                      Text(tx['date'] as String, style: const TextStyle(fontSize: 10, color: ProColors.textMuted)),
+                                      Text(tx['service'] as String,
+                                          style: ProText.captionStyle(context)),
+                                      Text(tx['date'] as String,
+                                          style: TextStyle(
+                                              fontSize: 10, color: ProColors.txtMuted(context))),
                                     ],
                                   ),
                                 ),
@@ -389,7 +468,9 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
                                     fontSize: 14,
-                                    color: isCredit ? ProColors.primary : ProColors.emergencyRed,
+                                    color: isCredit
+                                        ? ProColors.primary
+                                        : ProColors.emergencyRed,
                                   ),
                                 ),
                               ],
@@ -397,6 +478,7 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
                           );
                         },
                       ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
@@ -431,14 +513,21 @@ class _StatCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title, style: ProText.label),
+              Text(title, style: ProText.labelStyle(context)),
               Icon(icon, size: 16, color: accentColor),
             ],
           ),
           const SizedBox(height: 8),
-          Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white)),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              color: ProColors.txt(context),
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(subtitle, style: ProText.caption),
+          Text(subtitle, style: ProText.captionStyle(context)),
         ],
       ),
     );

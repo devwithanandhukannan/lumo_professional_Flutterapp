@@ -43,7 +43,8 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
     if (!silent) setState(() => _loading = true);
     try {
       final jobs = await ProApiClient.getMyJobs();
-      final requested = jobs.where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED').toList();
+      final requested =
+          jobs.where((j) => (j['status']?.toString() ?? '').toUpperCase() == 'REQUESTED').toList();
 
       if (requested.length > _requestedJobs.length) {
         ProHapticService.incomingJobRequest();
@@ -66,13 +67,17 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
       await ProApiClient.acceptJob(bookingId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('⚡ Instant Job Accepted! Live navigation active.'), backgroundColor: ProColors.primary),
+        const SnackBar(
+            content: Text('⚡ Instant Job Accepted! Live navigation active.'),
+            backgroundColor: ProColors.primary),
       );
       _loadRequests();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Accept failed: ${e.toString()}'), backgroundColor: ProColors.emergencyRed),
+        SnackBar(
+            content: Text('Accept failed: ${e.toString()}'),
+            backgroundColor: ProColors.emergencyRed),
       );
     }
   }
@@ -81,18 +86,27 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: ProColors.cardBg,
-        title: const Text('Decline Request', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        content: const Text('Are you sure you want to decline / cancel this job request?', style: TextStyle(color: ProColors.textMuted)),
+        backgroundColor: ProColors.surf(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text('Decline Request',
+            style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold)),
+        content: Text(
+          'Are you sure you want to decline / cancel this job request?',
+          style: TextStyle(color: ProColors.txtSec(context)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Keep', style: TextStyle(color: ProColors.textMuted)),
+            child: Text('Keep', style: TextStyle(color: ProColors.txtMuted(context))),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: ProColors.emergencyRed),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ProColors.emergencyRed,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Decline', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: const Text('Decline', style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -109,7 +123,9 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
       } catch (e) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Decline failed: ${e.toString()}'), backgroundColor: ProColors.emergencyRed),
+          SnackBar(
+              content: Text('Decline failed: ${e.toString()}'),
+              backgroundColor: ProColors.emergencyRed),
         );
       }
     }
@@ -119,19 +135,28 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        titleSpacing: 16,
+        title: Row(
           children: [
-            Icon(Icons.bolt_rounded, color: ProColors.warningAmber, size: 20),
-            SizedBox(width: 8),
-            Text('Instant Customer Requests', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+            const Icon(Icons.bolt_rounded, color: ProColors.warningAmber, size: 22),
+            const SizedBox(width: 8),
+            Text(
+              'Instant Customer Requests',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 16,
+                color: ProColors.txt(context),
+              ),
+            ),
           ],
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh_rounded),
+            icon: Icon(Icons.refresh_rounded, color: ProColors.txtMuted(context)),
             onPressed: _loadRequests,
             tooltip: 'Refresh Feed',
           ),
+          const SizedBox(width: 4),
         ],
       ),
       body: _loading
@@ -143,25 +168,40 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                   ? ListView(
                       padding: const EdgeInsets.all(24),
                       children: [
-                        const SizedBox(height: 60),
-                        Icon(Icons.notifications_paused_outlined, size: 56, color: ProColors.textMuted.withAlpha(120)),
-                        const SizedBox(height: 16),
-                        const Text(
+                        const SizedBox(height: 80),
+                        Container(
+                          width: 72,
+                          height: 72,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: ProColors.surfHigh(context),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(Icons.notifications_paused_outlined,
+                              size: 36, color: ProColors.txtMuted(context)),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
                           'No Instant Requests Right Now',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: ProColors.txt(context),
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           'Keep your duty toggle ON to receive instant customer dispatch alerts within your 50km radius.',
                           textAlign: TextAlign.center,
-                          style: TextStyle(color: ProColors.textMuted, fontSize: 12),
+                          style: ProText.captionStyle(context),
                         ),
                       ],
                     )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                       itemCount: _requestedJobs.length,
+                      separatorBuilder: (ctx, idx) => const SizedBox(height: 12),
                       itemBuilder: (ctx, idx) {
                         final job = _requestedJobs[idx];
                         final id = job['id']?.toString() ?? '';
@@ -170,17 +210,11 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                         final amount = job['total_amount']?.toString() ?? '499';
                         final dist = job['travel_distance_km']?.toString() ?? '3.2';
 
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 16),
+                        return GlassCard(
+                          borderRadius: 20,
                           padding: const EdgeInsets.all(18),
-                          decoration: BoxDecoration(
-                            color: ProColors.cardBg,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: ProColors.warningAmber.withAlpha(120)),
-                            boxShadow: [
-                              BoxShadow(color: ProColors.warningAmber.withAlpha(20), blurRadius: 12, spreadRadius: 1),
-                            ],
-                          ),
+                          borderColor: ProColors.warningAmber.withAlpha(100),
+                          borderWidth: 1.2,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -188,42 +222,78 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                 children: [
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                    decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(12)),
+                                    decoration: BoxDecoration(
+                                      color: ProColors.warningAmberSoft,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     child: const Row(
                                       children: [
                                         Icon(Icons.timer_outlined, color: ProColors.warningAmber, size: 13),
                                         SizedBox(width: 3),
-                                        Text('5 MIN TIMER', style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: ProColors.warningAmber)),
+                                        Text('5 MIN TIMER',
+                                            style: TextStyle(
+                                                fontSize: 9,
+                                                fontWeight: FontWeight.w800,
+                                                color: ProColors.warningAmber)),
                                       ],
                                     ),
                                   ),
-                                  const SizedBox(width: 6),
+                                  const SizedBox(width: 8),
                                   Builder(builder: (ctx) {
                                     final totalVal = double.tryParse(amount) ?? 0.0;
-                                    final platformFeeVal = double.tryParse(job['platform_fee']?.toString() ?? '50') ?? 50.0;
-                                    final netPayoutVal = (totalVal - platformFeeVal) > 0 ? (totalVal - platformFeeVal) : totalVal;
+                                    final platformFeeVal =
+                                        double.tryParse(job['platform_fee']?.toString() ?? '50') ?? 50.0;
+                                    final netPayoutVal = (totalVal - platformFeeVal) > 0
+                                        ? (totalVal - platformFeeVal)
+                                        : totalVal;
 
                                     return Container(
                                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
+                                      decoration: BoxDecoration(
+                                        color: ProColors.primarySoft,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
                                       child: Row(
                                         children: [
-                                          const Icon(Icons.account_balance_wallet, color: ProColors.primary, size: 13),
-                                          const SizedBox(width: 3),
-                                          Text('YOU GET ₹${netPayoutVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ProColors.primary)),
+                                          const Icon(Icons.account_balance_wallet_rounded,
+                                              color: ProColors.primary, size: 13),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            'YOU GET ₹${netPayoutVal.toStringAsFixed(0)}',
+                                            style: const TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w900,
+                                              color: ProColors.primary,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     );
                                   }),
                                   const Spacer(),
-                                  Text('₹$amount', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white)),
+                                  Text(
+                                    '₹$amount',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.w900,
+                                      color: ProColors.primaryAccent(context),
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 12),
                               Row(
                                 children: [
-                                  Expanded(child: Text(serviceName, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white))),
-                                  // Update 5: Customer sex badge
+                                  Expanded(
+                                    child: Text(
+                                      serviceName,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        color: ProColors.txt(context),
+                                      ),
+                                    ),
+                                  ),
                                   Builder(builder: (ctx) {
                                     final customerSex = job['customer_sex']?.toString() ?? '';
                                     if (customerSex.isEmpty) return const SizedBox.shrink();
@@ -233,26 +303,45 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                       decoration: BoxDecoration(
                                         color: isFemale ? const Color(0x1AEC4899) : const Color(0x1A3B82F6),
                                         borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: isFemale ? const Color(0x80EC4899) : const Color(0x803B82F6)),
+                                        border: Border.all(
+                                            color: isFemale
+                                                ? const Color(0x80EC4899)
+                                                : const Color(0x803B82F6)),
                                       ),
                                       child: Row(
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Text(isFemale ? '👩' : '👨', style: const TextStyle(fontSize: 12)),
                                           const SizedBox(width: 4),
-                                          Text(isFemale ? 'Female' : 'Male', style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: isFemale ? const Color(0xFFEC4899) : const Color(0xFF3B82F6))),
+                                          Text(
+                                            isFemale ? 'Female' : 'Male',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              fontWeight: FontWeight.w700,
+                                              color: isFemale
+                                                  ? const Color(0xFFEC4899)
+                                                  : const Color(0xFF3B82F6),
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     );
                                   }),
                                 ],
                               ),
-                              const SizedBox(height: 6),
+                              const SizedBox(height: 8),
                               Row(
                                 children: [
                                   const Icon(Icons.location_on, color: ProColors.emergencyRed, size: 16),
                                   const SizedBox(width: 6),
-                                  Expanded(child: Text(address, style: const TextStyle(color: ProColors.textMuted, fontSize: 12), maxLines: 1, overflow: TextOverflow.ellipsis)),
+                                  Expanded(
+                                    child: Text(
+                                      address,
+                                      style: TextStyle(color: ProColors.txtSec(context), fontSize: 12),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 4),
@@ -265,9 +354,23 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                     final travelCharge = job['travel_charge'];
                                     final basePrice = job['base_price'] ?? job['total_amount'];
                                     if (travelCharge != null) {
-                                      return Text('$distKm km · Base ₹$basePrice + Travel ₹$travelCharge', style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600));
+                                      return Text(
+                                        '$distKm km · Base ₹$basePrice + Travel ₹$travelCharge',
+                                        style: TextStyle(
+                                          color: ProColors.primaryAccent(context),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      );
                                     }
-                                    return Text('Distance: $distKm km', style: const TextStyle(color: ProColors.primary, fontSize: 11, fontWeight: FontWeight.w600));
+                                    return Text(
+                                      'Distance: $distKm km',
+                                      style: TextStyle(
+                                        color: ProColors.primaryAccent(context),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    );
                                   }),
                                 ],
                               ),
@@ -289,11 +392,12 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                         );
                                       },
                                       style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.white,
-                                        side: const BorderSide(color: ProColors.border),
+                                        foregroundColor: ProColors.txt(context),
+                                        side: BorderSide(color: ProColors.brd(context)),
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                       ),
-                                      child: const Text('DETAILS', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                                      child: const Text('DETAILS',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                                     ),
                                   ),
                                   const SizedBox(width: 12),
@@ -306,7 +410,8 @@ class _ProInstantRequestsScreenState extends State<ProInstantRequestsScreen> {
                                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                       ),
                                       icon: const Icon(Icons.bolt, size: 18),
-                                      label: const Text('ACCEPT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
+                                      label: const Text('ACCEPT',
+                                          style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900)),
                                     ),
                                   ),
                                 ],
