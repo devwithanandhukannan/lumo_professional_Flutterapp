@@ -756,9 +756,17 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                   if (_offeredServices.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: ProColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.border)),
-                      child: const Center(
-                        child: Text('No services configured yet.\nTap "+ ADMIN SERVICES" above to select services.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                      decoration: BoxDecoration(
+                        color: ProColors.card(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: ProColors.brd(context)),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No services configured yet.\nTap "+ ADMIN SERVICES" above to select services.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12),
+                        ),
                       ),
                     )
                   else
@@ -773,9 +781,10 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: ProColors.cardBg,
+                            color: ProColors.card(context),
                             borderRadius: BorderRadius.circular(18),
-                            border: Border.all(color: isActive ? ProColors.border : ProColors.border.withAlpha(50)),
+                            border: Border.all(color: isActive ? ProColors.brd(context) : ProColors.brd(context).withAlpha(50)),
+                            boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -785,10 +794,10 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                   Container(
                                     padding: const EdgeInsets.all(10),
                                     decoration: BoxDecoration(
-                                      color: isActive ? ProColors.primarySoft : ProColors.surface,
+                                      color: isActive ? ProColors.primarySoft : ProColors.surfHigh(context),
                                       borderRadius: BorderRadius.circular(14),
                                     ),
-                                    child: Icon(Icons.handyman_rounded, color: isActive ? ProColors.primary : ProColors.textMuted, size: 22),
+                                    child: Icon(Icons.handyman_rounded, color: isActive ? ProColors.primary : ProColors.txtMuted(context), size: 22),
                                   ),
                                   const SizedBox(width: 14),
                                   Expanded(
@@ -798,18 +807,25 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                         Row(
                                           children: [
                                             Expanded(
-                                              child: Text(srv['service_name'] ?? 'Service Name', style: TextStyle(color: isActive ? Colors.white : ProColors.textMuted, fontWeight: FontWeight.bold, fontSize: 14)),
+                                              child: Text(
+                                                srv['service_name'] ?? 'Service Name',
+                                                style: TextStyle(
+                                                  color: isActive ? ProColors.txt(context) : ProColors.txtMuted(context),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
                                             ),
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                               decoration: BoxDecoration(
-                                                color: (isActive ? ProColors.primary : ProColors.textMuted).withAlpha(30),
+                                                color: (isActive ? ProColors.primary : ProColors.txtMuted(context)).withAlpha(30),
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 isActive ? 'ACTIVE' : 'DEACTIVATED',
                                                 style: TextStyle(
-                                                  color: isActive ? ProColors.primary : ProColors.textMuted,
+                                                  color: isActive ? ProColors.primary : ProColors.txtMuted(context),
                                                   fontSize: 9,
                                                   fontWeight: FontWeight.bold,
                                                 ),
@@ -818,7 +834,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                           ],
                                         ),
                                         const SizedBox(height: 2),
-                                        Text('Base Rate: ₹${srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                                        Text('Base Rate: ₹${srv['base_price'] ?? 499}', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11)),
                                       ],
                                     ),
                                   ),
@@ -836,7 +852,7 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                 ],
                               ),
                               const SizedBox(height: 8),
-                              const Divider(color: ProColors.border, height: 1),
+                              Divider(color: ProColors.brd(context), height: 1),
                               const SizedBox(height: 8),
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -846,14 +862,14 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                     children: [
                                       Row(
                                         children: [
-                                          const Text('Your Rate: ', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                                          Text('Your Rate: ', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12)),
                                           Text('₹${srv['custom_price'] ?? srv['base_price'] ?? 499}', style: const TextStyle(color: ProColors.accent, fontWeight: FontWeight.w900, fontSize: 15)),
                                         ],
                                       ),
                                       const SizedBox(height: 2),
                                       Row(
                                         children: [
-                                          const Text('Travel Fee: ', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                                          Text('Travel Fee: ', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11)),
                                           Text('₹${srv['km_charge_per_km'] ?? srv['per_km_rate'] ?? 15}/km', style: const TextStyle(color: ProColors.primary, fontWeight: FontWeight.bold, fontSize: 11)),
                                         ],
                                       ),
@@ -885,15 +901,23 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                   const SizedBox(height: 24),
 
                   // Submitted Custom Service Requests & Admin Status
-                  const Text('MY CUSTOM REQUESTS', style: ProText.label),
+                  Text('MY CUSTOM REQUESTS', style: ProText.labelStyle(context)),
                   const SizedBox(height: 10),
 
                   if (_customRequests.isEmpty)
                     Container(
                       padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(color: ProColors.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.border)),
-                      child: const Center(
-                        child: Text('No custom service requests submitted yet.\nTap "+ CUSTOM SERVICE" to request a new service.', textAlign: TextAlign.center, style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                      decoration: BoxDecoration(
+                        color: ProColors.card(context),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: ProColors.brd(context)),
+                      ),
+                      child: Center(
+                        child: Text(
+                          'No custom service requests submitted yet.\nTap "+ CUSTOM SERVICE" to request a new service.',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12),
+                        ),
                       ),
                     )
                   else
@@ -922,9 +946,10 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: ProColors.cardBg,
+                            color: ProColors.card(context),
                             borderRadius: BorderRadius.circular(18),
                             border: Border.all(color: badgeColor.withAlpha(100)),
+                            boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -935,7 +960,14 @@ class _ProServicesCustomScreenState extends State<ProServicesCustomScreen> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(req['service_name'] ?? 'Custom Service', style: TextStyle(color: isReqActive ? Colors.white : ProColors.textMuted, fontWeight: FontWeight.bold, fontSize: 15)),
+                                        Text(
+                                          req['service_name'] ?? 'Custom Service',
+                                          style: TextStyle(
+                                            color: isReqActive ? ProColors.txt(context) : ProColors.txtMuted(context),
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                          ),
+                                        ),
                                         const SizedBox(height: 4),
                                         Row(
                                           children: [

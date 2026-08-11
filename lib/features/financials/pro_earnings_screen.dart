@@ -17,17 +17,18 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
   int _thisWeekJobsCount = 0;
   bool _loading = true;
 
-  final List<Map<String, dynamic>> _weeklyData = const [
-    {'day': 'Mon', 'amount': 0},
-    {'day': 'Tue', 'amount': 0},
-    {'day': 'Wed', 'amount': 0},
-    {'day': 'Thu', 'amount': 0},
-    {'day': 'Fri', 'amount': 0},
-    {'day': 'Sat', 'amount': 0},
-    {'day': 'Sun', 'amount': 0},
+  List<Map<String, dynamic>> _weeklyData = [
+    {'day': 'Mon', 'amount': 0.0},
+    {'day': 'Tue', 'amount': 0.0},
+    {'day': 'Wed', 'amount': 0.0},
+    {'day': 'Thu', 'amount': 0.0},
+    {'day': 'Fri', 'amount': 0.0},
+    {'day': 'Sat', 'amount': 0.0},
+    {'day': 'Sun', 'amount': 0.0},
   ];
 
   List<Map<String, dynamic>> _transactions = [];
+  List<dynamic> _savedPayoutMethods = [];
 
   @override
   void initState() {
@@ -37,42 +38,32 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
 
   Future<void> _loadEarnings() async {
     try {
-      final jobs = await ProApiClient.getMyJobs();
-      double totalWallet = 0.0;
-      double todayTotal = 0.0;
-      int todayCount = 0;
-      double weekTotal = 0.0;
-      int weekCount = 0;
-      final txs = <Map<String, dynamic>>[];
+      final results = await Future.wait([
+        ProApiClient.getProWalletSummary().catchError((_) => <String, dynamic>{}),
+        ProApiClient.getWalletTransactions().catchError((_) => <dynamic>[]),
+        ProApiClient.getPayoutMethods().catchError((_) => <dynamic>[]),
+      ]);
 
-      for (final j in jobs) {
-        if (j['status'] == 'COMPLETED') {
-          final amt = (double.tryParse(j['total_amount']?.toString() ?? '0') ?? 0.0);
-          totalWallet += amt;
-          todayTotal += amt;
-          todayCount++;
-          weekTotal += amt;
-          weekCount++;
-
-          txs.add({
-            'id': j['id'] ?? 'tx-${DateTime.now().millisecondsSinceEpoch}',
-            'title': 'Job Completion #${j['id'] ?? 'BK'}',
-            'service': j['service_name'] ?? 'Service Job',
-            'amount': '+ ₹${amt.toStringAsFixed(2)}',
-            'date': 'Completed',
-            'isCredit': true,
-          });
-        }
-      }
+      final walletData = results[0] as Map<String, dynamic>;
+      final txList = (results[1] as List).cast<Map<String, dynamic>>();
+      final methods = results[2] as List;
 
       if (mounted) {
         setState(() {
-          _walletBalance = totalWallet;
-          _todayEarnings = todayTotal;
-          _todayJobsCount = todayCount;
-          _thisWeekEarnings = weekTotal;
-          _thisWeekJobsCount = weekCount;
-          _transactions = txs;
+          if (walletData.isNotEmpty) {
+            _walletBalance = (walletData['walletBalance'] as num?)?.toDouble() ?? 0.0;
+            _todayEarnings = (walletData['todayEarnings'] as num?)?.toDouble() ?? 0.0;
+            _todayJobsCount = (walletData['todayJobsCount'] as num?)?.toInt() ?? 0;
+            _thisWeekEarnings = (walletData['thisWeekEarnings'] as num?)?.toDouble() ?? 0.0;
+            _thisWeekJobsCount = (walletData['thisWeekJobsCount'] as num?)?.toInt() ?? 0;
+            if (walletData['weeklyData'] is List) {
+              _weeklyData = (walletData['weeklyData'] as List)
+                  .map((e) => Map<String, dynamic>.from(e as Map))
+                  .toList();
+            }
+          }
+          _transactions = txList;
+          _savedPayoutMethods = methods;
           _loading = false;
         });
       }
@@ -82,8 +73,32 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
   }
 
   void _showWithdrawalModal() {
-    final amountCtrl = TextEditingController(text: '2000');
-    final upiCtrl = TextEditingController(text: 'priya@upi');
+    final amountCtrl = TextEditingController(
+      text: _walletBalance >= 100 ? (_walletBalance > 2000 ? '2000' : _walletBalance.toStringAsFixed(0)) : '100',
+    );
+    final upiCtrl = TextEditingController(text: 'pro@upi');
+    final acctNumCtrl = TextEditingController();
+    final ifscCtrl = TextEditingController();
+    final acctNameCtrl = TextEditingController();
+
+    // Check if we have a saved primary method
+    if (_savedPayoutMethods.isNotEmpty) {
+      final primary = _savedPayoutMethods.firstWhere(
+        (m) => m['is_primary'] == true,
+        orElse: () => _savedPayoutMethods.first,
+      );
+      if (primary['type'] == 'UPI' && primary['upi_id'] != null) {
+        upiCtrl.text = primary['upi_id'];
+      } else if (primary['type'] == 'BANK_ACCOUNT') {
+        acctNumCtrl.text = primary['account_number'] ?? '';
+        ifscCtrl.text = primary['ifsc_code'] ?? '';
+        acctNameCtrl.text = primary['account_holder_name'] ?? '';
+      }
+    }
+
+    String selectedType = 'UPI'; // 'UPI' or 'BANK'
+    bool isSubmitting = false;
+    String? modalError;
 
     showModalBottomSheet(
       context: context,
@@ -92,97 +107,350 @@ class _ProEarningsScreenState extends State<ProEarningsScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(
-          left: 24,
-          right: 24,
-          top: 24,
-          bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Instant Wallet Payout',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: ProColors.txt(context),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.close, color: ProColors.txtMuted(context)),
-                  onPressed: () => Navigator.pop(ctx),
-                ),
-              ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              left: 24,
+              right: 24,
+              top: 24,
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 24,
             ),
-            const SizedBox(height: 6),
-            Text(
-              'Available Balance: ₹${_walletBalance.toStringAsFixed(2)}',
-              style: ProText.captionStyle(context),
-            ),
-            const SizedBox(height: 20),
-
-            Text('WITHDRAWAL AMOUNT (₹)', style: ProText.labelStyle(context)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: amountCtrl,
-              keyboardType: TextInputType.number,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ProColors.txt(context)),
-              decoration: proInputDecoration(hint: 'Enter amount', context: context),
-            ),
-            const SizedBox(height: 14),
-
-            Text('UPI ID / BANK ACCOUNT', style: ProText.labelStyle(context)),
-            const SizedBox(height: 6),
-            TextField(
-              controller: upiCtrl,
-              style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
-              decoration: proInputDecoration(hint: 'mobile@upi', context: context),
-            ),
-            const SizedBox(height: 24),
-
-            SizedBox(
-              height: 50,
-              child: ElevatedButton(
-                onPressed: () {
-                  final val = double.tryParse(amountCtrl.text.trim()) ?? 0;
-                  if (val > 0 && val <= _walletBalance) {
-                    setState(() {
-                      _walletBalance -= val;
-                      _transactions.insert(0, {
-                        'id': 'tx-${DateTime.now().millisecondsSinceEpoch}',
-                        'title': 'Instant Wallet Payout',
-                        'service': 'Transfer to ${upiCtrl.text.trim()}',
-                        'amount': '- ₹${val.toStringAsFixed(2)}',
-                        'date': 'Just now',
-                        'isCredit': false,
-                      });
-                    });
-                    Navigator.pop(ctx);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Payout of ₹${val.toStringAsFixed(2)} initiated successfully!'),
-                        backgroundColor: ProColors.primary,
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Withdraw to Bank / UPI',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: ProColors.txt(context),
+                        ),
                       ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: ProColors.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                ),
-                child: const Text('CONFIRM INSTANT PAYOUT',
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13)),
+                      IconButton(
+                        icon: Icon(Icons.close, color: ProColors.txtMuted(context)),
+                        onPressed: () => Navigator.pop(ctx),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(Icons.account_balance_wallet_rounded, size: 14, color: ProColors.primary),
+                      const SizedBox(width: 6),
+                      Text(
+                        'Available to Withdraw: ₹${_walletBalance.toStringAsFixed(2)}',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: ProColors.primary,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+
+                  if (modalError != null)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: ProColors.emergencyRedSoft,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: ProColors.emergencyRedBorder),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.error_outline, color: ProColors.emergencyRed, size: 16),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              modalError!,
+                              style: const TextStyle(color: ProColors.emergencyRed, fontSize: 12),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Quick Amount Selector
+                  Text('WITHDRAWAL AMOUNT (₹)', style: ProText.labelStyle(context)),
+                  const SizedBox(height: 6),
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: ProColors.txt(context)),
+                    decoration: proInputDecoration(
+                      hint: 'Min ₹100',
+                      prefix: const Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        child: Text('₹', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: ProColors.primary)),
+                      ),
+                      context: context,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // Quick Amount Chips
+                  Wrap(
+                    spacing: 8,
+                    children: [500, 1000, 2000, 5000].map((amt) {
+                      return ChoiceChip(
+                        label: Text('₹$amt', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                        selected: amountCtrl.text == amt.toString(),
+                        selectedColor: ProColors.primarySoft,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setModalState(() {
+                              amountCtrl.text = amt.toString();
+                              modalError = null;
+                            });
+                          }
+                        },
+                      );
+                    }).toList()
+                      ..add(
+                        ChoiceChip(
+                          label: const Text('ALL BALANCE', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: ProColors.primary)),
+                          selected: amountCtrl.text == _walletBalance.toStringAsFixed(0),
+                          selectedColor: ProColors.primarySoft,
+                          onSelected: (selected) {
+                            if (selected && _walletBalance > 0) {
+                              setModalState(() {
+                                amountCtrl.text = _walletBalance.toStringAsFixed(0);
+                                modalError = null;
+                              });
+                            }
+                          },
+                        ),
+                      ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Payout Method Switcher (UPI vs Bank)
+                  Text('DISBURSEMENT DESTINATION', style: ProText.labelStyle(context)),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => selectedType = 'UPI'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'UPI' ? ProColors.primarySoft : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedType == 'UPI' ? ProColors.primary : ProColors.brd(context),
+                                width: selectedType == 'UPI' ? 1.8 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.bolt_rounded, size: 16, color: selectedType == 'UPI' ? ProColors.primary : ProColors.txtMuted(context)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Instant UPI (VPA)',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: selectedType == 'UPI' ? ProColors.primary : ProColors.txtMuted(context),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: GestureDetector(
+                          onTap: () => setModalState(() => selectedType = 'BANK'),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(vertical: 10),
+                            decoration: BoxDecoration(
+                              color: selectedType == 'BANK' ? ProColors.primarySoft : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: selectedType == 'BANK' ? ProColors.primary : ProColors.brd(context),
+                                width: selectedType == 'BANK' ? 1.8 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.account_balance_rounded, size: 16, color: selectedType == 'BANK' ? ProColors.primary : ProColors.txtMuted(context)),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Bank IMPS / NEFT',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: selectedType == 'BANK' ? ProColors.primary : ProColors.txtMuted(context),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  if (selectedType == 'UPI') ...[
+                    TextField(
+                      controller: upiCtrl,
+                      style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
+                      decoration: proInputDecoration(
+                        hint: 'e.g. yourname@okicici, mobile@upi',
+                        prefix: const Icon(Icons.alternate_email_rounded, color: ProColors.primary, size: 18),
+                        context: context,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text('Direct instant settlement to your UPI Virtual Payment Address.', style: ProText.captionStyle(context)),
+                  ] else ...[
+                    TextField(
+                      controller: acctNameCtrl,
+                      style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
+                      decoration: proInputDecoration(
+                        hint: 'Account Holder Name',
+                        prefix: const Icon(Icons.person_outline, color: ProColors.primary, size: 18),
+                        context: context,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: acctNumCtrl,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
+                      decoration: proInputDecoration(
+                        hint: 'Bank Account Number',
+                        prefix: const Icon(Icons.numbers, color: ProColors.primary, size: 18),
+                        context: context,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: ifscCtrl,
+                      textCapitalization: TextCapitalization.characters,
+                      style: TextStyle(fontSize: 14, color: ProColors.txt(context)),
+                      decoration: proInputDecoration(
+                        hint: 'Bank IFSC Code (e.g. SBIN0001234)',
+                        prefix: const Icon(Icons.domain, color: ProColors.primary, size: 18),
+                        context: context,
+                      ),
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: isSubmitting
+                          ? null
+                          : () async {
+                              final val = double.tryParse(amountCtrl.text.trim()) ?? 0;
+                              if (val < 100) {
+                                setModalState(() => modalError = 'Minimum withdrawal amount is ₹100.00');
+                                return;
+                              }
+                              if (val > _walletBalance) {
+                                setModalState(() => modalError = 'Amount exceeds your available balance of ₹${_walletBalance.toStringAsFixed(2)}');
+                                return;
+                              }
+
+                              if (selectedType == 'UPI' && (!upiCtrl.text.contains('@') || upiCtrl.text.trim().length < 4)) {
+                                setModalState(() => modalError = 'Please enter a valid UPI ID (e.g. mobile@upi)');
+                                return;
+                              }
+
+                              if (selectedType == 'BANK') {
+                                if (acctNumCtrl.text.trim().length < 8 || ifscCtrl.text.trim().length < 5) {
+                                  setModalState(() => modalError = 'Please enter valid Bank Account Number and IFSC Code');
+                                  return;
+                                }
+                              }
+
+                              setModalState(() {
+                                isSubmitting = true;
+                                modalError = null;
+                              });
+
+                              try {
+                                if (selectedType == 'UPI') {
+                                  await ProApiClient.requestWithdrawal(
+                                    amount: val,
+                                    customUpi: upiCtrl.text.trim(),
+                                  );
+                                } else {
+                                  await ProApiClient.requestWithdrawal(
+                                    amount: val,
+                                    customBank: {
+                                      'accountHolderName': acctNameCtrl.text.trim(),
+                                      'accountNumber': acctNumCtrl.text.trim(),
+                                      'ifscCode': ifscCtrl.text.trim().toUpperCase(),
+                                    },
+                                  );
+                                }
+
+                                if (mounted) {
+                                  Navigator.pop(ctx);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Disbursement of ₹${val.toStringAsFixed(2)} initiated successfully!'),
+                                      backgroundColor: ProColors.primary,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  _loadEarnings();
+                                }
+                              } catch (e) {
+                                setModalState(() {
+                                  isSubmitting = false;
+                                  modalError = e.toString().replaceAll('Exception: ', '');
+                                });
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: ProColors.primary,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: isSubmitting
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                            )
+                          : const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.check_circle_outline_rounded, size: 18),
+                                SizedBox(width: 8),
+                                Text(
+                                  'CONFIRM DISBURSEMENT',
+                                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 13, letterSpacing: 0.5),
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }

@@ -126,13 +126,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: ProColors.cardBg,
+        backgroundColor: ProColors.surf(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Enter Start Job OTP', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+        title: Text(
+          'Enter Start Job OTP',
+          style: TextStyle(color: ProColors.txt(context), fontSize: 16, fontWeight: FontWeight.w800),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Ask the customer to share their START OTP code.', style: TextStyle(color: ProColors.textMuted, fontSize: 13)),
+            Text(
+              'Ask the customer to share their START OTP code.',
+              style: TextStyle(color: ProColors.txtMuted(context), fontSize: 13),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: _startOtpCtrl,
@@ -140,19 +146,26 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w900, color: Colors.white),
-              decoration: proInputDecoration(hint: '· · · ·').copyWith(counterText: ''),
+              style: TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w900, color: ProColors.txt(context)),
+              decoration: proInputDecoration(hint: '· · · ·', context: context).copyWith(counterText: ''),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: ProColors.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: TextStyle(color: ProColors.txtMuted(context))),
+          ),
           ElevatedButton(
             onPressed: _verifyingOtp ? null : () async {
               Navigator.pop(ctx);
               await _verifyStartOtp();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: ProColors.accent, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ProColors.accent,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             child: const Text('VERIFY & START', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
           ),
         ],
@@ -184,13 +197,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: ProColors.cardBg,
+        backgroundColor: ProColors.surf(context),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text('Enter End Job OTP', style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w700)),
+        title: Text(
+          'Enter End Job OTP',
+          style: TextStyle(color: ProColors.txt(context), fontSize: 16, fontWeight: FontWeight.w800),
+        ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text('Ask the customer to share their END OTP code to complete the job.', style: TextStyle(color: ProColors.textMuted, fontSize: 13)),
+            Text(
+              'Ask the customer to share their END OTP code to complete the job.',
+              style: TextStyle(color: ProColors.txtMuted(context), fontSize: 13),
+            ),
             const SizedBox(height: 14),
             TextField(
               controller: _endOtpCtrl,
@@ -198,19 +217,26 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w900, color: Colors.white),
-              decoration: proInputDecoration(hint: '· · · ·').copyWith(counterText: ''),
+              style: TextStyle(fontSize: 24, letterSpacing: 8, fontWeight: FontWeight.w900, color: ProColors.txt(context)),
+              decoration: proInputDecoration(hint: '· · · ·', context: context).copyWith(counterText: ''),
             ),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: ProColors.textMuted))),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('Cancel', style: TextStyle(color: ProColors.txtMuted(context))),
+          ),
           ElevatedButton(
             onPressed: _verifyingOtp ? null : () async {
               Navigator.pop(ctx);
               await _verifyEndOtp();
             },
-            style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: ProColors.primary,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
             child: const Text('VERIFY & COMPLETE', style: TextStyle(fontWeight: FontWeight.w900, color: Colors.white)),
           ),
         ],
@@ -227,18 +253,29 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
     final bookingId = jobMap['id']?.toString() ?? '';
     final customerName = jobMap['customer_name']?.toString() ?? 'Customer';
     final customerPhone = jobMap['customer_phone']?.toString() ?? '+91 98765 43210';
+    final isDark = ProColors.isDark(context);
 
     return Scaffold(
+      backgroundColor: ProColors.bg(context),
       appBar: AppBar(
+        backgroundColor: ProColors.bg(context),
+        elevation: 0,
+        titleSpacing: 0,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Job Dispatch Detail'),
-            Text(bookingId, style: const TextStyle(fontSize: 10, fontFamily: 'monospace', color: ProColors.textMuted)),
+            Text(
+              'Job Dispatch Detail',
+              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: ProColors.txt(context)),
+            ),
+            Text(
+              bookingId,
+              style: TextStyle(fontSize: 11, fontFamily: 'monospace', color: ProColors.txtMuted(context)),
+            ),
           ],
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          icon: Icon(Icons.arrow_back_ios_new, size: 18, color: ProColors.txt(context)),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -248,13 +285,9 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Status & Pricing Card
-            Container(
+            GlassCard(
               padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: ProColors.primary.withAlpha(80)),
-              ),
+              borderRadius: 20,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -262,27 +295,56 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                        decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(20)),
-                        child: Text(_jobState, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ProColors.primary)),
+                        decoration: BoxDecoration(
+                          color: ProColors.primarySoft,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: ProColors.primary.withAlpha(80)),
+                        ),
+                        child: Text(
+                          _jobState,
+                          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w900, color: ProColors.primary),
+                        ),
                       ),
                       const Spacer(),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
-                          Text('₹$amount', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white)),
-                          const Text('Base + Travel Fee', style: TextStyle(fontSize: 9, color: ProColors.primary, fontWeight: FontWeight.bold)),
+                          Text(
+                            '₹$amount',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w900,
+                              color: ProColors.txt(context),
+                            ),
+                          ),
+                          const Text(
+                            'Base + Travel Fee',
+                            style: TextStyle(fontSize: 9, color: ProColors.primary, fontWeight: FontWeight.bold),
+                          ),
                         ],
                       ),
                     ],
                   ),
                   const SizedBox(height: 14),
-                  Text(serviceName, style: ProText.heading2),
+                  Text(
+                    serviceName,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                      color: ProColors.txt(context),
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   Row(
                     children: [
                       const Icon(Icons.location_on, color: ProColors.emergencyRed, size: 16),
                       const SizedBox(width: 6),
-                      Expanded(child: Text(address, style: ProText.caption)),
+                      Expanded(
+                        child: Text(
+                          address,
+                          style: ProText.captionStyle(context),
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -298,30 +360,45 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               final netPayoutVal = (totalVal - platformFeeVal) > 0 ? (totalVal - platformFeeVal) : totalVal;
 
               return Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(18),
                 decoration: BoxDecoration(
-                  color: ProColors.primarySoft,
+                  color: isDark ? ProColors.primarySoft : const Color(0xFFF0FDF4),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ProColors.primary.withAlpha(90)),
+                  border: Border.all(color: ProColors.primary.withAlpha(70), width: 1.2),
                 ),
                 child: Column(
                   children: [
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Customer Booking Total', style: TextStyle(fontSize: 12, color: ProColors.textMuted)),
-                        Text('₹${totalVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text(
+                          'Customer Booking Total',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ProColors.txtSec(context)),
+                        ),
+                        Text(
+                          '₹${totalVal.toStringAsFixed(0)}',
+                          style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: ProColors.txt(context)),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text('Platform Fee Split Deduction', style: TextStyle(fontSize: 12, color: ProColors.textMuted)),
-                        Text('- ₹${platformFeeVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: ProColors.warningAmber)),
+                        Text(
+                          'Platform Fee Split Deduction',
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: ProColors.txtSec(context)),
+                        ),
+                        Text(
+                          '- ₹${platformFeeVal.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: ProColors.warningAmber),
+                        ),
                       ],
                     ),
-                    const Divider(color: ProColors.border, height: 16),
+                    Divider(
+                      color: isDark ? const Color(0xFF1A2A40) : const Color(0xFFDCFCE7),
+                      height: 20,
+                    ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -329,10 +406,16 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                           children: [
                             Icon(Icons.account_balance_wallet_rounded, color: ProColors.primary, size: 18),
                             SizedBox(width: 6),
-                            Text('YOUR NET EARNINGS PAYOUT', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: ProColors.primary, letterSpacing: 0.5)),
+                            Text(
+                              'YOUR NET EARNINGS PAYOUT',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: ProColors.primary, letterSpacing: 0.5),
+                            ),
                           ],
                         ),
-                        Text('₹${netPayoutVal.toStringAsFixed(0)}', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: ProColors.primary)),
+                        Text(
+                          '₹${netPayoutVal.toStringAsFixed(0)}',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: ProColors.primary),
+                        ),
                       ],
                     ),
                   ],
@@ -347,13 +430,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               final isPlatformFeePaid = jobMap['platform_fee_paid'] == true ||
                   ['CONFIRMED', 'NAVIGATING', 'ARRIVED', 'IN_PROGRESS', 'START_OTP_VERIFIED', 'JOB_COMPLETED_PAYMENT_DUE', 'COMPLETED'].contains(_jobState.toUpperCase());
 
-              return Container(
+              return GlassCard(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: ProColors.cardBg,
-                  borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: isPlatformFeePaid ? ProColors.border : ProColors.warningAmber.withAlpha(100)),
-                ),
+                borderRadius: 18,
+                borderColor: isPlatformFeePaid ? Colors.transparent : ProColors.warningAmber.withAlpha(100),
+                borderWidth: isPlatformFeePaid ? 0 : 1.2,
                 child: Row(
                   children: [
                     Container(
@@ -376,14 +457,19 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                         children: [
                           Text(
                             isPlatformFeePaid ? customerName : 'Customer Contact Locked 🔒',
-                            style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14),
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              color: ProColors.txt(context),
+                              fontSize: 14,
+                            ),
                           ),
-                          const SizedBox(height: 2),
+                          const SizedBox(height: 3),
                           Text(
                             isPlatformFeePaid ? customerPhone : 'Waiting for Customer Platform Fee Payment',
                             style: TextStyle(
-                              fontSize: 11,
-                              color: isPlatformFeePaid ? ProColors.textMuted : ProColors.warningAmber,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: isPlatformFeePaid ? ProColors.txtMuted(context) : ProColors.warningAmber,
                               fontFamily: isPlatformFeePaid ? 'monospace' : null,
                             ),
                           ),
@@ -392,7 +478,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                     ),
                     if (isPlatformFeePaid)
                       IconButton(
-                        icon: const Icon(Icons.phone, color: ProColors.primary),
+                        icon: const Icon(Icons.phone_rounded, color: ProColors.primary),
                         onPressed: () {
                           _showSnackBar('Calling customer $customerPhone...', isSuccess: true);
                         },
@@ -400,7 +486,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                       )
                     else
                       IconButton(
-                        icon: const Icon(Icons.lock_clock_outlined, color: ProColors.textMuted),
+                        icon: Icon(Icons.lock_clock_outlined, color: ProColors.txtMuted(context)),
                         onPressed: () {
                           _showSnackBar('Customer contact details will unlock automatically as soon as the customer pays the Platform Fee.', isSuccess: false);
                         },
@@ -419,6 +505,7 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ProMapScreen(job: widget.job))),
                 style: OutlinedButton.styleFrom(
+                  backgroundColor: isDark ? Colors.transparent : Colors.white,
                   side: const BorderSide(color: ProColors.primary, width: 1.5),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
@@ -438,7 +525,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _verifyingOtp ? null : _acceptJob,
-                  style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ProColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: const Icon(Icons.check_circle_outline, color: Colors.white),
                   label: FittedBox(
                     fit: BoxFit.scaleDown,
@@ -451,17 +542,28 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             ] else if (_jobState == 'ACCEPTED_PAYMENT_PENDING') ...[
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.warningAmber)),
-                child: const Row(
+                decoration: BoxDecoration(
+                  color: isDark ? ProColors.warningAmberSoft : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ProColors.warningAmber.withAlpha(120)),
+                ),
+                child: Row(
                   children: [
-                    Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 24),
-                    SizedBox(width: 12),
+                    const Icon(Icons.hourglass_top_rounded, color: ProColors.warningAmber, size: 24),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Job Accepted! Awaiting Customer Platform Fee', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
-                          Text('Navigation unlocks automatically as soon as customer pays Platform Fee.', style: TextStyle(color: ProColors.warningAmber, fontSize: 11)),
+                          Text(
+                            'Job Accepted! Awaiting Customer Platform Fee',
+                            style: TextStyle(fontWeight: FontWeight.w800, color: ProColors.txt(context), fontSize: 14),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Navigation unlocks automatically as soon as customer pays Platform Fee.',
+                            style: TextStyle(color: ProColors.warningAmber, fontSize: 11),
+                          ),
                         ],
                       ),
                     ),
@@ -473,7 +575,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _showStartOtpDialog,
-                  style: ElevatedButton.styleFrom(backgroundColor: ProColors.accent, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ProColors.accent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: const Icon(Icons.key_rounded, color: Colors.white),
                   label: const FittedBox(
                     fit: BoxFit.scaleDown,
@@ -486,7 +592,11 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
                 height: 52,
                 child: ElevatedButton.icon(
                   onPressed: _showEndOtpDialog,
-                  style: ElevatedButton.styleFrom(backgroundColor: ProColors.primary, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: ProColors.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  ),
                   icon: const Icon(Icons.check_circle_rounded, color: Colors.white),
                   label: const FittedBox(
                     fit: BoxFit.scaleDown,
@@ -497,17 +607,28 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             ] else if (_jobState == 'JOB_COMPLETED_PAYMENT_DUE') ...[
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: ProColors.warningAmberSoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.warningAmber)),
-                child: const Row(
+                decoration: BoxDecoration(
+                  color: isDark ? ProColors.warningAmberSoft : const Color(0xFFFFFBEB),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ProColors.warningAmber.withAlpha(120)),
+                ),
+                child: Row(
                   children: [
-                    Icon(Icons.mark_email_read_rounded, color: ProColors.warningAmber, size: 24),
-                    SizedBox(width: 12),
+                    const Icon(Icons.mark_email_read_rounded, color: ProColors.warningAmber, size: 24),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('End OTP Verified! Awaiting Customer Balance', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
-                          Text('Your earnings will be credited into your wallet as soon as customer pays balance.', style: TextStyle(color: ProColors.warningAmber, fontSize: 11)),
+                          Text(
+                            'End OTP Verified! Awaiting Customer Balance',
+                            style: TextStyle(fontWeight: FontWeight.w800, color: ProColors.txt(context), fontSize: 14),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            'Your earnings will be credited into your wallet as soon as customer pays balance.',
+                            style: TextStyle(color: ProColors.warningAmber, fontSize: 11),
+                          ),
                         ],
                       ),
                     ),
@@ -517,17 +638,28 @@ class _JobDetailScreenState extends State<JobDetailScreen> {
             ] else if (_jobState == 'COMPLETED') ...[
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.primary.withAlpha(80))),
-                child: const Row(
+                decoration: BoxDecoration(
+                  color: isDark ? ProColors.primarySoft : const Color(0xFFF0FDF4),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ProColors.primary.withAlpha(80)),
+                ),
+                child: Row(
                   children: [
-                    Icon(Icons.check_circle, color: ProColors.primary, size: 24),
-                    SizedBox(width: 12),
+                    const Icon(Icons.check_circle, color: ProColors.primary, size: 24),
+                    const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Job Completed & Payment Received!', style: TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 15)),
-                          Text('100% of your service price has been credited to your withdrawable wallet.', style: TextStyle(color: ProColors.primary, fontSize: 11)),
+                          Text(
+                            'Job Completed & Payment Received!',
+                            style: TextStyle(fontWeight: FontWeight.w800, color: ProColors.txt(context), fontSize: 15),
+                          ),
+                          const SizedBox(height: 2),
+                          const Text(
+                            '100% of your service price has been credited to your withdrawable wallet.',
+                            style: TextStyle(color: ProColors.primary, fontSize: 11),
+                          ),
                         ],
                       ),
                     ),

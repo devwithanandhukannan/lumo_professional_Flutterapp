@@ -193,10 +193,10 @@ class _ProMapScreenState extends State<ProMapScreen> {
             child: Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: ProColors.cardBg.withAlpha(240),
+                color: ProColors.card(context).withAlpha(245),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: ProColors.primary.withAlpha(80)),
-                boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 10)],
+                boxShadow: ProColors.cardShadow(context, elevation: 1.5),
               ),
               child: Row(
                 children: [
@@ -215,9 +215,14 @@ class _ProMapScreenState extends State<ProMapScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('LIVE GOOGLE MAPS NAVIGATION', style: ProText.label),
+                        Text('LIVE GOOGLE MAPS NAVIGATION', style: ProText.labelStyle(context)),
                         const SizedBox(height: 2),
-                        Text(address, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13), maxLines: 1, overflow: TextOverflow.ellipsis),
+                        Text(
+                          address,
+                          style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ],
                     ),
                   ),

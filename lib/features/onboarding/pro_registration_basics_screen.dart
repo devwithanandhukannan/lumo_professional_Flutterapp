@@ -194,7 +194,10 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ProColors.isDark(context);
+
     return Scaffold(
+      backgroundColor: ProColors.bg(context),
       body: Stack(
         children: [
           _buildBgBlobs(),
@@ -206,7 +209,7 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                   SliverAppBar(
                     backgroundColor: Colors.transparent,
                     leading: IconButton(
-                      icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+                      icon: Icon(Icons.arrow_back_rounded, color: ProColors.txt(context)),
                       onPressed: () async {
                         if (Navigator.canPop(context)) {
                           Navigator.pop(context);
@@ -216,7 +219,7 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                         }
                       },
                     ),
-                    title: const Text('Basic Profile Details'),
+                    title: Text('Basic Profile Details', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold)),
                   ),
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -225,9 +228,9 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                         const OnboardingStepperHeader(currentStep: 1),
                         const SizedBox(height: 4),
 
-                        const Text('Tell Us About Yourself', style: ProText.heading1),
+                        Text('Tell Us About Yourself', style: ProText.heading1Style(context)),
                         const SizedBox(height: 6),
-                        const Text('Basic information to create your professional profile.', style: ProText.body),
+                        Text('Basic information to create your professional profile.', style: ProText.bodyStyle(context)),
                         const SizedBox(height: 24),
 
                         if (_error != null) _errorBanner(_error!),
@@ -237,34 +240,41 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text('FULL NAME *', style: ProText.label),
+                              Text('FULL NAME *', style: ProText.labelStyle(context)),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: _nameCtrl,
                                 textCapitalization: TextCapitalization.words,
-                                style: const TextStyle(color: ProColors.textPrimary, fontSize: 16),
+                                style: TextStyle(color: ProColors.txt(context), fontSize: 16),
                                 decoration: proInputDecoration(
                                   hint: 'Your Full Name',
                                   prefix: const Icon(Icons.person_rounded, color: ProColors.primary, size: 20),
+                                  context: context,
                                 ),
                               ),
                               const SizedBox(height: 16),
 
                               Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
+                                  SizedBox(
+                                    width: 90,
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text('AGE *', style: ProText.label),
+                                        Text('AGE *', style: ProText.labelStyle(context)),
                                         const SizedBox(height: 8),
                                         TextField(
                                           controller: _ageCtrl,
                                           keyboardType: TextInputType.number,
                                           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                                           maxLength: 2,
-                                          style: const TextStyle(color: ProColors.textPrimary, fontSize: 16),
-                                          decoration: proInputDecoration(hint: 'e.g. 25').copyWith(counterText: ''),
+                                          textAlign: TextAlign.center,
+                                          style: TextStyle(color: ProColors.txt(context), fontSize: 16, fontWeight: FontWeight.w700),
+                                          decoration: proInputDecoration(hint: '25', context: context).copyWith(
+                                            counterText: '',
+                                            contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -274,13 +284,17 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text('EMAIL', style: ProText.label),
+                                        Text('EMAIL', style: ProText.labelStyle(context)),
                                         const SizedBox(height: 8),
                                         TextField(
                                           controller: _emailCtrl,
                                           keyboardType: TextInputType.emailAddress,
-                                          style: const TextStyle(color: ProColors.textPrimary, fontSize: 14),
-                                          decoration: proInputDecoration(hint: 'name@email.com'),
+                                          style: TextStyle(color: ProColors.txt(context), fontSize: 14),
+                                          decoration: proInputDecoration(
+                                            hint: 'name@email.com',
+                                            prefix: const Icon(Icons.email_outlined, color: ProColors.primary, size: 18),
+                                            context: context,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -289,12 +303,21 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                               ),
                               const SizedBox(height: 16),
 
-                              const Text('GENDER *', style: ProText.label),
+                              Text('GENDER *', style: ProText.labelStyle(context)),
                               const SizedBox(height: 8),
                               Row(
                                 children: _genders.map((g) {
                                   final selected = _selectedGender == g['value'];
                                   final color = g['color'] as Color;
+                                  final Color selectedBg = isDark
+                                      ? color.withAlpha(35)
+                                      : (g['value'] == 'MALE'
+                                          ? const Color(0xFFEFF6FF)
+                                          : (g['value'] == 'FEMALE' ? const Color(0xFFFDF2F8) : const Color(0xFFF0FDF4)));
+                                  final Color unselectedBg = isDark ? const Color(0x0AFFFFFF) : const Color(0xFFF8FAFC);
+                                  final Color unselectedBorder = isDark ? ProColors.glassBorder : const Color(0xFFE2E8F0);
+                                  final Color textColor = selected ? color : ProColors.txtMuted(context);
+
                                   return Expanded(
                                     child: GestureDetector(
                                       onTap: () => setState(() => _selectedGender = g['value']),
@@ -303,15 +326,28 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                                         margin: const EdgeInsets.only(right: 6),
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         decoration: BoxDecoration(
-                                          color: selected ? color.withAlpha(30) : const Color(0x0AFFFFFF),
+                                          color: selected ? selectedBg : unselectedBg,
                                           borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(color: selected ? color : ProColors.glassBorder, width: selected ? 1.5 : 1),
+                                          border: Border.all(
+                                            color: selected ? color : unselectedBorder,
+                                            width: selected ? 1.5 : 1,
+                                          ),
+                                          boxShadow: selected && !isDark
+                                              ? [BoxShadow(color: color.withAlpha(25), blurRadius: 6, offset: const Offset(0, 2))]
+                                              : null,
                                         ),
                                         child: Column(
                                           children: [
-                                            Icon(g['icon'] as IconData, color: selected ? color : ProColors.textMuted, size: 20),
-                                            const SizedBox(height: 4),
-                                            Text(g['label'] as String, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: selected ? color : ProColors.textMuted)),
+                                            Icon(g['icon'] as IconData, color: textColor, size: 22),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              g['label'] as String,
+                                              style: TextStyle(
+                                                fontSize: 11,
+                                                fontWeight: selected ? FontWeight.w800 : FontWeight.w600,
+                                                color: textColor,
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -324,7 +360,7 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  const Text('SERVICE AREA / CITY *', style: ProText.label),
+                                  Text('SERVICE AREA / CITY *', style: ProText.labelStyle(context)),
                                   GestureDetector(
                                     onTap: _openGoogleMapPicker,
                                     child: const Row(
@@ -340,7 +376,7 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                               const SizedBox(height: 8),
                               TextField(
                                 controller: _serviceAreaCtrl,
-                                style: const TextStyle(color: ProColors.textPrimary, fontSize: 16),
+                                style: TextStyle(color: ProColors.txt(context), fontSize: 16),
                                 decoration: proInputDecoration(
                                   hint: 'e.g. Kochi, Bangalore',
                                   prefix: const Icon(Icons.location_city_rounded, color: ProColors.primary, size: 20),
@@ -349,10 +385,11 @@ class _ProRegistrationBasicsScreenState extends State<ProRegistrationBasicsScree
                                     onPressed: _openGoogleMapPicker,
                                     tooltip: 'Open Google Map Location Picker',
                                   ),
+                                  context: context,
                                 ),
                               ),
                               const SizedBox(height: 6),
-                              const Text('You can accept jobs within the admin-set radius (default 50km) of this area.', style: ProText.caption),
+                              Text('You can accept jobs within the admin-set radius (default 50km) of this area.', style: ProText.captionStyle(context)),
                             ],
                           ),
                         ),

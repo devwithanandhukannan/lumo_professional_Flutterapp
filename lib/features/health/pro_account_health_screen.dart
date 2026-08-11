@@ -38,24 +38,12 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
           child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Gauge & Score Card
-            Container(
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                  color: isHealthy ? ProColors.primary : ProColors.warningAmber,
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: isHealthy ? const Color(0x3310B981) : const Color(0x33F59E0B),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
+            // Top Health Score Banner
+            GlassCard(
+              padding: const EdgeInsets.all(24),
+              borderRadius: 24,
+              borderColor: isHealthy ? ProColors.primary.withAlpha(80) : ProColors.warningAmber.withAlpha(80),
+              borderWidth: 1.2,
               child: Column(
                 children: [
                   Stack(
@@ -67,7 +55,7 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
                         child: CircularProgressIndicator(
                           value: _healthScore / 100,
                           strokeWidth: 10,
-                                            color: isHealthy ? ProColors.primary : ProColors.warningAmber,
+                          color: isHealthy ? ProColors.primary : ProColors.warningAmber,
                         ),
                       ),
                       Column(
@@ -75,15 +63,15 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
                         children: [
                           Text(
                             '${_healthScore.toInt()}',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 38,
                               fontWeight: FontWeight.w900,
-                              color: Colors.white,
+                              color: ProColors.txt(context),
                             ),
                           ),
-                          const Text(
+                          Text(
                             '/ 100',
-                            style: TextStyle(fontSize: 12, color: ProColors.textMuted, fontWeight: FontWeight.bold),
+                            style: TextStyle(fontSize: 12, color: ProColors.txtMuted(context), fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),
@@ -100,10 +88,10 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  const Text(
+                  Text(
                     'Your account health score is calculated based on customer ratings, job acceptance rate, low cancellation rates, and safety protocol adherence.',
                     textAlign: TextAlign.center,
-                    style: ProText.caption,
+                    style: ProText.captionStyle(context),
                   ),
                 ],
               ),
@@ -112,7 +100,7 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
             const SizedBox(height: 24),
 
             // Performance Grid Metrics
-            const Text('PERFORMANCE METRICS', style: ProText.label),
+            Text('PERFORMANCE METRICS', style: ProText.labelStyle(context)),
             const SizedBox(height: 12),
 
             GridView.count(
@@ -153,33 +141,29 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
             const SizedBox(height: 24),
 
             // Compliance Badges Checklist
-            Container(
+            GlassCard(
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: ProColors.cardBg,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: ProColors.border),
-              ),
-              child: const Column(
+              borderRadius: 20,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('PLATFORM COMPLIANCE BADGES', style: ProText.label),
-                  SizedBox(height: 14),
-                  _BadgeTile(
+                  Text('PLATFORM COMPLIANCE BADGES', style: ProText.labelStyle(context)),
+                  const SizedBox(height: 14),
+                  const _BadgeTile(
                     title: 'Background Check Verified',
                     description: 'Government ID & Police Clearance PDF passed',
                     icon: Icons.shield_rounded,
                     color: ProColors.primary,
                   ),
-                  SizedBox(height: 10),
-                  _BadgeTile(
+                  const SizedBox(height: 10),
+                  const _BadgeTile(
                     title: 'Face Verification Selfie Match',
                     description: 'Live face verification matched with Govt ID photo',
                     icon: Icons.face_retouching_natural,
                     color: ProColors.accent,
                   ),
-                  SizedBox(height: 10),
-                  _BadgeTile(
+                  const SizedBox(height: 10),
+                  const _BadgeTile(
                     title: 'Women Safety Certified',
                     description: 'Completed LUMO Safety & Misconduct Protocol Module',
                     icon: Icons.verified_user_rounded,
@@ -192,29 +176,25 @@ class _ProAccountHealthScreenState extends State<ProAccountHealthScreen> {
             const SizedBox(height: 24),
 
             // Tips to Maintain High Score
-            Container(
+            GlassCard(
               padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: ProColors.surface,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: ProColors.border),
-              ),
-              child: const Column(
+              borderRadius: 20,
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.lightbulb_outline, color: ProColors.warningAmber, size: 20),
-                      SizedBox(width: 8),
-                      Text('HOW TO KEEP A 95+ HEALTH SCORE', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+                      const Icon(Icons.lightbulb_outline, color: ProColors.warningAmber, size: 20),
+                      const SizedBox(width: 8),
+                      Text('HOW TO KEEP A 95+ HEALTH SCORE', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.w800, fontSize: 13)),
                     ],
                   ),
-                  SizedBox(height: 10),
-                  Text('• Always verify customer Start OTP before beginning work.', style: ProText.caption),
-                  SizedBox(height: 4),
-                  Text('• Arrive on time at customer location within the estimated ETA.', style: ProText.caption),
-                  SizedBox(height: 4),
-                  Text('• Maintain mandatory safety protocol and wear LUMO partner badge.', style: ProText.caption),
+                  const SizedBox(height: 10),
+                  Text('• Always verify customer Start OTP before beginning work.', style: ProText.captionStyle(context)),
+                  const SizedBox(height: 4),
+                  Text('• Arrive on time at customer location within the estimated ETA.', style: ProText.captionStyle(context)),
+                  const SizedBox(height: 4),
+                  Text('• Maintain mandatory safety protocol and wear LUMO partner badge.', style: ProText.captionStyle(context)),
                 ],
               ),
             ),
@@ -241,22 +221,18 @@ class _MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: ProColors.cardBg,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ProColors.border),
-      ),
+      borderRadius: 18,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: ProText.label.copyWith(fontSize: 10)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: ProColors.labelColor(context))),
           const SizedBox(height: 6),
           Text(value, style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: color)),
           const SizedBox(height: 2),
-          Text(subtitle, style: ProText.caption.copyWith(fontSize: 11)),
+          Text(subtitle, style: ProText.captionStyle(context).copyWith(fontSize: 11)),
         ],
       ),
     );
@@ -294,8 +270,8 @@ class _BadgeTile extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
-              Text(description, style: ProText.caption),
+              Text(title, style: TextStyle(fontWeight: FontWeight.w700, color: ProColors.txt(context), fontSize: 13)),
+              Text(description, style: ProText.captionStyle(context)),
             ],
           ),
         ),

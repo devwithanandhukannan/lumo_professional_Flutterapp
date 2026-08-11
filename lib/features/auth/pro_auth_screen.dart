@@ -197,22 +197,22 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   void _showRegionPicker() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: ProColors.surface,
+      backgroundColor: ProColors.card(context),
       shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Padding(
-            padding: EdgeInsets.all(20),
+          Padding(
+            padding: const EdgeInsets.all(20),
             child: Text('Select Country / Region Code',
                 style: TextStyle(
-                    color: ProColors.textPrimary,
+                    color: ProColors.txt(context),
                     fontWeight: FontWeight.bold,
                     fontSize: 16)),
           ),
-          const Divider(color: Color(0xFF1A2A40), height: 1),
+          Divider(color: ProColors.brd(context), height: 1),
           Flexible(
             child: ListView.builder(
               shrinkWrap: true,
@@ -226,16 +226,16 @@ class _ProAuthScreenState extends State<ProAuthScreen>
                   title: Text(region.name,
                       style: TextStyle(
                           color: isSelected
-                              ? ProColors.primaryLight
-                              : ProColors.textPrimary,
+                              ? ProColors.primaryAccent(context)
+                              : ProColors.txt(context),
                           fontWeight: isSelected
                               ? FontWeight.bold
                               : FontWeight.normal)),
                   trailing: Text(region.dialCode,
                       style: TextStyle(
                           color: isSelected
-                              ? ProColors.primaryLight
-                              : ProColors.textMuted,
+                              ? ProColors.primaryAccent(context)
+                              : ProColors.txtMuted(context),
                           fontWeight: FontWeight.bold)),
                   onTap: () {
                     setState(() => _selectedRegion = region);
@@ -254,7 +254,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Always dark background for auth screen
+      backgroundColor: ProColors.bg(context),
       body: Stack(
         children: [
           _buildBackgroundBlobs(),
@@ -287,6 +287,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   }
 
   Widget _buildBackgroundBlobs() {
+    final isDark = ProColors.isDark(context);
     return Stack(
       children: [
         Positioned(
@@ -296,7 +297,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(colors: [
-                ProColors.primary.withAlpha(35),
+                ProColors.primary.withAlpha(isDark ? 35 : 18),
                 Colors.transparent
               ]),
             ),
@@ -309,7 +310,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(colors: [
-                ProColors.accent.withAlpha(25),
+                ProColors.accent.withAlpha(isDark ? 25 : 12),
                 Colors.transparent
               ]),
             ),
@@ -343,17 +344,17 @@ class _ProAuthScreenState extends State<ProAuthScreen>
           child: const Icon(Icons.shield_rounded, size: 36, color: Colors.white),
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           'LUMO Partner',
           style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
-              color: ProColors.textPrimary,
+              color: ProColors.txt(context),
               letterSpacing: 0.3),
         ),
         const SizedBox(height: 4),
-        const Text('Verified Professional Portal',
-            style: ProText.caption),
+        Text('Verified Professional Portal',
+            style: ProText.captionStyle(context)),
       ],
     );
   }
@@ -362,16 +363,10 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: ProColors.surface,
+        color: ProColors.surf(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF1A2A40), width: 0.8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withAlpha(100),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-              spreadRadius: -2),
-        ],
+        border: Border.all(color: ProColors.brd(context), width: 0.8),
+        boxShadow: ProColors.cardShadow(context),
       ),
       child: Row(
         children: [
@@ -424,7 +419,7 @@ class _ProAuthScreenState extends State<ProAuthScreen>
               fontSize: 13,
               fontWeight: FontWeight.w700,
               color:
-                  selected ? Colors.white : ProColors.textMuted,
+                  selected ? Colors.white : ProColors.txtMuted(context),
             ),
           ),
         ),
@@ -434,10 +429,11 @@ class _ProAuthScreenState extends State<ProAuthScreen>
 
   // ── Phone + Region Input ────────────────────────────────────────────────────
   Widget _buildPhoneAndRegionInput() {
+    final isDark = ProColors.isDark(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('MOBILE PHONE & REGION', style: ProText.label),
+        Text('MOBILE PHONE & REGION', style: ProText.labelStyle(context)),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -447,10 +443,10 @@ class _ProAuthScreenState extends State<ProAuthScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                 decoration: BoxDecoration(
-                  color: ProColors.surfaceHigh,
+                  color: isDark ? ProColors.surfaceHigh : const Color(0xFFF1F5F9),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                      color: const Color(0xFF1A2A40), width: 0.8),
+                      color: ProColors.brd(context), width: 0.8),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -460,14 +456,14 @@ class _ProAuthScreenState extends State<ProAuthScreen>
                     const SizedBox(width: 6),
                     Text(
                       _selectedRegion.dialCode,
-                      style: const TextStyle(
-                          color: ProColors.textPrimary,
+                      style: TextStyle(
+                          color: ProColors.txt(context),
                           fontWeight: FontWeight.bold,
                           fontSize: 14),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(Icons.arrow_drop_down,
-                        color: ProColors.textMuted, size: 20),
+                    Icon(Icons.arrow_drop_down,
+                        color: ProColors.txtMuted(context), size: 20),
                   ],
                 ),
               ),
@@ -478,14 +474,15 @@ class _ProAuthScreenState extends State<ProAuthScreen>
                 controller: _phoneCtrl,
                 keyboardType: TextInputType.phone,
                 inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(
-                    color: ProColors.textPrimary,
+                style: TextStyle(
+                    color: ProColors.txt(context),
                     fontSize: 16,
                     letterSpacing: 1),
                 decoration: proInputDecoration(
                   hint: '98765 43210',
-                  prefix: const Icon(Icons.phone_android,
-                      color: ProColors.primaryLight, size: 20),
+                  prefix: Icon(Icons.phone_android,
+                      color: ProColors.primaryAccent(context), size: 20),
+                  context: context,
                 ),
               ),
             ),
@@ -501,17 +498,17 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('NEW PROFESSIONAL ACCOUNT', style: ProText.label),
+          Text('NEW PROFESSIONAL ACCOUNT', style: ProText.labelStyle(context)),
           const SizedBox(height: 4),
-          const Text('4-Step Onboarding Pipeline',
+          Text('4-Step Onboarding Pipeline',
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: ProColors.textPrimary)),
+                  color: ProColors.txt(context))),
           const SizedBox(height: 6),
-          const Text(
+          Text(
               'Select your country region and enter your mobile number to start.',
-              style: ProText.caption),
+              style: ProText.captionStyle(context)),
           const SizedBox(height: 20),
           if (_error != null) _errorBanner(_error!),
           if (_infoMessage != null) _infoBanner(_infoMessage!),
@@ -525,21 +522,21 @@ class _ProAuthScreenState extends State<ProAuthScreen>
           ),
           if (_otpSent) ...[
             const SizedBox(height: 20),
-            const Divider(color: Color(0xFF1A2A40)),
+            Divider(color: ProColors.brd(context)),
             const SizedBox(height: 16),
-            const Text('VERIFICATION CODE', style: ProText.label),
+            Text('VERIFICATION CODE', style: ProText.labelStyle(context)),
             const SizedBox(height: 8),
             TextField(
               controller: _otpCtrl,
               keyboardType: TextInputType.number,
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: ProColors.textPrimary,
+              style: TextStyle(
+                  color: ProColors.txt(context),
                   fontSize: 28,
                   letterSpacing: 12,
                   fontWeight: FontWeight.w800),
-              decoration: proInputDecoration(hint: '· · · · · ·')
+              decoration: proInputDecoration(hint: '· · · · · ·', context: context)
                   .copyWith(counterText: ''),
             ),
             const SizedBox(height: 16),
@@ -561,17 +558,17 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('EXISTING PARTNER', style: ProText.label),
+          Text('EXISTING PARTNER', style: ProText.labelStyle(context)),
           const SizedBox(height: 4),
-          const Text('Welcome Back',
+          Text('Welcome Back',
               style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
-                  color: ProColors.textPrimary)),
+                  color: ProColors.txt(context))),
           const SizedBox(height: 6),
-          const Text(
+          Text(
               'Select your region and enter your registered mobile number.',
-              style: ProText.caption),
+              style: ProText.captionStyle(context)),
           const SizedBox(height: 20),
           if (_error != null) _errorBanner(_error!),
           if (_infoMessage != null) _infoBanner(_infoMessage!),
@@ -585,21 +582,21 @@ class _ProAuthScreenState extends State<ProAuthScreen>
           ),
           if (_otpSent) ...[
             const SizedBox(height: 20),
-            const Divider(color: Color(0xFF1A2A40)),
+            Divider(color: ProColors.brd(context)),
             const SizedBox(height: 16),
-            const Text('VERIFICATION CODE', style: ProText.label),
+            Text('VERIFICATION CODE', style: ProText.labelStyle(context)),
             const SizedBox(height: 8),
             TextField(
               controller: _otpCtrl,
               keyboardType: TextInputType.number,
               maxLength: 6,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                  color: ProColors.textPrimary,
+              style: TextStyle(
+                  color: ProColors.txt(context),
                   fontSize: 28,
                   letterSpacing: 12,
                   fontWeight: FontWeight.w800),
-              decoration: proInputDecoration(hint: '· · · · · ·')
+              decoration: proInputDecoration(hint: '· · · · · ·', context: context)
                   .copyWith(counterText: ''),
             ),
             const SizedBox(height: 16),
@@ -616,21 +613,15 @@ class _ProAuthScreenState extends State<ProAuthScreen>
     );
   }
 
-  /// Always-dark auth card — not theme-dependent
+  /// Theme-adaptive auth card
   Widget _authCard({required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: ProColors.surface,
+        color: ProColors.card(context),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF1A2A40), width: 0.8),
-        boxShadow: [
-          BoxShadow(
-              color: Colors.black.withAlpha(120),
-              blurRadius: 24,
-              offset: const Offset(0, 8),
-              spreadRadius: -4),
-        ],
+        border: Border.all(color: ProColors.brd(context), width: 0.8),
+        boxShadow: ProColors.cardShadow(context),
       ),
       child: child,
     );
@@ -670,13 +661,13 @@ class _ProAuthScreenState extends State<ProAuthScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline,
-              color: ProColors.primaryLight, size: 18),
+          Icon(Icons.info_outline,
+              color: ProColors.primaryAccent(context), size: 18),
           const SizedBox(width: 10),
           Expanded(
               child: Text(msg,
-                  style: const TextStyle(
-                      color: ProColors.primaryLight,
+                  style: TextStyle(
+                      color: ProColors.primaryAccent(context),
                       fontSize: 12,
                       height: 1.4))),
         ],
@@ -685,24 +676,24 @@ class _ProAuthScreenState extends State<ProAuthScreen>
   }
 
   Widget _buildFooter() {
-    return const Column(
+    return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(Icons.shield_outlined,
-                color: ProColors.primaryLight, size: 15),
-            SizedBox(width: 6),
+                color: ProColors.primaryAccent(context), size: 15),
+            const SizedBox(width: 6),
             Text('Bank-Grade Security & Verification Audit',
                 style: TextStyle(
-                    fontSize: 11, color: ProColors.textMuted)),
+                    fontSize: 11, color: ProColors.txtMuted(context))),
           ],
         ),
-        SizedBox(height: 10),
+        const SizedBox(height: 10),
         Text(
           'By proceeding, you agree to LUMO Partner Terms & Security Guidelines.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: ProColors.textDisabled),
+          style: TextStyle(fontSize: 10, color: ProColors.txtMuted(context)),
         ),
       ],
     );

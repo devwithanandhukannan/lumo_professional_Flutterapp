@@ -210,15 +210,13 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     );
-  }
-
-  @override
+  }  @override
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.90,
-      decoration: const BoxDecoration(
-        color: ProColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      decoration: BoxDecoration(
+        color: ProColors.card(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       ),
       child: Column(
         children: [
@@ -233,17 +231,23 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                   child: const Icon(Icons.map_rounded, color: ProColors.primary, size: 20),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Select Service Area on Google Map', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
-                      Text('Search or drag pin to operational region', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                      Text(
+                        'Select Service Area on Google Map',
+                        style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 15),
+                      ),
+                      Text(
+                        'Search or drag pin to operational region',
+                        style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11),
+                      ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: ProColors.textMuted),
+                  icon: Icon(Icons.close_rounded, color: ProColors.txtMuted(context)),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -285,9 +289,10 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: ProColors.background,
+                            color: ProColors.card(context),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(color: ProColors.primary),
+                            boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                           ),
                           child: const Text('SERVICE PIN', style: TextStyle(color: ProColors.primary, fontSize: 10, fontWeight: FontWeight.bold)),
                         ),
@@ -305,20 +310,18 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                     children: [
                       Container(
                         decoration: BoxDecoration(
-                          color: ProColors.cardBg,
+                          color: ProColors.card(context),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: ProColors.glassBorder),
-                          boxShadow: const [
-                            BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4)),
-                          ],
+                          border: Border.all(color: ProColors.brd(context)),
+                          boxShadow: ProColors.cardShadow(context, elevation: 1.5),
                         ),
                         child: TextField(
                           controller: _searchController,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: TextStyle(color: ProColors.txt(context), fontSize: 14),
                           onSubmitted: _searchPlace,
                           decoration: InputDecoration(
                             hintText: 'Search city, landmark, or address...',
-                            hintStyle: const TextStyle(color: ProColors.textMuted, fontSize: 13),
+                            hintStyle: TextStyle(color: ProColors.txtMuted(context), fontSize: 13),
                             prefixIcon: const Icon(Icons.search_rounded, color: ProColors.primary, size: 20),
                             suffixIcon: _isSearching
                                 ? const Padding(
@@ -327,7 +330,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                                   )
                                 : _searchController.text.isNotEmpty
                                     ? IconButton(
-                                        icon: const Icon(Icons.clear_rounded, color: ProColors.textMuted, size: 18),
+                                        icon: Icon(Icons.clear_rounded, color: ProColors.txtMuted(context), size: 18),
                                         onPressed: () {
                                           _searchController.clear();
                                           setState(() => _searchResults = []);
@@ -345,16 +348,17 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                         Container(
                           margin: const EdgeInsets.only(top: 6),
                           decoration: BoxDecoration(
-                            color: ProColors.cardBg,
+                            color: ProColors.card(context),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: ProColors.glassBorder),
+                            border: Border.all(color: ProColors.brd(context)),
+                            boxShadow: ProColors.cardShadow(context, elevation: 1.5),
                           ),
                           child: Column(
                             children: _searchResults.map((res) {
                               return ListTile(
                                 dense: true,
                                 leading: const Icon(Icons.place_rounded, color: ProColors.accent, size: 18),
-                                title: Text(res['formatted'], style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                title: Text(res['formatted'], style: TextStyle(color: ProColors.txt(context), fontSize: 12)),
                                 onTap: () => _selectSearchResult(res),
                               );
                             }).toList(),
@@ -372,8 +376,9 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       // Toggle Map Type Button (Satellite / Normal)
                       FloatingActionButton.small(
                         heroTag: 'mapTypeBtn',
+                        backgroundColor: ProColors.card(context),
                         onPressed: _toggleMapType,
-                                        child: Icon(
+                        child: Icon(
                           _currentMapType == MapType.normal ? Icons.satellite_alt_rounded : Icons.map_rounded,
                           color: ProColors.accent, size: 20,
                         ),
@@ -383,24 +388,27 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                       // Current Location GPS Button
                       FloatingActionButton.small(
                         heroTag: 'myLocBtn',
+                        backgroundColor: ProColors.card(context),
                         onPressed: _locateCurrentPos,
-                                        child: const Icon(Icons.my_location_rounded, color: ProColors.primary, size: 20),
+                        child: const Icon(Icons.my_location_rounded, color: ProColors.primary, size: 20),
                       ),
                       const SizedBox(height: 8),
 
                       // Zoom In Button
                       FloatingActionButton.small(
                         heroTag: 'zoomInBtn',
+                        backgroundColor: ProColors.card(context),
                         onPressed: _zoomIn,
-                                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 22),
+                        child: Icon(Icons.add_rounded, color: ProColors.txt(context), size: 22),
                       ),
                       const SizedBox(height: 8),
 
                       // Zoom Out Button
                       FloatingActionButton.small(
                         heroTag: 'zoomOutBtn',
+                        backgroundColor: ProColors.card(context),
                         onPressed: _zoomOut,
-                                        child: const Icon(Icons.remove_rounded, color: Colors.white, size: 22),
+                        child: Icon(Icons.remove_rounded, color: ProColors.txt(context), size: 22),
                       ),
                     ],
                   ),
@@ -412,9 +420,9 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
           // Selected Address Detail Box
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: const BoxDecoration(
-              color: ProColors.cardBg,
-              border: Border(top: BorderSide(color: ProColors.border)),
+            decoration: BoxDecoration(
+              color: ProColors.card(context),
+              border: Border(top: BorderSide(color: ProColors.brd(context))),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -426,7 +434,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                     Expanded(
                       child: Text(
                         _cityName,
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ),
                     if (_isGeocoding) const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2, color: ProColors.primary)),
@@ -435,7 +443,7 @@ class _ProLocationPickerModalState extends State<ProLocationPickerModal> {
                 const SizedBox(height: 4),
                 Text(
                   _selectedAddress,
-                  style: const TextStyle(color: ProColors.textMuted, fontSize: 12),
+                  style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),

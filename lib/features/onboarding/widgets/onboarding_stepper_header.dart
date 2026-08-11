@@ -21,14 +21,16 @@ class OnboardingStepperHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = (currentStep / totalSteps).clamp(0.0, 1.0);
+    final isDark = ProColors.isDark(context);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ProColors.surface,
+        color: ProColors.card(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ProColors.border),
+        border: Border.all(color: ProColors.brd(context)),
+        boxShadow: ProColors.cardShadow(context, elevation: 0.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -42,25 +44,25 @@ class OnboardingStepperHeader extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: ProColors.primarySoft,
+                      color: isDark ? ProColors.primarySoft : const Color(0xFFDCFCE7),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: ProColors.primary),
+                      border: Border.all(color: isDark ? ProColors.primary : const Color(0xFF10B981), width: 1),
                     ),
                     child: Text(
                       'STEP $currentStep OF $totalSteps',
-                      style: const TextStyle(
-                        color: ProColors.primary,
+                      style: TextStyle(
+                        color: isDark ? ProColors.primary : const Color(0xFF047857),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
+                        letterSpacing: 0.8,
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
                   Text(
                     steps[(currentStep - 1).clamp(0, totalSteps - 1)]['title'] ?? '',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: ProColors.txt(context),
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -69,8 +71,8 @@ class OnboardingStepperHeader extends StatelessWidget {
               ),
               Text(
                 '${(progress * 100).toInt()}% Done',
-                style: const TextStyle(
-                  color: ProColors.textMuted,
+                style: TextStyle(
+                  color: ProColors.txtMuted(context),
                   fontSize: 11,
                   fontWeight: FontWeight.w700,
                 ),
@@ -85,7 +87,7 @@ class OnboardingStepperHeader extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: ProColors.cardBg,
+              backgroundColor: isDark ? ProColors.surfaceHigh : const Color(0xFFE2E8F0),
               color: ProColors.primary,
             ),
           ),
@@ -102,11 +104,19 @@ class OnboardingStepperHeader extends StatelessWidget {
 
               final Color nodeColor = isCompleted
                   ? ProColors.primary
-                  : (isCurrent ? ProColors.accent : ProColors.border);
+                  : (isCurrent ? (isDark ? ProColors.accent : const Color(0xFF2563EB)) : ProColors.brd(context));
 
               final Color iconColor = isCompleted
                   ? Colors.white
-                  : (isCurrent ? Colors.white : ProColors.textMuted);
+                  : (isCurrent
+                      ? (isDark ? Colors.white : const Color(0xFF1D4ED8))
+                      : (isDark ? ProColors.textMuted : const Color(0xFF64748B)));
+
+              final Color nodeBg = isCompleted
+                  ? ProColors.primary
+                  : (isCurrent
+                      ? (isDark ? ProColors.accentSoft : const Color(0xFFDBEAFE))
+                      : (isDark ? ProColors.card(context) : const Color(0xFFF1F5F9)));
 
               return Expanded(
                 child: Row(
@@ -115,9 +125,7 @@ class OnboardingStepperHeader extends StatelessWidget {
                       width: 26,
                       height: 26,
                       decoration: BoxDecoration(
-                        color: isCompleted
-                            ? ProColors.primary
-                            : (isCurrent ? ProColors.accentSoft : ProColors.cardBg),
+                        color: nodeBg,
                         shape: BoxShape.circle,
                         border: Border.all(
                           color: nodeColor,
@@ -131,7 +139,7 @@ class OnboardingStepperHeader extends StatelessWidget {
                                 '$stepNum',
                                 style: TextStyle(
                                   fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w800,
                                   color: iconColor,
                                 ),
                               ),
@@ -141,7 +149,7 @@ class OnboardingStepperHeader extends StatelessWidget {
                       Expanded(
                         child: Container(
                           height: 2,
-                          color: isCompleted ? ProColors.primary : ProColors.border,
+                          color: isCompleted ? ProColors.primary : ProColors.brd(context),
                         ),
                       ),
                   ],

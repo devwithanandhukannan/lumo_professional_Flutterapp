@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pro_smooth_animations.dart';
+import 'pro_theme_controller.dart';
 
 // ─── Professional Pro Color Palette ──────────────────────────────────────────
 class ProColors {
@@ -10,15 +11,15 @@ class ProColors {
   static const Color cardBg       = Color(0xFF101826); // alias
 
   // ── Light Mode Base ────────────────────────────────────────────────────────
-  static const Color lightBackground   = Color(0xFFF0F5FB);
+  static const Color lightBackground   = Color(0xFFF8FAFC); // Slate 50
   static const Color lightSurface      = Color(0xFFFFFFFF);
-  static const Color lightSurfaceHigh  = Color(0xFFF8FBFF);
+  static const Color lightSurfaceHigh  = Color(0xFFF1F5F9); // Slate 100
   static const Color lightCardBg       = Color(0xFFFFFFFF);
-  static const Color lightBorder       = Color(0xFFE0E9F5);
-  static const Color lightBorderSoft   = Color(0xFFECF2FA);
-  static const Color lightTextPrimary  = Color(0xFF0C1729);
-  static const Color lightTextSecondary = Color(0xFF344F72);
-  static const Color lightTextMuted    = Color(0xFF7A93B8);
+  static const Color lightBorder       = Color(0xFFE2E8F0); // Slate 200
+  static const Color lightBorderSoft   = Color(0xFFEDF2F7);
+  static const Color lightTextPrimary  = Color(0xFF0F172A); // Slate 900
+  static const Color lightTextSecondary = Color(0xFF475569); // Slate 600
+  static const Color lightTextMuted    = Color(0xFF64748B); // Slate 500
 
   // ── Legacy compat ──────────────────────────────────────────────────────────
   static const Color border            = Color(0xFF1A2A40);
@@ -27,12 +28,12 @@ class ProColors {
   static const Color glassBorderBright = Color(0x00000000);
 
   // ── Accent ─────────────────────────────────────────────────────────────────
-  static const Color primary          = Color(0xFF0EA572); // deep emerald
-  static const Color primaryDark      = Color(0xFF0A7D57);
-  static const Color primaryLight     = Color(0xFF34D399); // bright emerald
+  static const Color primary          = Color(0xFF059669); // Emerald 600
+  static const Color primaryDark      = Color(0xFF047857);
+  static const Color primaryLight     = Color(0xFF10B981); // Emerald 500
   static const Color primarySoft      = Color(0x140EA572);
   static const Color primaryGlow      = Color(0x280EA572);
-  static const Color accent           = Color(0xFF3B7FF5);
+  static const Color accent           = Color(0xFF2563EB);
   static const Color accentSoft       = Color(0x143B7FF5);
   static const Color emergencyRed     = Color(0xFFEF4444);
   static const Color emergencyRedSoft = Color(0x14EF4444);
@@ -50,37 +51,41 @@ class ProColors {
   static const Color textDisabled  = Color(0xFF253348);
 
   // ── Dynamic Helpers ────────────────────────────────────────────────────────
-  static bool isDark(BuildContext context) =>
-      Theme.of(context).brightness == Brightness.dark;
+  static bool isDark([BuildContext? context]) {
+    if (context != null) {
+      return Theme.of(context).brightness == Brightness.dark;
+    }
+    return ProThemeController.instance.isDark;
+  }
 
-  static Color bg(BuildContext context) =>
+  static Color bg([BuildContext? context]) =>
       isDark(context) ? background : lightBackground;
 
-  static Color surf(BuildContext context) =>
+  static Color surf([BuildContext? context]) =>
       isDark(context) ? surface : lightSurface;
 
-  static Color surfHigh(BuildContext context) =>
+  static Color surfHigh([BuildContext? context]) =>
       isDark(context) ? surfaceHigh : lightSurfaceHigh;
 
-  static Color card(BuildContext context) =>
+  static Color card([BuildContext? context]) =>
       isDark(context) ? surface : lightSurface;
 
-  static Color txt(BuildContext context) =>
+  static Color txt([BuildContext? context]) =>
       isDark(context) ? textPrimary : lightTextPrimary;
 
-  static Color txtSec(BuildContext context) =>
+  static Color txtSec([BuildContext? context]) =>
       isDark(context) ? textSecondary : lightTextSecondary;
 
-  static Color txtMuted(BuildContext context) =>
+  static Color txtMuted([BuildContext? context]) =>
       isDark(context) ? textMuted : lightTextMuted;
 
-  static Color brd(BuildContext context) =>
+  static Color brd([BuildContext? context]) =>
       isDark(context) ? const Color(0xFF1A2A40) : lightBorder;
 
-  static Color primaryAccent(BuildContext context) =>
+  static Color primaryAccent([BuildContext? context]) =>
       isDark(context) ? primaryLight : primary;
 
-  static Color labelColor(BuildContext context) =>
+  static Color labelColor([BuildContext? context]) =>
       isDark(context) ? const Color(0xFF34D399) : primaryDark;
 
   // ── Shadow System ──────────────────────────────────────────────────────────

@@ -205,7 +205,10 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ProColors.isDark(context);
+
     return Scaffold(
+      backgroundColor: ProColors.bg(context),
       appBar: AppBar(
         title: Text(widget.isStandaloneManagement ? 'Manage Offered Services' : 'Service Configuration'),
         automaticallyImplyLeading: widget.isStandaloneManagement,
@@ -220,13 +223,13 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
               const SizedBox(height: 4),
             ],
 
-            const Text('Your Services & Rates', style: ProText.heading1),
+            Text('Your Services & Rates', style: ProText.heading1Style(context)),
             const SizedBox(height: 6),
             Text(
               widget.isStandaloneManagement
                   ? 'Select the admin services you offer and set your custom pricing rates.'
                   : 'Select services you offer. Set your custom rates and travel fee per km.',
-              style: ProText.body,
+              style: ProText.bodyStyle(context),
             ),
             const SizedBox(height: 20),
 
@@ -251,22 +254,23 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                 padding: const EdgeInsets.all(20),
                 margin: const EdgeInsets.only(bottom: 16),
                 decoration: BoxDecoration(
-                  color: ProColors.surface,
+                  color: ProColors.card(context),
                   borderRadius: BorderRadius.circular(18),
-                  border: Border.all(color: ProColors.border),
+                  border: Border.all(color: ProColors.brd(context)),
+                  boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                 ),
-                child: const Column(
+                child: Column(
                   children: [
-                    Icon(Icons.info_outline_rounded, color: ProColors.textMuted, size: 28),
-                    SizedBox(height: 8),
+                    Icon(Icons.info_outline_rounded, color: ProColors.txtMuted(context), size: 28),
+                    const SizedBox(height: 8),
                     Text(
                       'No Admin Services Available Yet',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
+                      style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 14),
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Text(
                       'Use "+ Request Custom Service" below to suggest a new service for Admin approval.',
-                      style: TextStyle(color: ProColors.textMuted, fontSize: 12),
+                      style: ProText.captionStyle(context),
                       textAlign: TextAlign.center,
                     ),
                   ],
@@ -286,12 +290,15 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                   return AnimatedContainer(
                     duration: const Duration(milliseconds: 200),
                     decoration: BoxDecoration(
-                      color: isChecked ? ProColors.cardBg : ProColors.surface,
+                      color: isChecked
+                          ? (isDark ? ProColors.primarySoft : const Color(0xFFF0FDF4))
+                          : ProColors.card(context),
                       borderRadius: BorderRadius.circular(18),
                       border: Border.all(
-                        color: isChecked ? ProColors.primary : ProColors.border,
+                        color: isChecked ? ProColors.primary : ProColors.brd(context),
                         width: isChecked ? 1.5 : 1,
                       ),
+                      boxShadow: ProColors.cardShadow(context, elevation: isChecked ? 1.0 : 0.5),
                     ),
                     child: Column(
                       children: [
@@ -317,11 +324,11 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                                         service['name']?.toString() ?? '',
                                         style: TextStyle(
                                           fontWeight: FontWeight.w700,
-                                          color: isChecked ? Colors.white : ProColors.textMuted,
+                                          color: ProColors.txt(context),
                                           fontSize: 14,
                                         ),
                                       ),
-                                      Text('Base Price: ₹${service['base_price']}', style: ProText.caption),
+                                      Text('Base Price: ₹${service['base_price']}', style: ProText.captionStyle(context)),
                                     ],
                                   ),
                                 ),
@@ -329,8 +336,9 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(
-                                      color: ProColors.primarySoft,
+                                      color: isDark ? ProColors.primarySoft : const Color(0xFFDCFCE7),
                                       borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: ProColors.primary.withAlpha(80)),
                                     ),
                                     child: const Text(
                                       'SELECTED',
@@ -342,7 +350,7 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                           ),
                         ),
                         if (isChecked) ...[
-                          const Divider(color: ProColors.border, height: 1),
+                          Divider(color: isDark ? ProColors.border : const Color(0xFFDCFCE7), height: 1),
                           Padding(
                             padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
                             child: Row(
@@ -351,13 +359,13 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('YOUR CUSTOM RATE (₹)', style: TextStyle(color: ProColors.textMuted, fontSize: 10, fontWeight: FontWeight.bold)),
+                                      Text('YOUR CUSTOM RATE (₹)', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 10, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 4),
                                       TextField(
                                         controller: _priceControllers[id],
                                         keyboardType: TextInputType.number,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                        decoration: proInputDecoration(hint: '₹ Rate').copyWith(
+                                        style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 14),
+                                        decoration: proInputDecoration(context: context, hint: '₹ Rate').copyWith(
                                           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                                           prefixIcon: const Icon(Icons.currency_rupee, color: ProColors.accent, size: 16),
                                         ),
@@ -370,15 +378,15 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text('TRAVEL FEE (₹/KM)', style: TextStyle(color: Color(0xFFF59E0B), fontSize: 10, fontWeight: FontWeight.bold)),
+                                      const Text('TRAVEL FEE (₹/KM)', style: TextStyle(color: Color(0xFFD97706), fontSize: 10, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 4),
                                       TextField(
                                         controller: _kmChargeControllers[id],
                                         keyboardType: TextInputType.number,
-                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                                        decoration: proInputDecoration(hint: '₹/km').copyWith(
+                                        style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 14),
+                                        decoration: proInputDecoration(context: context, hint: '₹/km').copyWith(
                                           contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                                          prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFF59E0B), size: 16),
+                                          prefixIcon: const Icon(Icons.directions_car_rounded, color: Color(0xFFD97706), size: 16),
                                         ),
                                       ),
                                     ],
@@ -398,26 +406,27 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
 
             // Custom service requests list
             if (_myServiceRequests.isNotEmpty) ...[
-              const Text('MY CUSTOM SERVICE REQUESTS', style: ProText.label),
+              Text('MY CUSTOM SERVICE REQUESTS', style: ProText.labelStyle(context)),
               const SizedBox(height: 10),
               ..._myServiceRequests.map((r) => Container(
                 margin: const EdgeInsets.only(bottom: 8),
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: ProColors.surface,
+                  color: ProColors.card(context),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: ProColors.border),
+                  border: Border.all(color: ProColors.brd(context)),
+                  boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.hourglass_top_rounded, color: Color(0xFFF59E0B), size: 20),
+                    const Icon(Icons.hourglass_top_rounded, color: Color(0xFFD97706), size: 20),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(r['service_name']?.toString() ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
-                          Text(r['status']?.toString() ?? 'PENDING', style: const TextStyle(color: Color(0xFFF59E0B), fontSize: 11)),
+                          Text(r['service_name']?.toString() ?? '', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.w600, fontSize: 13)),
+                          Text(r['status']?.toString() ?? 'PENDING', style: const TextStyle(color: Color(0xFFD97706), fontSize: 11)),
                         ],
                       ),
                     ),
@@ -434,9 +443,10 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
               child: Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: ProColors.surface,
+                  color: ProColors.card(context),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: ProColors.primary.withAlpha(80)),
+                  boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                 ),
                 child: Row(
                   children: [
@@ -446,16 +456,16 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
                       child: const Icon(Icons.add_circle_outline_rounded, color: ProColors.primary, size: 20),
                     ),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Request a New Service', style: TextStyle(fontWeight: FontWeight.w700, color: Colors.white, fontSize: 13)),
-                          Text('Not in the list? Request — admin will review & add it.', style: ProText.caption),
+                          Text('Request a New Service', style: TextStyle(fontWeight: FontWeight.w700, color: ProColors.txt(context), fontSize: 13)),
+                          Text('Not in the list? Request — admin will review & add it.', style: ProText.captionStyle(context)),
                         ],
                       ),
                     ),
-                    Icon(_showCustomServiceForm ? Icons.expand_less : Icons.expand_more, color: ProColors.textMuted),
+                    Icon(_showCustomServiceForm ? Icons.expand_less : Icons.expand_more, color: ProColors.txtMuted(context)),
                   ],
                 ),
               ),
@@ -466,38 +476,39 @@ class _ProServiceSetupScreenState extends State<ProServiceSetupScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: ProColors.cardBg,
+                  color: ProColors.card(context),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: ProColors.border),
+                  border: Border.all(color: ProColors.brd(context)),
+                  boxShadow: ProColors.cardShadow(context, elevation: 0.5),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const Text('SERVICE NAME *', style: ProText.label),
+                    Text('SERVICE NAME *', style: ProText.labelStyle(context)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _customNameCtrl,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: proInputDecoration(hint: 'e.g. CCTV Installation'),
+                      style: TextStyle(color: ProColors.txt(context), fontSize: 13),
+                      decoration: proInputDecoration(context: context, hint: 'e.g. CCTV Installation'),
                     ),
                     const SizedBox(height: 10),
-                    const Text('DESCRIPTION', style: ProText.label),
+                    Text('DESCRIPTION', style: ProText.labelStyle(context)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _customDescCtrl,
                       maxLines: 2,
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: proInputDecoration(hint: 'Brief description'),
+                      style: TextStyle(color: ProColors.txt(context), fontSize: 13),
+                      decoration: proInputDecoration(context: context, hint: 'Brief description'),
                     ),
                     const SizedBox(height: 10),
-                    const Text('SUGGESTED PRICE (₹)', style: ProText.label),
+                    Text('SUGGESTED PRICE (₹)', style: ProText.labelStyle(context)),
                     const SizedBox(height: 6),
                     TextField(
                       controller: _customPriceCtrl,
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
-                      style: const TextStyle(color: Colors.white, fontSize: 13),
-                      decoration: proInputDecoration(hint: '499'),
+                      style: TextStyle(color: ProColors.txt(context), fontSize: 13),
+                      decoration: proInputDecoration(context: context, hint: '499'),
                     ),
                     const SizedBox(height: 14),
                     GradientButton(

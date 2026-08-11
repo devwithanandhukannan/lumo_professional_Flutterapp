@@ -61,7 +61,7 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
   Future<void> _openCameraOrGalleryModal() async {
     showModalBottomSheet(
       context: context,
-      backgroundColor: ProColors.cardBg,
+      backgroundColor: ProColors.card(context),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
@@ -77,23 +77,23 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                   child: const Icon(Icons.camera_front_rounded, color: ProColors.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Capture Live Selfie', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      Text('Open front camera or upload photo', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                      Text('Capture Live Selfie', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('Open front camera or upload photo', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: ProColors.textMuted),
+                  icon: Icon(Icons.close, color: ProColors.txtMuted(context)),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            const Divider(color: ProColors.border, height: 1),
+            Divider(color: ProColors.brd(context), height: 1),
             const SizedBox(height: 16),
 
             ListTile(
@@ -102,8 +102,8 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                 decoration: BoxDecoration(color: ProColors.primarySoft, borderRadius: BorderRadius.circular(12)),
                 child: const Icon(Icons.camera_front_rounded, color: ProColors.primary),
               ),
-              title: const Text('Open Front Camera', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Snap live face verification photo', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+              title: Text('Open Front Camera', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold)),
+              subtitle: Text('Snap live face verification photo', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11)),
               onTap: () {
                 Navigator.pop(ctx);
                 _captureSelfieFromSource(ImageSource.camera);
@@ -117,8 +117,8 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                 decoration: BoxDecoration(color: const Color(0x1A8B5CF6), borderRadius: BorderRadius.circular(12)),
                 child: const Icon(Icons.photo_library_rounded, color: Color(0xFF8B5CF6)),
               ),
-              title: const Text('Choose from Gallery', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              subtitle: const Text('Select existing face selfie from library', style: TextStyle(color: ProColors.textMuted, fontSize: 11)),
+              title: Text('Choose from Gallery', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold)),
+              subtitle: Text('Select existing face selfie from library', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11)),
               onTap: () {
                 Navigator.pop(ctx);
                 _captureSelfieFromSource(ImageSource.gallery);
@@ -259,9 +259,12 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                     const OnboardingStepperHeader(currentStep: 4),
                     const SizedBox(height: 4),
 
-                    const Text('Live Face Verification', style: ProText.heading1),
+                    Text('Live Face Verification', style: ProText.heading1Style(context)),
                     const SizedBox(height: 6),
-                    const Text('We need a real-time selfie to verify your identity. Make sure you\'re in good lighting, face clearly visible.', style: ProText.body),
+                    Text(
+                      'We need a real-time selfie to verify your identity. Make sure you\'re in good lighting, face clearly visible.',
+                      style: ProText.bodyStyle(context),
+                    ),
 
                     const SizedBox(height: 40),
 
@@ -342,9 +345,9 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                       padding: const EdgeInsets.all(14),
                       child: Column(
                         children: [
-                          _guideline(Icons.wb_sunny_outlined, 'Good lighting — face clearly visible'),
-                          _guideline(Icons.face_outlined, 'No masks, glasses or hats'),
-                          _guideline(Icons.center_focus_strong_outlined, 'Look directly into the front camera'),
+                          _guideline(context, Icons.wb_sunny_outlined, 'Good lighting — face clearly visible'),
+                          _guideline(context, Icons.face_outlined, 'No masks, glasses or hats'),
+                          _guideline(context, Icons.center_focus_strong_outlined, 'Look directly into the front camera'),
                         ],
                       ),
                     ),
@@ -369,7 +372,7 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
                       onTap: _submitAndFinish,
                       isLoading: _isSubmitting,
                       icon: Icons.send_rounded,
-                      colors: [ProColors.primary, ProColors.primaryDark],
+                      colors: const [ProColors.primary, ProColors.primaryDark],
                     ),
                     const SizedBox(height: 24),
                   ],
@@ -382,14 +385,14 @@ class _ProSelfieScreenState extends State<ProSelfieScreen>
     );
   }
 
-  Widget _guideline(IconData icon, String text) {
+  Widget _guideline(BuildContext context, IconData icon, String text) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Row(
         children: [
-          Icon(icon, color: ProColors.textMuted, size: 18),
+          Icon(icon, color: ProColors.txtMuted(context), size: 18),
           const SizedBox(width: 10),
-          Text(text, style: const TextStyle(fontSize: 12, color: ProColors.textSecondary)),
+          Text(text, style: TextStyle(fontSize: 12, color: ProColors.txtSec(context))),
         ],
       ),
     );

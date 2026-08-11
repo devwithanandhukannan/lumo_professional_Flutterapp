@@ -17,10 +17,10 @@ class ProApiClient {
   static String _defaultBaseUrl() {
     if (kIsWeb) return 'http://localhost:8000';
     try {
-      if (Platform.isAndroid) return 'http://192.168.1.2:8000';
-      if (Platform.isIOS) return 'http://192.168.1.2:8000';
+      if (Platform.isAndroid) return 'http://192.168.1.4:8000';
+      if (Platform.isIOS) return 'http://192.168.1.4:8000';
     } catch (_) {}
-    return 'http://192.168.1.2:8000';
+    return 'http://192.168.1.4:8000';
   }
 
   static String baseUrl = _defaultBaseUrl();
@@ -51,11 +51,18 @@ class ProApiClient {
     } catch (primaryErr) {
       // 2. Fallback to candidate hosts with fast fail
       final candidateUrls = <String>{
+        'http://192.168.1.4:8000',
+        'http://192.168.1.4:5000',
         'http://192.168.1.2:8000',
         'http://192.168.1.9:8000',
-        if (!kIsWeb && Platform.isAndroid) 'http://10.0.2.2:8000',
+        if (!kIsWeb && Platform.isAndroid) ...[
+          'http://10.0.2.2:8000',
+          'http://10.0.2.2:5000',
+        ],
         'http://localhost:8000',
+        'http://localhost:5000',
         'http://127.0.0.1:8000',
+        'http://127.0.0.1:5000',
         'http://192.168.1.3:8000',
         'http://192.168.0.2:8000',
         'http://192.168.0.9:8000',
@@ -616,6 +623,101 @@ class ProApiClient {
         body: jsonEncode({'fcmToken': fcmToken}),
       ));
     } catch (_) {}
+  }
+
+  // ─── PRO WALLET & DISBURSEMENT APIS ──────────────────────────────────────
+
+  /// Fetch Professional Wallet Summary, balances & weekly chart data
+  static Future<Map<String, dynamic>> getProWalletSummary() async {
+    final res = await _requestWithFallback((url) => http.get(
+      Uri.parse('$url/api/v1/payments/pro/wallet'),
+      headers: _authHeaders,
+    ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return (body['data'] as Map<String, dynamic>?) ?? {};
+    }
+    throw Exception(body['message'] ?? 'Failed to load wallet summary');
+  }
+
+  /// Fetch Saved Payout Methods (UPI VPAs & Bank Accounts)
+  static Future<List<dynamic>> getPayoutMethods() async {
+    final res = await _requestWithFallback((url) => http.get(
+      Uri.parse('$url/api/v1/payments/pro/payout-methods'),
+      headers: _authHeaders,
+    ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return (body['data'] as List?) ?? [];
+    }
+    return [];
+  }
+
+  /// Save new Payout Method (UPI or Bank Account)
+  static Future<Map<String, dynamic>> savePayoutMethod({
+    required String type,
+    String? upiId,
+    String? accountHolderName,
+    String? accountNumber,
+    String? ifscCode,
+    String? bankName,
+    bool setAsPrimary = true,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+      Uri.parse('$url/api/v1/payments/pro/payout-methods'),
+      headers: _authHeaders,
+      body: jsonEncode({
+        'type': type,
+        if (upiId != null) 'upiId': upiId,
+        if (accountHolderName != null) 'accountHolderName': accountHolderName,
+        if (accountNumber != null) 'accountNumber': accountNumber,
+        if (ifscCode != null) 'ifscCode': ifscCode,
+        if (bankName != null) 'bankName': bankName,
+        'setAsPrimary': setAsPrimary,
+      }),
+    ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return (body['data'] as Map<String, dynamic>?) ?? {};
+    }
+    throw Exception(body['message'] ?? 'Failed to save payout method');
+  }
+
+  /// Request Instant Wallet Withdrawal
+  static Future<Map<String, dynamic>> requestWithdrawal({
+    required double amount,
+    String? payoutMethodId,
+    String? customUpi,
+    Map<String, String>? customBank,
+  }) async {
+    final res = await _requestWithFallback((url) => http.post(
+      Uri.parse('$url/api/v1/payments/pro/withdraw'),
+      headers: _authHeaders,
+      body: jsonEncode({
+        'amount': amount,
+        if (payoutMethodId != null) 'payoutMethodId': payoutMethodId,
+        if (customUpi != null) 'customUpi': customUpi,
+        if (customBank != null) 'customBank': customBank,
+      }),
+    ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return (body['data'] as Map<String, dynamic>?) ?? {};
+    }
+    throw Exception(body['message'] ?? 'Failed to process withdrawal request');
+  }
+
+  /// Fetch Professional Wallet Transactions Ledger
+  static Future<List<dynamic>> getWalletTransactions({int limit = 50}) async {
+    final res = await _requestWithFallback((url) => http.get(
+      Uri.parse('$url/api/v1/payments/pro/transactions?limit=$limit'),
+      headers: _authHeaders,
+    ));
+    final body = jsonDecode(res.body);
+    if (res.statusCode == 200) {
+      return (body['data'] as List?) ?? [];
+    }
+    return [];
   }
 }
 

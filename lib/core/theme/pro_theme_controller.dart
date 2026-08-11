@@ -32,4 +32,10 @@ class ProThemeController extends ChangeNotifier {
         return 'Light Mode';
     }
   }
+
+  bool get isDark {
+    if (_themeMode == ThemeMode.dark) return true;
+    if (_themeMode == ThemeMode.light) return false;
+    return WidgetsBinding.instance.platformDispatcher.platformBrightness == Brightness.dark;
+  }
 }

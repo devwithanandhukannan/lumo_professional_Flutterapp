@@ -164,20 +164,20 @@ class _ProProfileScreenState extends State<ProProfileScreen> {
 
                     const SizedBox(height: 20),
 
-                    Container(
+                    GlassCard(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(color: ProColors.cardBg, borderRadius: BorderRadius.circular(16), border: Border.all(color: ProColors.border)),
-                      child: const Row(
+                      borderRadius: 16,
+                      child: Row(
                         children: [
-                          Icon(Icons.verified_user, color: ProColors.primary, size: 22),
-                          SizedBox(width: 12),
+                          const Icon(Icons.verified_user, color: ProColors.primary, size: 22),
+                          const SizedBox(width: 12),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text('Police Verified Professional', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                                SizedBox(height: 4),
-                                Text('Background checked, government ID verified, and safety trained.', style: TextStyle(color: ProColors.textMuted, fontSize: 12, height: 1.4)),
+                                Text('Police Verified Professional', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 4),
+                                Text('Background checked, government ID verified, and safety trained.', style: ProText.captionStyle(context)),
                               ],
                             ),
                           ),
@@ -199,14 +199,14 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: ProColors.cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: ProColors.border)),
+      borderRadius: 14,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Text(label, style: const TextStyle(fontSize: 10, color: ProColors.textMuted, fontWeight: FontWeight.w600)),
+          Text(label, style: TextStyle(fontSize: 10, color: ProColors.txtMuted(context), fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           Text(value, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: color)),
         ],
@@ -258,13 +258,9 @@ class _ServiceLocationMapCard extends StatelessWidget {
       ),
     };
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: ProColors.cardBg,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ProColors.border),
-      ),
+    return GlassCard(
+      padding: EdgeInsets.zero,
+      borderRadius: 16,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -277,7 +273,7 @@ class _ServiceLocationMapCard extends StatelessWidget {
                   children: [
                     const Icon(Icons.location_on_outlined, color: ProColors.primary, size: 20),
                     const SizedBox(width: 8),
-                    const Text('Service Location & Coverage', style: ProText.label),
+                    Text('Service Location & Coverage', style: ProText.labelStyle(context)),
                     const Spacer(),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -303,14 +299,14 @@ class _ServiceLocationMapCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 Text(
                   serviceArea.isNotEmpty ? serviceArea : 'Kochi, Kerala, India',
-                  style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(color: ProColors.txt(context), fontSize: 14, fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    const Text(
+                    Text(
                       'Coverage Radius: ',
-                      style: TextStyle(color: ProColors.textMuted, fontSize: 12),
+                      style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12),
                     ),
                     Text(
                       '${coverageRadiusKm.toStringAsFixed(0)} km around pin',
@@ -329,7 +325,7 @@ class _ServiceLocationMapCard extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: ProColors.border),
+              border: Border.all(color: ProColors.brd(context)),
             ),
             child: GoogleMap(
               initialCameraPosition: CameraPosition(
@@ -346,11 +342,11 @@ class _ServiceLocationMapCard extends StatelessWidget {
             ),
           ),
 
-          const Padding(
-            padding: EdgeInsets.fromLTRB(14, 0, 14, 14),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
             child: Text(
               'ℹ️ Location is locked upon verification. Contact LUMO Admin to request a location change.',
-              style: TextStyle(color: ProColors.textMuted, fontSize: 11, fontStyle: FontStyle.italic),
+              style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11, fontStyle: FontStyle.italic),
             ),
           ),
         ],
@@ -373,7 +369,12 @@ class _Tile extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 8),
         padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(color: ProColors.cardBg, borderRadius: BorderRadius.circular(14), border: Border.all(color: ProColors.border)),
+        decoration: BoxDecoration(
+          color: ProColors.card(context),
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: ProColors.brd(context)),
+          boxShadow: ProColors.cardShadow(context, elevation: 0.5),
+        ),
         child: Row(
           children: [
             Icon(icon, color: ProColors.primary, size: 20),
@@ -382,13 +383,17 @@ class _Tile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(label, style: ProText.label),
+                  Text(label, style: ProText.labelStyle(context)),
                   const SizedBox(height: 2),
-                  Text(value, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis),
+                  Text(
+                    value,
+                    style: TextStyle(color: ProColors.txt(context), fontSize: 14, fontWeight: FontWeight.w500),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
-            if (onTap != null) const Icon(Icons.chevron_right, color: ProColors.textMuted, size: 18),
+            if (onTap != null) Icon(Icons.chevron_right, color: ProColors.txtMuted(context), size: 18),
           ],
         ),
       ),

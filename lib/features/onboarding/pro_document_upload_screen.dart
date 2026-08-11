@@ -59,7 +59,7 @@ class _ProDocumentUploadScreenState extends State<ProDocumentUploadScreen>
   void _showUploadOptionsModal(String docType, String docTitle) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: ProColors.cardBg,
+      backgroundColor: ProColors.card(context),
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (ctx) => Container(
         padding: const EdgeInsets.all(24),
@@ -79,19 +79,19 @@ class _ProDocumentUploadScreenState extends State<ProDocumentUploadScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Upload $docTitle', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
-                      const Text('Select upload format from device', style: TextStyle(color: ProColors.textMuted, fontSize: 12)),
+                      Text('Upload $docTitle', style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 16)),
+                      Text('Select upload format from device', style: TextStyle(color: ProColors.txtMuted(context), fontSize: 12)),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: ProColors.textMuted),
+                  icon: Icon(Icons.close, color: ProColors.txtMuted(context)),
                   onPressed: () => Navigator.pop(ctx),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            const Divider(color: ProColors.border, height: 1),
+            Divider(color: ProColors.brd(context), height: 1),
             const SizedBox(height: 16),
 
             // Option 1: Pick PDF File
@@ -381,9 +381,12 @@ startxref
                         const OnboardingStepperHeader(currentStep: 3),
                         const SizedBox(height: 4),
 
-                        const Text('Upload Verification Proofs', style: ProText.heading1),
+                        const Text('Upload Verification Proofs', style: TextStyle(fontSize: 26, fontWeight: FontWeight.w800)),
                         const SizedBox(height: 6),
-                        const Text('Upload your government ID and police clearance certificate PDF. All files will be stored in the backend proff_cert folder.', style: ProText.body),
+                        Text(
+                          'Upload your government ID and police clearance certificate PDF. All files will be stored in the backend proff_cert folder.',
+                          style: ProText.bodyStyle(context),
+                        ),
                         const SizedBox(height: 24),
 
                         if (_error != null) _errorBanner(_error!),
@@ -393,11 +396,12 @@ startxref
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text('SELECT GOVERNMENT ID TYPE', style: ProText.label),
+                              Text('SELECT GOVERNMENT ID TYPE', style: ProText.labelStyle(context)),
                               const SizedBox(height: 12),
                               Row(
                                 children: _idTypes.map((t) {
                                   final selected = _selectedIdType == t['value'];
+                                  final isDark = ProColors.isDark(context);
                                   return Expanded(
                                     child: GestureDetector(
                                       onTap: () => setState(() => _selectedIdType = t['value']),
@@ -406,15 +410,28 @@ startxref
                                         margin: const EdgeInsets.only(right: 6),
                                         padding: const EdgeInsets.symmetric(vertical: 12),
                                         decoration: BoxDecoration(
-                                          color: selected ? ProColors.primarySoft : const Color(0x0AFFFFFF),
+                                          color: selected
+                                              ? ProColors.primarySoft
+                                              : (isDark ? const Color(0x0AFFFFFF) : const Color(0xFFF8FAFC)),
                                           borderRadius: BorderRadius.circular(14),
-                                          border: Border.all(color: selected ? ProColors.primary : ProColors.glassBorder, width: selected ? 1.5 : 1),
+                                          border: Border.all(
+                                            color: selected ? ProColors.primary : ProColors.brd(context),
+                                            width: selected ? 1.5 : 1,
+                                          ),
                                         ),
                                         child: Column(
                                           children: [
-                                            Icon(t['icon'] as IconData, color: selected ? ProColors.primary : ProColors.textMuted, size: 22),
+                                            Icon(t['icon'] as IconData, color: selected ? ProColors.primary : ProColors.txtMuted(context), size: 22),
                                             const SizedBox(height: 4),
-                                            Text(t['label'] as String, textAlign: TextAlign.center, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: selected ? ProColors.primary : ProColors.textMuted)),
+                                            Text(
+                                              t['label'] as String,
+                                              textAlign: TextAlign.center,
+                                              style: TextStyle(
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.w700,
+                                                color: selected ? ProColors.primary : ProColors.txtMuted(context),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
@@ -423,12 +440,13 @@ startxref
                                 }).toList(),
                               ),
                               const SizedBox(height: 16),
-                              const Text('DOCUMENT NUMBER *', style: ProText.label),
+                              Text('DOCUMENT NUMBER *', style: ProText.labelStyle(context)),
                               const SizedBox(height: 8),
                               TextField(
                                 controller: _idNumberCtrl,
-                                style: const TextStyle(color: ProColors.textPrimary, fontFamily: 'monospace', fontSize: 16, letterSpacing: 1.5),
+                                style: TextStyle(color: ProColors.txt(context), fontFamily: 'monospace', fontSize: 16, letterSpacing: 1.5, fontWeight: FontWeight.bold),
                                 decoration: proInputDecoration(
+                                  context: context,
                                   hint: 'e.g. DL-1420110012345',
                                   prefix: const Icon(Icons.badge_outlined, color: ProColors.primary, size: 20),
                                 ),
@@ -472,14 +490,14 @@ startxref
                         GlassCard(
                           borderRadius: 14,
                           padding: const EdgeInsets.all(12),
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(Icons.folder_special_rounded, color: ProColors.primary, size: 18),
-                              SizedBox(width: 10),
+                              const Icon(Icons.folder_special_rounded, color: ProColors.primary, size: 18),
+                              const SizedBox(width: 10),
                               Expanded(
                                 child: Text(
                                   'Uploaded files are saved in backend "proff_cert" directory for verification.',
-                                  style: TextStyle(fontSize: 11, color: ProColors.textMuted),
+                                  style: TextStyle(fontSize: 11, color: ProColors.txtMuted(context)),
                                 ),
                               ),
                             ],
@@ -545,14 +563,16 @@ class _UploadOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ProColors.isDark(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: const Color(0x0AFFFFFF),
+          color: isDark ? const Color(0x0AFFFFFF) : ProColors.card(context),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ProColors.glassBorder),
+          border: Border.all(color: ProColors.brd(context)),
+          boxShadow: ProColors.cardShadow(context, elevation: 0.5),
         ),
         child: Row(
           children: [
@@ -569,13 +589,13 @@ class _UploadOptionTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(title, style: TextStyle(color: ProColors.txt(context), fontWeight: FontWeight.bold, fontSize: 14)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: const TextStyle(color: ProColors.textMuted, fontSize: 11)),
+                  Text(subtitle, style: TextStyle(color: ProColors.txtMuted(context), fontSize: 11)),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: ProColors.textMuted, size: 20),
+            Icon(Icons.chevron_right_rounded, color: ProColors.txtMuted(context), size: 20),
           ],
         ),
       ),
@@ -603,36 +623,40 @@ class _UploadTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = ProColors.isDark(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isUploaded ? color.withAlpha(20) : const Color(0x0AFFFFFF),
+          color: isUploaded
+              ? color.withAlpha(isDark ? 20 : 15)
+              : ProColors.card(context),
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isUploaded ? color : ProColors.glassBorder,
+            color: isUploaded ? color : ProColors.brd(context),
             width: isUploaded ? 1.5 : 1,
           ),
+          boxShadow: ProColors.cardShadow(context, elevation: 0.5),
         ),
         child: Row(
           children: [
             Container(
               width: 44, height: 44,
               decoration: BoxDecoration(
-                color: isUploaded ? color.withAlpha(40) : ProColors.surface,
+                color: isUploaded ? color.withAlpha(40) : (isDark ? ProColors.surface : const Color(0xFFF1F5F9)),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(isUploaded ? Icons.picture_as_pdf_rounded : icon, color: isUploaded ? color : ProColors.textMuted, size: 22),
+              child: Icon(isUploaded ? Icons.picture_as_pdf_rounded : icon, color: isUploaded ? color : ProColors.txtMuted(context), size: 22),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w800, color: Colors.white, fontSize: 14)),
+                  Text(title, style: TextStyle(fontWeight: FontWeight.w800, color: ProColors.txt(context), fontSize: 14)),
                   const SizedBox(height: 2),
-                  Text(subtitle, style: TextStyle(color: isUploaded ? color : ProColors.textMuted, fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
+                  Text(subtitle, style: TextStyle(color: isUploaded ? color : ProColors.txtMuted(context), fontSize: 11), maxLines: 2, overflow: TextOverflow.ellipsis),
                 ],
               ),
             ),
